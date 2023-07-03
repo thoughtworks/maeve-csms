@@ -1,0 +1,72 @@
+fileignoreconfig:
+  - filename: .gitignore
+    checksum: 66a920c9d4e428e6066e074d3375dc1149500f7e275041e939c92eddd751755c
+  - filename: config/envoy/envoy.yaml
+    checksum: eecf2e1431c914fd681f6be482e399fa9b8f61f11eb33cc354bd5781af28df5d
+  - filename: docker-compose.yml
+    checksum: bebfd6c63f4d2a688fdda876093b7f4a95e38c331cb70bcec548b43b80c93cd7
+  - filename: gateway/cmd/serve.go
+    checksum: f08fe8f8c8710239376098c6e1b778d3fa9a1fb5f0653ff2a9a34e9c70d4194e
+  - filename: gateway/server/ws.go
+    checksum: 4cbde936242380603e07cf8bd049dbca9d1c3108843d10e58f588540176c6d23
+  - filename: gateway/server/ws_test.go
+    checksum: 4a9379d10dc5a63bb6af399f77ef8598f6a6a289f60b4a634a9150c5cec03dcf
+  - filename: manager/Dockerfile
+    checksum: db69536d308b905d6214db1fb0e10442fe3e770ef3fed47809ca1f3ec099409d
+  - filename: manager/handlers/ocpp16/data_transfer_test.go
+    checksum: ff19ad1feeb979a62c6a53e256ab3fe879bd540242153792b8b1148ae7010c4b
+  - filename: manager/handlers/ocpp16/stop_transaction.go
+    checksum: 26b2a5113699eb2d1558d782785a5a44ac17477e1d6d47be9f0ae9a0d0877242
+  - filename: manager/handlers/ocpp201/get_certificate_status_test.go
+    checksum: c181e8cd66c0b11de814810bf8d2dd411489ad5e0dc0e47ec5ca0555148b6ecd
+  - filename: manager/mqtt/handler.go
+    checksum: 9660c626538042009cebcba874730e4222c115fdf24c9dba12c5d4601c69b613
+  - filename: manager/mqtt/router.go
+    checksum: 880513a5d3f0070619c4890b5aab9fcf10650afc79550a83c1ad9a986c7e7367
+  - filename: manager/ocpp/ocpp201/authorize_request.go
+    checksum: 0d8a2377b6f329c6c765c9be5f5720c1b6a06de8569be8251747e70e94538b69
+  - filename: manager/ocpp/ocpp201/certificate_signed_request.go
+    checksum: ce7ab452c6bafff18dd02b023d994ae7916fd6ec12537c28ff30796f48340da0
+  - filename: manager/ocpp/ocpp201/id_token_enum_type.go
+    checksum: 12cb2bc8ca2fe84231986857696a463e3dff4d5f9cdde9b265899b09bb1f95b0
+  - filename: manager/ocpp/ocpp201/transactionevent_request.go
+    checksum: 90efafcdaa21a3fc4b5a08616a8ad285ab36db978df6b1f326d4d88e0b661da4
+  - filename: manager/ocpp/ocpp201/transactionevent_response.go
+    checksum: 4cded4e9cd565b05a69eb311b93035775252e138dc5397081a75e6624ffec13e
+  - filename: manager/schemas/ocpp201/CertificateSignedRequest.json
+    checksum: f2e371c099d44a97cac67d497188057e3fbe0194e06091d94507125464cfb13b
+  - filename: manager/schemas/ocpp201/CostUpdatedRequest.json
+    checksum: 0c0f033a7663e1b5644920b19c8ec14acda5cd9c3882ddfc39f51ebf1682e6db
+  - filename: manager/schemas/ocpp201/GetChargingProfilesRequest.json
+    checksum: cbc75b736c6a7be65bc22f7426b8bd9c0fa631720b8e2514f102d79e239de57a
+  - filename: manager/schemas/ocpp201/GetDisplayMessagesRequest.json
+    checksum: c454c60eddff5ea7f74dfedb770ab20ade35a837256a2ba0145b488a70aad55b
+  - filename: manager/schemas/ocpp201/GetVariablesResponse.json
+    checksum: 74f8be8e01deb703b47c283449aa7cc87b792f0003992afa1808952e8b8c55e9
+  - filename: manager/schemas/ocpp201/NotifyEventRequest.json
+    checksum: ae3fb76875fc26e055d9d041f7ad246f35794c06b2b6ca96ba7b900862c1ad10
+  - filename: manager/schemas/ocpp201/NotifyReportRequest.json
+    checksum: e98c2c1100c236875c67644901879f80c462fe95fc282e3bc14d66f926bfe69e
+  - filename: manager/schemas/ocpp201/SetNetworkProfileRequest.json
+    checksum: 8f44fafcd3f33362ffe1669f639140b52cd2da28bffac643d5d999cbbe9cd75e
+  - filename: manager/schemas/ocpp201/SetVariablesRequest.json
+    checksum: c6c236b717f75c85054102064d9a001debfcf7bc1460fe34e7fdf391c6d43aba
+  - filename: manager/schemas/ocpp201/SignCertificateRequest.json
+    checksum: bc9281581eab4a81329e8c5426a4768361f0aa8022c865b5cfca4b4b85bbaee6
+  - filename: manager/schemas/ocpp201/TransactionEventResponse.json
+    checksum: 30e812e60ae4c19b31bc91b1214057cb2dca6e346967250d912cd108a44322d2
+  - filename: manager/services/certificate_signer_test.go
+    checksum: 001da8587b186aee5c51cad9690eec227c29bc625939340af2aa701f8d30d43f
+  - filename: manager/services/certificate_validation.go
+    checksum: 4c42fca074b2a5a68d7c6573c1fe3c8247412f4e2b36f179def8d0d38e25e98e
+  - filename: manager/services/certificate_validation_hubject_test.go
+    checksum: 100d8f7a7fe642abae94812a2e9f6938f5045bbd22c358b2e0adc684a45698ce
+  - filename: manager/services/certificate_validation_test.go
+    checksum: 5116639fad8dea80fe5db46ca18f923e43135e8e5e5eafbb9d9ff9f28c8172fb
+  - filename: manager/services/transaction.go
+    checksum: 5c382cf7937a6d7ab2626620b44a73131c23fd6702b4ed00cfd744d41cfb63c0
+  - filename: scripts/generate-tls-cert.sh
+    checksum: eab0c50edc72d8a53c2a2d0c4238924f9705666dc962a344384d793a501dea50
+scopeconfig:
+  - scope: go
+version: ""

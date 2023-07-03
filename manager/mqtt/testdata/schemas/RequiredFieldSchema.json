@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "RequiredFieldSchema",
+  "type": "object",
+  "properties": {
+    "data": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "data"
+  ]
+}

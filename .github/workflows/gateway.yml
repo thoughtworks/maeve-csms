@@ -1,0 +1,47 @@
+name: Gateway
+
+on:
+  push:
+    branches: [ '*' ]
+    paths:
+      - "gateway/**"
+      - ".github/workflows/gateway.yml"
+env:
+  SERVICE: gateway
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./${{env.SERVICE}}
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup Go environment
+      uses: actions/setup-go@v4.0.1
+      with:
+        # Path to the go.mod or go.work file.
+        go-version-file: ${{env.SERVICE}}/go.mod
+        # Set this option to true if you want the action to always check for the latest available version that satisfies the version spec
+        check-latest: false
+        # Used to specify whether caching is needed. Set to true, if you'd like to enable caching.
+        cache: true
+        # Used to specify the path to a dependency file - go.sum
+        cache-dependency-path: ${{env.SERVICE}}/go.sum
+    - name: Test & Coverage
+      run: | 
+        go test ./... -coverprofile=coverage.out
+        go tool cover -html=coverage.out -o cover.html
+    - uses: actions/upload-artifact@v3
+      with:
+        name: code-coverage
+        path: ${{env.SERVICE}}/cover.html
+    - name: Build the Docker image
+      run: |
+        docker build . \
+          --file Dockerfile \
+          --tag ${{env.SERVICE}}:${GITHUB_SHA} \
+          --build-arg TARGETARCH=amd64
+      env:
+        DOCKER_BUILDKIT: 1

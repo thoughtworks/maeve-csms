@@ -1,0 +1,64 @@
+<html>
+<head>
+<style>
+table, th {
+  border: 1px solid;
+}
+</style>
+</head>
+
+<body>
+<h1>Transactions:</h1>
+<table>
+	<tr>
+		<th>ChargeStationId</th>
+		<th>TransactionId</th>
+		<th>IdToken</th>
+		<th>TokenType</th>
+		<th>MeterValues</th>
+		<th>StartSeqNo</th>
+		<th>UpdatedSeqNoCount</th>
+		<th>EndedSeqNo</th>
+		<th>Offline</th>
+	</tr>
+{{range .}}
+	<tr>
+		<td>{{.ChargeStationId}}</td>
+		<td>{{.TransactionId}}</td>
+		<td>{{.IdToken}}</td>
+		<td>{{.TokenType}}</td>
+		<td>
+			{{ range .MeterValues}}
+				<div>Timestamp: {{ .Timestamp }}</div>
+				<table>
+					<tr>
+						<th>Context</th>
+						<th>Location</th>
+						<th>Measurand</th>
+						<th>Phase</th>
+						<th>Unit of Measure</th>
+						<th>Value</th>
+					</tr>
+					{{ range .SampledValues }}
+					<tr>
+						<td>{{.Context}}</td>
+						<td>{{.Location}}</td>
+						<td>{{.Measurand}}</td>
+						<td>{{.Phase}}</td>
+						<td>{{ if .UnitOfMeasure }}{{ .UnitOfMeasure.Unit }}{{ end }}</td>
+						<td>{{.Value}}</td>
+					</tr>
+					{{ end }}
+				</table>
+			{{ end }}
+		</td>
+		<td>{{.StartSeqNo}}</td>
+		<td>{{.UpdatedSeqNoCount}}</td>
+		<td>{{.EndedSeqNo}}</td>
+		<td>{{.Offline}}</td>
+	</tr>
+{{end}}
+</table>
+
+</body>
+</html>

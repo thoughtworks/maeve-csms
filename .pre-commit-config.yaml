@@ -1,0 +1,18 @@
+repos:
+  - repo: https://github.com/thoughtworks/talisman
+    rev: 'v1.30.2'
+    hooks:
+      - id: talisman-commit
+        entry: cmd --githook pre-commit
+  - repo: local
+    hooks:
+      - id: sort-talismanrc
+        name: Sort .talismanrc
+        language: script
+        files: '.talismanrc'
+        entry: .hook/sort-talismanrc.sh
+      - id: check-talisman-files
+        name: Check files in .talismanrc
+        language: script
+        files: '.talismanrc'
+        entry: .hook/check-talisman-files.sh

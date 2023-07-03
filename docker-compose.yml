@@ -1,0 +1,132 @@
+networks:
+  default:
+    name: ocpp2-broker-core
+    enable_ipv6: true
+    ipam:
+      config:
+        - subnet: 2001:db8:a::/64
+          gateway: 2001:db8:a::1
+
+services:
+  mqtt:
+    image: eclipse-mosquitto:2
+    volumes:
+      - type: bind
+        source: ./config/mosquitto
+        target: /mosquitto/config
+        read_only: true
+    ports:
+      - "1883:1883"
+      - "9000:9000"
+    user: "10000:10000"
+    healthcheck:
+      test: ["CMD-SHELL", "timeout 5 mosquitto_sub -t '$$SYS/#' -C 1 | grep -v Error || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+
+  lb:
+    image: envoyproxy/envoy:v1.26-latest
+    command: ["-c", "/config/envoy.yaml"]
+    volumes:
+      - type: bind
+        source: ./config/envoy
+        target: /config
+        read_only: true
+    ports:
+      - "80:80"
+      - "443:443"
+      - "9410:9410"
+
+  gateway:
+    build:
+      context: gateway
+      ssh:
+        - default
+    depends_on:
+      mqtt:
+        condition: service_healthy
+      manager:
+        condition: service_healthy
+    command:
+      - "serve"
+      - "--ws-addr"
+      - ":9310"
+      - "--wss-addr"
+      - ":9311"
+      - "--status-addr"
+      - ":9312"
+      - "--tls-server-cert"
+      - "/certificates/csms.pem"
+      - "--tls-server-key"
+      - "/certificates/csms.key"
+      - "--tls-trust-cert"
+      - "/certificates/trust.pem"
+      - "--mqtt-addr"
+      - "mqtt://mqtt:1883"
+      - "--cs-password"
+      - "DEADBEEFDEADBEEF"
+    expose:
+      - "9310"
+      - "9311"
+      - "9312"
+    volumes:
+      - type: bind
+        source: ./config/certificates
+        target: /certificates
+        read_only: true
+    healthcheck:
+      test: ["CMD", "/usr/bin/curl", "-s", "--fail", "http://localhost:9312/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+    user: "10000:10000"
+
+  redis:
+    image: redis:latest
+    restart: always
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+    entrypoint: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./data/redis-data:/data
+
+  manager:
+    build:
+      context: manager
+      ssh:
+        - default
+    depends_on:
+      mqtt:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command:
+      - "serve"
+      - "--api-addr"
+      - ":9410"
+      - "--mqtt-addr"
+      - "mqtt://mqtt:1883"
+      - "--redis-addr"
+      - "redis:6379"
+      - "--v2g-pem-file"
+      - "/certificates/root-V2G-cert.pem"
+      - "--hubject-token"
+      - "${HUBJECT_TOKEN}"
+    volumes:
+      - type: bind
+        source: ./config/certificates
+        target: /certificates
+        read_only: true
+    expose:
+      - "9410"
+    healthcheck:
+      test: ["CMD", "/usr/bin/curl", "-s", "--fail", "http://localhost:9410/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+    user: "10000:10000"
