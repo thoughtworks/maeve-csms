@@ -49,5 +49,17 @@ _Come back to this later, we are currently working on it._
 ## Coding style guideline
 _Come back to this later, we are currently working on it._
 
+## Commit messages
+Commit messages should follow the [Conventional Commits specification](https://www.conventionalcommits.org/en/v1.0.0/)
+
+### Adding pre-commit hooks
+We recommend [using the pre-commit framework](https://pre-commit.com/#install) 
+
+#### Install the hooks
+To install the hooks simply run:
+```shell
+$ pre-commit install && pre-commit install --hook-type commit-msg
+```
+
 ## Contributors
 _Come back to this later, we are currently working on it._
