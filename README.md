@@ -18,8 +18,7 @@ certificate for the CSMS
 2. Run the [./scripts/get-ca-cert.sh](./scripts/get-ca-cert.sh) script with a token retrieved from 
 the [Hubject test environment](https://hubject.stoplight.io/docs/open-plugncharge/6bb8b3bc79c2e-authorization-token)
 to retrieve the V2G root certificate and CPO Sub CA certificates
-3. Run `HUBJECT_TOKEN='<hubject-token>' docker compose up` (where `hubject-token` is the same token
-as above) to run all the required components
+3. Run the [./scripts/run.sh](./scripts/run.sh) script with the same token to run all the required components
 
 Charge stations can connect to the CSMS using:
 * `ws://localhost/ws/<cs-id>`
