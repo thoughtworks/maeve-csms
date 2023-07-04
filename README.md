@@ -1,5 +1,5 @@
-[![Manager](https://github.com/twlabs/ocpp2-broker-core/workflows/Manager/badge.svg)](https://github.com/twlabs/ocpp2-broker-core/actions/workflows/manager.yml)
-[![Gateway](https://github.com/twlabs/ocpp2-broker-core/workflows/Gateway/badge.svg)](https://github.com/twlabs/ocpp2-broker-core/actions/workflows/gateway.yml)
+[![Manager](https://github.com/twlabs/maeve-csms/workflows/Manager/badge.svg)](https://github.com/twlabs/maeve-csms/actions/workflows/manager.yml)
+[![Gateway](https://github.com/twlabs/maeve-csms/workflows/Gateway/badge.svg)](https://github.com/twlabs/maeve-csms/actions/workflows/gateway.yml)
 
 # MaEVe
 
@@ -8,6 +8,16 @@ implementing ISO-15118-2 Plug and Charge (PnC) functionality and remains a work 
 time it will become more complete, but already provides a useful basis for experimentation.
 
 The system currently integrates with [Hubject](https://hubject.stoplight.io/) for PnC functionality. 
+
+## Table of Contents
+- [Documentation](#documentation)
+- [Getting Started](#getting-started)
+- [Configuration](#configuration)
+- [Contributing](#contributing)
+- [License](#license)
+
+## Documentation
+MaEVe is implemented in Go 1.20. Learn more about MaEVe and its existing components through this [High-level design document](./docs/design.md).
 
 ## Getting started
 
@@ -29,34 +39,10 @@ Charge stations can use either OCPP 1.6j or OCPP 2.0.1.
 For TLS, the charge station should use a certificate provisioned using the 
 [Hubject CPO EST service](https://hubject.stoplight.io/docs/open-plugncharge/486f0b8b3ded4-simple-enroll-iso-15118-2-and-iso-15118-20).
 
-At present, the set of charge stations that are accepted and their credentials are hard-coded
-in [gateway/cmd/serve.go](gateway/cmd/serve.go).
+_At present, the set of charge stations that are accepted and their credentials are hard-coded
+in [gateway/cmd/serve.go](gateway/cmd/serve.go)._
 
-The set of tokens that are accepted are also currently hard-coded in [manager/cmd/serve.go](manager/cmd/serve.go).
-
-## Developing
-
-MaEVe is implemented in go 1.20. MaEVe currently has two components:
-1. The [gateway](gateway) is a stateful service that accepts OCPP websocket connections from charge stations.
-OCPP messages from charge stations are unpacked and published on an MQTT topic. OCPP messages from the
-CSMS are read from another MQTT topic and sent to the charge station over the established websocket.
-2. The [manager](manager) is a stateless service that reads from and writes to the relevant MQTT topics to
-generate responses to OCPP calls that come from the charge station, make OCPP calls to the charge station and handle the 
-associated responses.
-
-To build the components, switch to the relevant directory and run:
-
-```shell
-$ go build ./...
-$ go test ./...
-```
-
-To run the system an MQTT v5 broker, such as [Mosquitto](https://mosquitto.org/) is required. This is used to
-decouple the stateful connections required by OCPP from the stateless message handlers. The system currently
-connects to the MQTT broker anonymously.
-
-The system also currently uses [Redis](https://redis.io/) as a storage engine for transaction details. This
-is also connected to anonymously.
+_The set of tokens that are accepted are also currently hard-coded in [manager/cmd/serve.go](manager/cmd/serve.go)._
 
 ## Configuration
 
@@ -65,3 +51,9 @@ component can be viewed using the `-h` flag. The configuration is mostly limited
 various components and their dependencies. As mentioned in [Getting started](#getting-started) the allowed charge
 stations and tokens are currently hard-coded in the server start up commands.
 
+## Contributing
+
+Learn more about how to contribute on this project through [Contributing](./CONTRIBUTING.md)
+
+## License
+MaEVe is [Apache licensed](./LICENSE).
