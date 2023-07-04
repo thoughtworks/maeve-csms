@@ -39,7 +39,8 @@ If you wish to run the tests manually, you can run the following:
 
 _Replace path_to_docker.sock in the command with the one on your development environment_
 ```shell
-$ DOCKER_HOST=${path_to_docker.sock};TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
+$ export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
+$ export DOCKER_HOST=$(docker context inspect -f '{{ .Endpoints.docker.Host }}')
 $ go test ./...
 ```
 
