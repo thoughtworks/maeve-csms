@@ -3,6 +3,9 @@
 BEARER_TOKEN="$1"
 if [[ "$BEARER_TOKEN" == "" ]]; then
   echo "You must provide a bearer token"
+  echo "Usage: get-ca-cert.sh <BEARER_TOKEN>"
+  echo "       BEARER_TOKEN can be obtained from the Hubject test environment: "
+  echo "       https://hubject.stoplight.io/docs/open-plugncharge/6bb8b3bc79c2e-authorization-token"
   exit 1
 fi
 
