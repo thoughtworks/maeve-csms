@@ -3,10 +3,10 @@
 MaEVe is designed to be scalable and robust. The solution is currently split into two
 components.
 
-1. The [gateway](gateway) is a stateful service that accepts OCPP websocket connections from charge stations.
+1. The [gateway](gateway.md) is a stateful service that accepts OCPP websocket connections from charge stations.
    OCPP messages from charge stations are unpacked and published on an MQTT topic. OCPP messages from the
    CSMS are read from another MQTT topic and sent to the charge station over the established websocket.
-2. The [manager](manager) is a stateless service that reads from and writes to the relevant MQTT topics to
+2. The [manager](manager.md) is a stateless service that reads from and writes to the relevant MQTT topics to
    generate responses to OCPP calls that come from the charge station, make OCPP calls to the charge station and handle the
    associated responses.
 
@@ -20,7 +20,7 @@ expected to be a limiting factor.
 
 The use of Redis to store transaction details enables the manager component to be stateless.
 
-![Diagram showing how multiple charge stations can connect to multiple instances of the CSMS gateway via a load balancer and on to multiple instances of the CSMS manager via an MQTT broker](scaling.png)
+![Diagram showing how multiple charge stations can connect to multiple instances of the CSMS gateway via a load balancer and on to multiple instances of the CSMS manager via an MQTT broker](assets/scaling.png)
 
 ## Evolution
 

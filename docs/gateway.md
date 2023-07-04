@@ -10,7 +10,7 @@ go channels:
 3. `CSMSRx` - receives messages from the CSMS manager
 4. `CSMSTx` - transmits messages to the CSMS manager
 
-![Diagram showing the gateway reading from a websocket connected to the charge station sending it to the MQTT broker in topic via the Pipe whilst subscribing to the MQTT broker out topic and writing it to the charge station websocket via the pipe](gateway.png)
+![Diagram showing the gateway reading from a websocket connected to the charge station sending it to the MQTT broker in topic via the Pipe whilst subscribing to the MQTT broker out topic and writing it to the charge station websocket via the pipe](assets/gateway.png)
 
 The Pipe implements a small state machine. The state machine has 3 states:
 1. `Waiting` - no OCPP call is in progress, a call will be accepted from the charge station or the CSMS manager.

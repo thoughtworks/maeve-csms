@@ -15,7 +15,7 @@ Messages are routed to an appropriate OCPP handler by the [Router](../manager/mq
 OCPP message type and OCPP action (from the message) to determine which handler to invoke. The router is responsible
 for creating the handler instances and providing them with their dependencies.
 
-![Diagram showing MQTT handler subscribing to incoming messages from the MQTT broker and processing them via either an OCPP 1.6 or OCPP 2.0.1 router which distributes them to a handler. A handler may initiate a call with a Call Maker which publishes a message to the MQTT broker](manager.png)
+![Diagram showing MQTT handler subscribing to incoming messages from the MQTT broker and processing them via either an OCPP 1.6 or OCPP 2.0.1 router which distributes them to a handler. A handler may initiate a call with a Call Maker which publishes a message to the MQTT broker](assets/manager.png)
 
 All integration points are decoupled from the OCPP handlers and provided to the handler as dependencies. At present 
 the following integration points are used:
