@@ -16,3 +16,9 @@ repos:
         language: script
         files: '.talismanrc'
         entry: .hook/check-talisman-files.sh
+  - repo: https://github.com/compilerla/conventional-pre-commit
+    rev: 'v2.3.0'
+    hooks:
+      - id: conventional-pre-commit
+        stages: [commit-msg]
+        args: ['feat', 'fix', 'ci', 'chore', 'test', 'docs', 'refactor']
