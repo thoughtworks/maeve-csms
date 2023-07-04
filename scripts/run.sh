@@ -27,4 +27,4 @@ else
   fi
 fi
 
-HUBJECT_TOKEN="Bearer "$BEARER_TOKEN docker-compose up
+HUBJECT_TOKEN="Bearer "$BEARER_TOKEN $DOCKER_COMPOSE_CMD up
