@@ -2,13 +2,6 @@ package ocpp16
 
 type DataTransferResponseJsonStatus string
 
-var enumValues_DataTransferResponseJsonStatus = []interface{}{
-	"Accepted",
-	"Rejected",
-	"UnknownMessageId",
-	"UnknownVendorId",
-}
-
 type DataTransferResponseJson struct {
 	// Data corresponds to the JSON schema field "data".
 	Data *string `json:"data,omitempty" yaml:"data,omitempty" mapstructure:"data,omitempty"`

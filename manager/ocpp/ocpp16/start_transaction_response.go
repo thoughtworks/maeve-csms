@@ -2,14 +2,6 @@ package ocpp16
 
 type StartTransactionResponseJsonIdTagInfoStatus string
 
-var enumValues_StartTransactionResponseJsonIdTagInfoStatus = []interface{}{
-	"Accepted",
-	"Blocked",
-	"Expired",
-	"Invalid",
-	"ConcurrentTx",
-}
-
 type StartTransactionResponseJsonIdTagInfo struct {
 	// ExpiryDate corresponds to the JSON schema field "expiryDate".
 	ExpiryDate *string `json:"expiryDate,omitempty" yaml:"expiryDate,omitempty" mapstructure:"expiryDate,omitempty"`

@@ -54,35 +54,4 @@ const StatusNotificationJsonStatusPreparing StatusNotificationJsonStatus = "Prep
 const StatusNotificationJsonStatusReserved StatusNotificationJsonStatus = "Reserved"
 const StatusNotificationJsonStatusSuspendedEV StatusNotificationJsonStatus = "SuspendedEV"
 const StatusNotificationJsonStatusSuspendedEVSE StatusNotificationJsonStatus = "SuspendedEVSE"
-
 const StatusNotificationJsonStatusUnavailable StatusNotificationJsonStatus = "Unavailable"
-
-var enumValues_StatusNotificationJsonErrorCode = []interface{}{
-	"ConnectorLockFailure",
-	"EVCommunicationError",
-	"GroundFailure",
-	"HighTemperature",
-	"InternalError",
-	"LocalListConflict",
-	"NoError",
-	"OtherError",
-	"OverCurrentFailure",
-	"PowerMeterFailure",
-	"PowerSwitchFailure",
-	"ReaderFailure",
-	"ResetFailure",
-	"UnderVoltage",
-	"OverVoltage",
-	"WeakSignal",
-}
-var enumValues_StatusNotificationJsonStatus = []interface{}{
-	"Available",
-	"Preparing",
-	"Charging",
-	"SuspendedEVSE",
-	"SuspendedEV",
-	"Finishing",
-	"Reserved",
-	"Unavailable",
-	"Faulted",
-}

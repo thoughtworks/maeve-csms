@@ -291,7 +291,7 @@ func checkCertificate(r *http.Request, orgNames []string, cs *registry.ChargeSta
 			break
 		}
 	}
-	if foundOrg == false {
+	if !foundOrg {
 		return false
 	}
 

@@ -148,7 +148,7 @@ func TestHubjectCertificateSignerService(t *testing.T) {
 	assert.Equal(t, "CN=int,O=Thoughtworks", intCert.Subject.String())
 
 	require.NotNil(t, pemBytes)
-	block, pemBytes = pem.Decode(pemBytes)
+	block, _ = pem.Decode(pemBytes)
 	require.Nil(t, block)
 }
 

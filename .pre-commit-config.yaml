@@ -22,3 +22,12 @@ repos:
       - id: conventional-pre-commit
         stages: [commit-msg]
         args: ['feat', 'fix', 'ci', 'chore', 'test', 'docs', 'refactor']
+  - repo: https://github.com/tekwizely/pre-commit-golang
+    rev: 'v1.0.0-rc.1'
+    hooks:
+      - id: go-mod-tidy
+      - id: go-vet-mod
+      - id: go-fmt
+      - id: go-staticcheck-mod
+      - id: go-build-mod
+      - id: go-test-mod

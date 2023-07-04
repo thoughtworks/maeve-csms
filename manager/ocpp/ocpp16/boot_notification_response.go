@@ -2,12 +2,6 @@ package ocpp16
 
 type BootNotificationResponseJsonStatus string
 
-var enumValues_BootNotificationResponseJsonStatus = []interface{}{
-	"Accepted",
-	"Pending",
-	"Rejected",
-}
-
 type BootNotificationResponseJson struct {
 	// CurrentTime corresponds to the JSON schema field "currentTime".
 	CurrentTime string `json:"currentTime" yaml:"currentTime" mapstructure:"currentTime"`

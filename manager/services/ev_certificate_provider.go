@@ -62,9 +62,9 @@ func (h HubjectEvCertificateProvider) ProvideCertificate(exiRequest string) (EvC
 	}
 
 	resp, err := withRetries(func() (*http.Response, error) {
-		req, err := h.hubjectRequest(err, requestUrl, marshalledBody)
+		req, err := h.hubjectRequest(requestUrl, marshalledBody)
 		if err != nil {
-			return &http.Response{}, fmt.Errorf("failed creating request: %w", err)
+			return &http.Response{}, fmt.Errorf("requesting certificate: %w", err)
 		}
 		return client.Do(req)
 	}, 5)
@@ -118,7 +118,7 @@ func (h HubjectEvCertificateProvider) ProvideCertificate(exiRequest string) (EvC
 	return response, nil
 }
 
-func (h HubjectEvCertificateProvider) hubjectRequest(err error, requestUrl string, marshalledBody []byte) (*http.Request, error) {
+func (h HubjectEvCertificateProvider) hubjectRequest(requestUrl string, marshalledBody []byte) (*http.Request, error) {
 	req, err := http.NewRequest("POST", requestUrl, bytes.NewReader(marshalledBody))
 	if err != nil {
 		return nil, err
@@ -140,11 +140,10 @@ func withRetries(action retryFunc, attempts int) (*http.Response, error) {
 			return resp, nil
 		} else {
 			if err == nil {
-				err = errors.New(fmt.Sprintf("HTTP request returned %v", resp.StatusCode))
+				err = HttpError(resp.StatusCode)
 			}
 		}
 		if attempt == attempts {
-			fmt.Println("operation failed after multiple attempts")
 			lastErr = err
 			break
 		}

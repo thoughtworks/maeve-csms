@@ -130,6 +130,9 @@ func requestChain(client *http.Client, url, bearerToken string) ([]byte, error) 
 func encodeLeafAndChain(leaf, chain []byte) (string, error) {
 	decodedLeaf := make([]byte, base64.StdEncoding.DecodedLen(len(leaf)))
 	n, err := base64.StdEncoding.Decode(decodedLeaf, leaf)
+	if err != nil {
+		return "", err
+	}
 
 	p7Leaf, err := pkcs7.Parse(decodedLeaf[:n])
 	if err != nil {
@@ -138,6 +141,9 @@ func encodeLeafAndChain(leaf, chain []byte) (string, error) {
 
 	decodedChain := make([]byte, base64.StdEncoding.DecodedLen(len(chain)))
 	n, err = base64.StdEncoding.Decode(decodedChain, chain)
+	if err != nil {
+		return "", err
+	}
 
 	p7Chain, err := pkcs7.Parse(decodedChain[:n])
 	if err != nil {
@@ -171,7 +177,7 @@ func encodeLeafAndChain(leaf, chain []byte) (string, error) {
 				break
 			}
 		}
-		if match == false {
+		if !match {
 			break
 		}
 	}

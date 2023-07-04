@@ -189,10 +189,7 @@ func TestChargeStationCallMessageIdReused(t *testing.T) {
 	p.ChargeStationRx <- callMessage
 	p.ChargeStationRx <- callMessage
 
-	select {
-	case <-ctx.Done():
-		// do nothing
-	}
+	<-ctx.Done()
 }
 
 func TestLateChargeStationResponseToCSMSCall(t *testing.T) {
@@ -402,10 +399,7 @@ func TestChargeStationReplyToUnknownCSMSCall(t *testing.T) {
 
 	p.ChargeStationRx <- callResponseMessage
 
-	select {
-	case <-ctx.Done():
-		// do nothing
-	}
+	<-ctx.Done()
 }
 
 func TestCSMSCallWhilstHandlingCSCalls(t *testing.T) {
@@ -749,10 +743,7 @@ func TestVeryLateCSMSResponseToCSCall(t *testing.T) {
 
 	p.ChargeStationRx <- callMessage
 
-	select {
-	case <-ctx.Done():
-		// do nothing
-	}
+	<-ctx.Done()
 }
 
 func TestCSMSCallResponseToWrongCSCall(t *testing.T) {

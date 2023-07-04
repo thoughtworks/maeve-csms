@@ -57,6 +57,7 @@ func TestStartTransaction(t *testing.T) {
 	require.NoError(t, err)
 	transactionId := handlers.ConvertToUUID(got.TransactionId)
 	found, err := transactionStore.FindTransaction("cs001", transactionId)
+	require.NoError(t, err)
 
 	expectedContext := "Transaction.Begin"
 	expectedMeasurand := "MeterValue"

@@ -3,6 +3,7 @@ package ocpp201_test
 import (
 	"context"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	handlers "github.com/twlabs/ocpp2-broker-core/manager/handlers/ocpp201"
 	types "github.com/twlabs/ocpp2-broker-core/manager/ocpp/ocpp201"
 	"github.com/twlabs/ocpp2-broker-core/manager/services"
@@ -52,6 +53,7 @@ func TestTransactionEventHandlerWithStartedEvent(t *testing.T) {
 	assert.Equal(t, want, got)
 
 	transaction, err := transactionStore.FindTransaction("cs001", "5555")
+	require.NoError(t, err)
 	assert.NotNil(t, transaction)
 }
 
@@ -94,6 +96,7 @@ func TestTransactionEventHandlerWithUpdatedEvent(t *testing.T) {
 	assert.Equal(t, want, got)
 
 	transaction, err := transactionStore.FindTransaction("cs001", "5555")
+	require.NoError(t, err)
 	assert.NotNil(t, transaction)
 }
 
@@ -139,5 +142,6 @@ func TestTransactionEventHandlerWithEndedEvent(t *testing.T) {
 	assert.Equal(t, want, got)
 
 	transaction, err := transactionStore.FindTransaction("cs001", "5555")
+	require.NoError(t, err)
 	assert.NotNil(t, transaction)
 }
