@@ -36,7 +36,10 @@ Each Go project contains a set of tests that are run upon each push reaches the 
 These tests also run as part of git hooks before committing to the local repository.
 
 If you wish to run the tests manually, you can run the following:
+
+_Replace path_to_docker.sock in the command with the one on your development environment_
 ```shell
+$ DOCKER_HOST=${path_to_docker.sock};TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
 $ go test ./...
 ```
 
