@@ -19,6 +19,10 @@ The system currently integrates with [Hubject](https://hubject.stoplight.io/) fo
 ## Documentation
 MaEVe is implemented in Go 1.20. Learn more about MaEVe and its existing components through this [High-level design document](./docs/design.md).
 
+## Pre-requisites
+
+MaEVe runs in a set of Docker containers. This means you need to have `docker`, `docker-compose` and `colima` (or equivalent) installed and running. 
+
 ## Getting started
 
 To get the system up and running:
