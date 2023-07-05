@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"context"
-	"github.com/twlabs/ocpp2-broker-core/manager/ocpp"
+	"github.com/twlabs/maeve-csms/manager/ocpp"
 )
 
 type CallHandler interface {

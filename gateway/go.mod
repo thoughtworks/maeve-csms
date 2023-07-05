@@ -1,4 +1,4 @@
-module github.com/twlabs/ocpp2-broker-core/gateway
+module github.com/twlabs/maeve-csms/gateway
 
 go 1.20
 

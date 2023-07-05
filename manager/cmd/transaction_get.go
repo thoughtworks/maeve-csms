@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/twlabs/ocpp2-broker-core/manager/services"
+	"github.com/twlabs/maeve-csms/manager/services"
 )
 
 var long = `Get transactions from the transaction store.

@@ -1,7 +1,7 @@
 package server_test
 
 import (
-	"github.com/twlabs/ocpp2-broker-core/gateway/server"
+	"github.com/twlabs/maeve-csms/gateway/server"
 	"net/http"
 	"net/http/httptest"
 	"testing"

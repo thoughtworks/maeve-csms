@@ -3,7 +3,7 @@ package ocpp_test
 import (
 	"encoding/json"
 	"github.com/google/go-cmp/cmp"
-	"github.com/twlabs/ocpp2-broker-core/gateway/ocpp"
+	"github.com/twlabs/maeve-csms/gateway/ocpp"
 	"testing"
 )
 

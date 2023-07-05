@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/eclipse/paho.golang/autopaho"
 	"github.com/eclipse/paho.golang/paho"
-	"github.com/twlabs/ocpp2-broker-core/manager/mqtt"
+	"github.com/twlabs/maeve-csms/manager/mqtt"
 	"net/url"
 	"testing"
 	"time"

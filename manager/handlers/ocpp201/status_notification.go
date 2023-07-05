@@ -2,8 +2,8 @@ package ocpp201
 
 import (
 	"context"
-	"github.com/twlabs/ocpp2-broker-core/manager/ocpp"
-	types "github.com/twlabs/ocpp2-broker-core/manager/ocpp/ocpp201"
+	"github.com/twlabs/maeve-csms/manager/ocpp"
+	types "github.com/twlabs/maeve-csms/manager/ocpp/ocpp201"
 	"log"
 )
 

@@ -3,7 +3,7 @@ package server_test
 import (
 	"context"
 	"fmt"
-	"github.com/twlabs/ocpp2-broker-core/manager/server"
+	"github.com/twlabs/maeve-csms/manager/server"
 	"net/http"
 	"testing"
 	"time"

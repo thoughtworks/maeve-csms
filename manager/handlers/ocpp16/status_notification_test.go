@@ -3,8 +3,8 @@ package ocpp16_test
 import (
 	"context"
 	"github.com/stretchr/testify/assert"
-	handlers "github.com/twlabs/ocpp2-broker-core/manager/handlers/ocpp16"
-	types "github.com/twlabs/ocpp2-broker-core/manager/ocpp/ocpp16"
+	handlers "github.com/twlabs/maeve-csms/manager/handlers/ocpp16"
+	types "github.com/twlabs/maeve-csms/manager/ocpp/ocpp16"
 	"testing"
 )
 

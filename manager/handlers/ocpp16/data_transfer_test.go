@@ -5,12 +5,12 @@ import (
 	"errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/twlabs/ocpp2-broker-core/manager/handlers"
-	handlers16 "github.com/twlabs/ocpp2-broker-core/manager/handlers/ocpp16"
-	"github.com/twlabs/ocpp2-broker-core/manager/ocpp"
-	"github.com/twlabs/ocpp2-broker-core/manager/ocpp/ocpp16"
-	types "github.com/twlabs/ocpp2-broker-core/manager/ocpp/ocpp201"
-	"github.com/twlabs/ocpp2-broker-core/manager/schemas"
+	"github.com/twlabs/maeve-csms/manager/handlers"
+	handlers16 "github.com/twlabs/maeve-csms/manager/handlers/ocpp16"
+	"github.com/twlabs/maeve-csms/manager/ocpp"
+	"github.com/twlabs/maeve-csms/manager/ocpp/ocpp16"
+	types "github.com/twlabs/maeve-csms/manager/ocpp/ocpp201"
+	"github.com/twlabs/maeve-csms/manager/schemas"
 	"testing"
 )
 

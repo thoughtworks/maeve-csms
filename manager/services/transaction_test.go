@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/twlabs/ocpp2-broker-core/manager/services"
+	"github.com/twlabs/maeve-csms/manager/services"
 )
 
 const idToken = "SOMERFID"

@@ -1,4 +1,4 @@
-module github.com/twlabs/ocpp2-broker-core/manager
+module github.com/twlabs/maeve-csms/manager
 
 go 1.20
 

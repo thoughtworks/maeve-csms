@@ -2,7 +2,7 @@ package pipe
 
 import (
 	"encoding/json"
-	"github.com/twlabs/ocpp2-broker-core/gateway/ocpp"
+	"github.com/twlabs/maeve-csms/gateway/ocpp"
 )
 
 type GatewayMessage struct {
