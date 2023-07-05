@@ -1,6 +1,6 @@
 networks:
   default:
-    name: ocpp2-broker-core
+    name: maeve-csms
     enable_ipv6: true
     ipam:
       config:
@@ -41,8 +41,6 @@ services:
   gateway:
     build:
       context: gateway
-      ssh:
-        - default
     depends_on:
       mqtt:
         condition: service_healthy
@@ -98,8 +96,6 @@ services:
   manager:
     build:
       context: manager
-      ssh:
-        - default
     depends_on:
       mqtt:
         condition: service_healthy

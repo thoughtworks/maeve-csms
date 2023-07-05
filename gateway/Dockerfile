@@ -16,14 +16,9 @@ RUN if [ "$TARGETARCH" = "arm64" ]; then \
 
 WORKDIR /src
 
-RUN git config --global --add url."ssh://git@github.com/twlabs/".insteadOf "https://github.com/twlabs/"
-
-RUN mkdir -p -m 0600 ~/.ssh && ssh-keyscan github.com >> ~/.ssh/known_hosts
-
 COPY ./go.mod ./go.sum ./
 
-ENV GOPRIVATE=github.com/twlabs
-RUN --mount=type=ssh go mod download
+RUN go mod download
 
 COPY ./ ./
 
