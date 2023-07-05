@@ -1,6 +1,10 @@
 # How to contribute to MaEVe
 Thank you for taking the time to read this guide. We are happy you wish to contribute to this project :partying_face: !
 
+## Code of Conduct
+This project adheres to the Contributor Covenant code of conduct. By participating, you are expected to uphold this code. 
+Our code of conduct is available at [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](./CODE_OF_CONDUCT.md)
+
 ## Requirements
 Please take some time to familiarise with the components in MaEVe. These are in the [README's documentation section](./README.md/#documentation).
 
