@@ -21,7 +21,7 @@ MaEVe is implemented in Go 1.20. Learn more about MaEVe and its existing compone
 
 ## Pre-requisites
 
-MaEVe runs in a set of Docker containers. This means you need to have `docker`, `docker-compose` and `colima` (or equivalent) installed and running. 
+MaEVe runs in a set of Docker containers. This means you need to have `docker`, `docker-compose` and a docker daemon (e.g. docker desktop, `colima` or `rancher`) installed and running. 
 
 ## Getting started
 
