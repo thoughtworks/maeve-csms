@@ -14,6 +14,8 @@ if [[ "$BEARER_TOKEN" == "" ]]; then
 fi
 BEARER_TOKEN=${BEARER_TOKEN#"Bearer "}
 
+shift
+
 # Check if 'docker compose' is available (with space)
 if command_exists "docker compose"; then
   DOCKER_COMPOSE_CMD="docker compose"
@@ -27,4 +29,4 @@ else
   fi
 fi
 
-HUBJECT_TOKEN="Bearer "$BEARER_TOKEN $DOCKER_COMPOSE_CMD up
+HUBJECT_TOKEN="Bearer "$BEARER_TOKEN $DOCKER_COMPOSE_CMD up "$@"
