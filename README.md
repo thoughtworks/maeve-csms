@@ -26,7 +26,7 @@ To get the system up and running:
 1. Run the [./scripts/generate-tls-cert.sh](./scripts/generate-tls-cert.sh) script which will create a server
 certificate for the CSMS
 2. Run the [./scripts/get-ca-cert.sh](./scripts/get-ca-cert.sh) script with a token retrieved from 
-the [Hubject test environment](https://hubject.stoplight.io/docs/open-plugncharge/6bb8b3bc79c2e-authorization-token)
+the [Hubject test environment](https://hubject.stoplight.io/docs/open-plugncharge/6bb8b3bc79c2e-authorization-token) (minus the "`Bearer `" part) 
 to retrieve the V2G root certificate and CPO Sub CA certificates
 3. Run the [./scripts/run.sh](./scripts/run.sh) script with the same token to run all the required components
 
