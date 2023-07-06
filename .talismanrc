@@ -2,7 +2,7 @@ fileignoreconfig:
   - filename: .gitignore
     checksum: 66a920c9d4e428e6066e074d3375dc1149500f7e275041e939c92eddd751755c
   - filename: CONTRIBUTING.md
-    checksum: 277ee727dc031c15b11542473fed9cbeafaa6c376fbed9258bbb2d4fe67abf3a
+    checksum: 75534cf22b02aef4e54959044a33d16bd2532383fe4bafdcf8585aed58f10eaf
   - filename: config/envoy/envoy.yaml
     checksum: eecf2e1431c914fd681f6be482e399fa9b8f61f11eb33cc354bd5781af28df5d
   - filename: docker-compose.yml
