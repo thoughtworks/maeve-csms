@@ -302,12 +302,10 @@ func TestAuthorizeWithEmaidAndNoCertificateData(t *testing.T) {
 	got, err := ah.HandleCall(context.Background(), "cs001", req)
 	assert.NoError(t, err)
 
-	certStatus := types.AuthorizeCertificateStatusEnumTypeCertChainError
 	want := &types.AuthorizeResponseJson{
 		IdTokenInfo: types.IdTokenInfoType{
-			Status: types.AuthorizationStatusEnumTypeInvalid,
+			Status: types.AuthorizationStatusEnumTypeAccepted,
 		},
-		CertificateStatus: &certStatus,
 	}
 
 	assert.Equal(t, want, got)

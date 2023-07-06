@@ -42,12 +42,6 @@ func (a AuthorizeHandler) HandleCall(ctx context.Context, chargeStationId string
 			_, err := a.CertificateValidationService.ValidateHashedCertificateChain(*req.Iso15118CertificateHashData)
 			status, certificateStatus = handleCertificateValidationError(err)
 		}
-
-		if req.IdToken.Type == types.IdTokenEnumTypeEMAID && certificateStatus == nil {
-			status = types.AuthorizationStatusEnumTypeInvalid
-			certStatus := types.AuthorizeCertificateStatusEnumTypeCertChainError
-			certificateStatus = &certStatus
-		}
 	}
 
 	if status == types.AuthorizationStatusEnumTypeAccepted {
