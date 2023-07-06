@@ -58,13 +58,13 @@ fileignoreconfig:
   - filename: manager/schemas/ocpp201/TransactionEventResponse.json
     checksum: 30e812e60ae4c19b31bc91b1214057cb2dca6e346967250d912cd108a44322d2
   - filename: manager/services/certificate_signer_test.go
-    checksum: 001da8587b186aee5c51cad9690eec227c29bc625939340af2aa701f8d30d43f
+    checksum: 487797450a17f27cf8190d00a85d13096ec4e9e9ee1ab1c7c685f3c8a387280d
   - filename: manager/services/certificate_validation.go
-    checksum: 4c42fca074b2a5a68d7c6573c1fe3c8247412f4e2b36f179def8d0d38e25e98e
+    checksum: d9e2d7302820b0811e9bf2364ab232a89dfac050fb650d93df8c1fb05cb5e6d1
   - filename: manager/services/certificate_validation_hubject_test.go
     checksum: 100d8f7a7fe642abae94812a2e9f6938f5045bbd22c358b2e0adc684a45698ce
   - filename: manager/services/certificate_validation_test.go
-    checksum: 5116639fad8dea80fe5db46ca18f923e43135e8e5e5eafbb9d9ff9f28c8172fb
+    checksum: 893e918e122b2dd321bad4a02ee0523f25df1a3b501538e5541f9bbbbc4bd794
   - filename: manager/services/transaction.go
     checksum: 5c382cf7937a6d7ab2626620b44a73131c23fd6702b4ed00cfd744d41cfb63c0
   - filename: scripts/generate-tls-cert.sh

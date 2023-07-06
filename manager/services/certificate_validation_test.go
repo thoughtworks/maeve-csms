@@ -109,8 +109,8 @@ func (o *OCSPResponder) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func setupOCSPResponder(t *testing.T, serverUrl string, ocspResponder *OCSPResponder) ([]*x509.Certificate, *x509.Certificate, *x509.Certificate) {
-	ca1Cert, ca1Key := createRootCACertificate(t, "ca1", serverUrl)
-	ca2Cert, ca2Key := createRootCACertificate(t, "ca2", serverUrl)
+	ca1Cert, ca1Key := createRootCACertificate(t, "ca1")
+	ca2Cert, ca2Key := createRootCACertificate(t, "ca2")
 	intCACert, intCAKey := createIntermediateCACertificate(t, "int1", serverUrl, ca2Cert, ca2Key)
 	leafCert, _ := createLeafCertificate(t, "MYEMAID", serverUrl, intCACert, intCAKey)
 
@@ -242,6 +242,107 @@ func TestValidatingPEMCertificateChainInvalidChain(t *testing.T) {
 	assert.Nil(t, ocspResp)
 }
 
+func TestValidatingPEMCertificateChainIncludingRootCertificate(t *testing.T) {
+	ocspResponder := &OCSPResponder{
+		T: t,
+	}
+
+	server := httptest.NewServer(ocspResponder)
+	defer server.Close()
+
+	rootCACerts, intCACert, leafCert := setupOCSPResponder(t, server.URL, ocspResponder)
+
+	validationService := services.OnlineCertificateValidationService{
+		RootCertificates: rootCACerts,
+		MaxOCSPAttempts:  3,
+	}
+
+	pemChain := pem.EncodeToMemory(&pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: leafCert.Raw,
+	})
+	pemChain = append(pemChain, pem.EncodeToMemory(&pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: intCACert.Raw,
+	})...)
+	pemChain = append(pemChain, pem.EncodeToMemory(&pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: rootCACerts[1].Raw,
+	})...)
+
+	ocspResp, err := validationService.ValidatePEMCertificateChain(pemChain, "MYEMAID")
+	require.NoError(t, err)
+
+	validateOCSPResponse(t, ocspResp)
+}
+
+func TestValidatingPEMCertificateChainIncludingUntrustedRootCertificate(t *testing.T) {
+	ocspResponder := &OCSPResponder{
+		T: t,
+	}
+
+	server := httptest.NewServer(ocspResponder)
+	defer server.Close()
+
+	rootCACerts, intCACert, leafCert := setupOCSPResponder(t, server.URL, ocspResponder)
+
+	validationService := services.OnlineCertificateValidationService{
+		RootCertificates: []*x509.Certificate{rootCACerts[0]},
+		MaxOCSPAttempts:  3,
+	}
+
+	pemChain := pem.EncodeToMemory(&pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: leafCert.Raw,
+	})
+	pemChain = append(pemChain, pem.EncodeToMemory(&pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: intCACert.Raw,
+	})...)
+	pemChain = append(pemChain, pem.EncodeToMemory(&pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: rootCACerts[1].Raw,
+	})...)
+
+	ocspResp, err := validationService.ValidatePEMCertificateChain(pemChain, "MYEMAID")
+	var valErr services.ValidationError
+	assert.Nil(t, ocspResp)
+	require.ErrorAs(t, err, &valErr)
+	assert.Equal(t, services.ValidationErrorCertChain, valErr)
+}
+
+func TestValidatingPEMCertificateChainWithNoOCSPOnLeafCertificate(t *testing.T) {
+	ocspResponder := &OCSPResponder{
+		T: t,
+	}
+
+	server := httptest.NewServer(ocspResponder)
+	defer server.Close()
+
+	rootCACerts, intCACert, leafCert := setupOCSPResponder(t, "", ocspResponder)
+
+	validationService := services.OnlineCertificateValidationService{
+		RootCertificates: rootCACerts,
+		MaxOCSPAttempts:  3,
+	}
+
+	pemChain := pem.EncodeToMemory(&pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: leafCert.Raw,
+	})
+	pemChain = append(pemChain, pem.EncodeToMemory(&pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: intCACert.Raw,
+	})...)
+
+	ocspResp, err := validationService.ValidatePEMCertificateChain(pemChain, "MYEMAID")
+	var valErr services.ValidationError
+	assert.Nil(t, ocspResp)
+	t.Log(err)
+	require.ErrorAs(t, err, &valErr)
+	assert.Equal(t, services.ValidationErrorCertChain, valErr)
+}
+
 func TestValidatingHashedCertificateChain(t *testing.T) {
 	ocspResponder := &OCSPResponder{
 		T: t,
@@ -341,7 +442,7 @@ func hashBytes(b []byte) string {
 	return hex.EncodeToString(shaBytes[:])
 }
 
-func createRootCACertificate(t *testing.T, commonName, ocspResponderUrl string) (*x509.Certificate, *ecdsa.PrivateKey) {
+func createRootCACertificate(t *testing.T, commonName string) (*x509.Certificate, *ecdsa.PrivateKey) {
 	caKeyPair, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
 		t.Fatalf("generating root CA key pair: %v", err)
@@ -363,7 +464,6 @@ func createRootCACertificate(t *testing.T, commonName, ocspResponderUrl string) 
 		IsCA:                  true,
 		NotBefore:             time.Now(),
 		NotAfter:              time.Now().Add(time.Minute),
-		OCSPServer:            []string{ocspResponderUrl},
 	}
 
 	caCertBytes, err :=
@@ -401,7 +501,9 @@ func createIntermediateCACertificate(t *testing.T, commonName, ocspResponderUrl 
 		IsCA:                  true,
 		NotBefore:             time.Now(),
 		NotAfter:              time.Now().Add(time.Minute),
-		OCSPServer:            []string{ocspResponderUrl},
+	}
+	if ocspResponderUrl != "" {
+		caCertTemplate.OCSPServer = []string{ocspResponderUrl}
 	}
 
 	caCertBytes, err :=
@@ -439,7 +541,9 @@ func createLeafCertificate(t *testing.T, commonName, ocspResponderUrl string, ca
 		IsCA:                  false,
 		NotBefore:             time.Now(),
 		NotAfter:              time.Now().Add(time.Minute),
-		OCSPServer:            []string{ocspResponderUrl},
+	}
+	if ocspResponderUrl != "" {
+		leafCertTemplate.OCSPServer = []string{ocspResponderUrl}
 	}
 
 	leafCertBytes, err :=

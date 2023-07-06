@@ -29,7 +29,7 @@ type hubjectHttpHandler struct {
 }
 
 func newHubjectHttpHandler(t *testing.T) hubjectHttpHandler {
-	caCert, caKey := createRootCACertificate(t, "test", "")
+	caCert, caKey := createRootCACertificate(t, "test")
 	intCert, intKey := createIntermediateCACertificate(t, "int", "", caCert, caKey)
 
 	return hubjectHttpHandler{

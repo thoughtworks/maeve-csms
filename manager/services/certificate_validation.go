@@ -151,32 +151,46 @@ func validateEMAID(certificate *x509.Certificate, eMAID string) error {
 	return nil
 }
 
-func validatePEMCertificateChainOCSPStatus(certificateChain, rootCertificates []*x509.Certificate, maxRetries int) (*string, error) {
+func validatePEMCertificateChainOCSPStatus(certificateChain, rootCertificates []*x509.Certificate, maxRetries int) (ocspResponse *string, err error) {
 	if len(certificateChain) < 1 {
 		return nil, fmt.Errorf("no certificates in chain: %w", ValidationErrorCertChain)
 	}
-	for i := 0; i < len(certificateChain)-1; i++ {
-		ocspRequest, err := createOCSPRequestFromCertificate(certificateChain[i], certificateChain[i+1])
-		if err != nil {
-			return nil, err
-		}
-		ocspResponse, err := performOCSPCheck(certificateChain[i].OCSPServer, ocspRequest, certificateChain[i+1], maxRetries)
-		if err != nil {
-			return ocspResponse, err
-		}
-	}
-	subjectCert := certificateChain[len(certificateChain)-1]
-	for _, rootCert := range rootCertificates {
-		if bytes.Equal(subjectCert.AuthorityKeyId, rootCert.SubjectKeyId) {
-			ocspRequest, err := createOCSPRequestFromCertificate(subjectCert, rootCert)
+
+	// validate each certificate with issuer
+	for i := 1; i < len(certificateChain); i++ {
+		if len(certificateChain[i-1].OCSPServer) > 0 {
+			var ocspRequest []byte
+			ocspRequest, err = createOCSPRequestFromCertificate(certificateChain[i-1], certificateChain[i])
 			if err != nil {
-				return nil, err
+				return
 			}
-			return performOCSPCheck(subjectCert.OCSPServer, ocspRequest, rootCert, maxRetries)
+			ocspResponse, err = performOCSPCheck(certificateChain[i-1].OCSPServer, ocspRequest, certificateChain[i], maxRetries)
+			if err != nil {
+				return
+			}
 		}
 	}
 
-	return nil, fmt.Errorf("missing root cert for chain: %w", ValidationErrorCertChain)
+	// validate last certificate in chain with configured root CA
+	subjectCert := certificateChain[len(certificateChain)-1]
+	if len(subjectCert.OCSPServer) > 0 {
+		for _, rootCert := range rootCertificates {
+			if bytes.Equal(subjectCert.AuthorityKeyId, rootCert.SubjectKeyId) {
+				var ocspRequest []byte
+				ocspRequest, err = createOCSPRequestFromCertificate(subjectCert, rootCert)
+				if err != nil {
+					return
+				}
+				return performOCSPCheck(subjectCert.OCSPServer, ocspRequest, rootCert, maxRetries)
+			}
+		}
+	}
+
+	if ocspResponse != nil {
+		return
+	}
+
+	return nil, fmt.Errorf("no OCSP response available: %w", ValidationErrorCertChain)
 }
 
 func performOCSPCheck(ocspResponderUrls []string, ocspRequest []byte, issuerCert *x509.Certificate, maxAttempts int) (*string, error) {
