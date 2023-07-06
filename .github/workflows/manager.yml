@@ -41,14 +41,14 @@ jobs:
       run: |
         docker build . \
           --file Dockerfile \
-          --tag ${{env.SERVICE}}:${${{ github.sha }}} \
+          --tag ${{env.SERVICE}}:${{ github.sha }} \
           --build-arg TARGETARCH=amd64
       env:
         DOCKER_BUILDKIT: 1
     - name: Run Trivy container vulnerability scan
       uses: aquasecurity/trivy-action@master
       with:
-        image-ref: '${{env.SERVICE}}:${${{ github.sha }}}'
+        image-ref: '${{env.SERVICE}}:${{ github.sha }}'
         format: 'table'
         exit-code: '1'
         ignore-unfixed: true
