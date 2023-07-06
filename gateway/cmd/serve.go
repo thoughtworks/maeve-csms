@@ -99,7 +99,7 @@ var serveCmd = &cobra.Command{
 				Certificates: []tls.Certificate{tlsCert},
 				ClientCAs:    trustedCerts,
 				ClientAuth:   tls.VerifyClientCertIfGiven,
-				MinVersion:   tls.VersionTLS13,
+				MinVersion:   tls.VersionTLS12,
 			}
 
 			wssServer = server.New("wss", wssAddr, tlsConfig, websocketHandler)
