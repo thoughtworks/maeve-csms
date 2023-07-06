@@ -88,6 +88,9 @@ For support, please contact us at [maeve-team@thoughtworks.com](mailto:maeve-tea
 
 Please follow these steps to submit your changes:
 
+*Note: While we generally follow a pull request model for contributions, contributors from the core team who are more
+familiar with the project and the component external interfaces are welcome to follow trunk-based development.*
+
 1. Fork the repository by clicking the "Fork" button on the [repository's page](https://github.com/twlabs/maeve-csms).
 
 2. Work on your own repository fork following our guidelines listed on this page until you are satisfied with your
