@@ -30,9 +30,9 @@ jobs:
         # Used to specify the path to a dependency file - go.sum
         cache-dependency-path: ${{env.SERVICE}}/go.sum
     - name: Run Gosec Security Scanner
-      uses: securego/gosec@master
-      with:
-        args: ./${{env.SERVICE}}/...
+      run: |
+        go install github.com/securego/gosec/v2/cmd/gosec@latest
+        gosec ./...
     - name: Test & Coverage
       run: | 
         go test ./... -coverprofile=coverage.out
