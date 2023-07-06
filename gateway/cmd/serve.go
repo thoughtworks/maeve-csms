@@ -70,10 +70,12 @@ var serveCmd = &cobra.Command{
 				return fmt.Errorf("no tls server key specified for wss connection")
 			}
 
+			//#nosec G304 - only files specified by the person running the application will be loaded
 			cb, err := os.ReadFile(tlsServerCert)
 			if err != nil {
 				return fmt.Errorf("reading tls cert from %s: %v", tlsServerCert, err)
 			}
+			//#nosec G304 - only files specified by the person running the application will be loaded
 			kb, err := os.ReadFile(tlsServerKey)
 			if err != nil {
 				return fmt.Errorf("reading tls key from %s: %v", tlsServerKey, err)
@@ -84,6 +86,7 @@ var serveCmd = &cobra.Command{
 			}
 			trustedCerts := x509.NewCertPool()
 			for _, tc := range tlsTrustCert {
+				//#nosec G304 - only files specified by the person running the application will be loaded
 				tcb, err := os.ReadFile(tc)
 				if err != nil {
 					return fmt.Errorf("reading trusted certs from %s: %v", tc, err)
@@ -96,6 +99,7 @@ var serveCmd = &cobra.Command{
 				Certificates: []tls.Certificate{tlsCert},
 				ClientCAs:    trustedCerts,
 				ClientAuth:   tls.VerifyClientCertIfGiven,
+				MinVersion:   tls.VersionTLS13,
 			}
 
 			wssServer = server.New("wss", wssAddr, tlsConfig, websocketHandler)
