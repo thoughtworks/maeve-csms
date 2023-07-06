@@ -54,23 +54,31 @@ _Come back to this later, we are currently working on it._
 ## How to submit changes
 _Come back to this later, we are currently working on it._
 
-## Coding style guideline
-_Come back to this later, we are currently working on it._
+## Coding style guidelines
+Please make sure you have configured the following hooks on your development environment. They ensure that, in addition to 
+scanning the code for vulnerabilities and code smells, all contributors adopt the same code style.
 
-## Commit messages
-Commit messages should follow the [Conventional Commits specification](https://www.conventionalcommits.org/en/v1.0.0/)
+### Install the hooks
+You will first need to install [the pre-commit framework](https://pre-commit.com/#install) in order to configure the git hooks.
 
-### Adding pre-commit hooks
-We recommend [using the pre-commit framework](https://pre-commit.com/#install) 
+Then, from the root of the repo, you can run the following:
 
-#### Install the hooks
-To install the hooks simply run:
 ```shell
 $ go install honnef.co/go/tools/cmd/staticcheck@latest
 $ go install golang.org/x/tools/cmd/goimports@latest
 $ go install github.com/securego/gosec/v2/cmd/gosec@latest
 $ pre-commit install && pre-commit install --hook-type commit-msg
 ```
+
+## Commit messages
+Commit messages should follow the [Conventional Commits specification](https://www.conventionalcommits.org/en/v1.0.0/).
+
+Additionally, please ensure that the _body_ of your commit message explicitly and succinctly communicates to other contributors what your change is about.
+This will us keep commits small and centered around something specific we are working on.
+
+For example, you can check out [this commit](https://github.com/twlabs/maeve-csms/commit/2c64552a689f185728566c841bfa7609469015f5) as a reference to what a good commit looks like.
+
+_Please note that all verbs should be at the present tense e.g. Add / ~~Adding~~ / ~~Added~~ ._
 
 ## Contributors
 _Come back to this later, we are currently working on it._
