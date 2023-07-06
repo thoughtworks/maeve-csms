@@ -261,6 +261,7 @@ var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 func randSeq(n int) string {
 	b := make([]rune, n)
 	for i := range b {
+		//#nosec G404 - client suffix does not require secure random number generator
 		b[i] = letters[rand.Intn(len(letters))]
 	}
 	return string(b)

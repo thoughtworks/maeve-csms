@@ -31,6 +31,7 @@ func (t StartTransactionHandler) HandleCall(ctx context.Context, chargeStationId
 	}
 	if tok != nil {
 		status = types.StartTransactionResponseJsonIdTagInfoStatusAccepted
+		//#nosec G404 - transaction id does not require secure random number generator
 		transactionId = int(rand.Int31())
 	}
 

@@ -235,6 +235,7 @@ func createOCSPRequestFromHashData(issuerNameHashHex, issuerKeyHashHex, serialNu
 }
 
 func attemptOCSPCheck(ocspResponderUrl string, ocspRequest []byte, issuerCert *x509.Certificate) (*string, error) {
+	//#nosec G107 - need to use OCSP URL specified in the certificate
 	resp, err := http.Post(ocspResponderUrl, "application/ocsp-request", bytes.NewReader(ocspRequest))
 	if err != nil {
 		return nil, fmt.Errorf("post %s: %w", ocspResponderUrl, err)

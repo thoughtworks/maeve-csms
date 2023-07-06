@@ -66,6 +66,9 @@ We recommend [using the pre-commit framework](https://pre-commit.com/#install)
 #### Install the hooks
 To install the hooks simply run:
 ```shell
+$ go install honnef.co/go/tools/cmd/staticcheck@latest
+$ go install golang.org/x/tools/cmd/goimports@latest
+$ go install github.com/securego/gosec/v2/cmd/gosec@latest
 $ pre-commit install && pre-commit install --hook-type commit-msg
 ```
 

@@ -118,6 +118,7 @@ the gateway and send appropriate responses.`,
 }
 
 func readCertificatesFromPEMFile(pemFile string) ([]*x509.Certificate, error) {
+	//#nosec G304 - only files specified by the person running the application will be loaded
 	pemData, err := os.ReadFile(pemFile)
 	if err != nil {
 		return nil, err

@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"time"
 )
 
 type Server struct {
@@ -16,7 +17,12 @@ type Server struct {
 
 func New(name, addr string, tlsConfig *tls.Config, handler http.Handler) *Server {
 	s := &Server{name: name}
-	s.srv = &http.Server{Addr: addr, Handler: handler, TLSConfig: tlsConfig}
+	s.srv = &http.Server{
+		Addr:              addr,
+		Handler:           handler,
+		ReadHeaderTimeout: 2 * time.Second,
+		TLSConfig:         tlsConfig,
+	}
 	return s
 }
 
