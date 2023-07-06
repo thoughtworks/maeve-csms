@@ -31,3 +31,4 @@ repos:
       - id: go-staticcheck-mod
       - id: go-build-mod
       - id: go-test-mod
+      - id: go-sec-mod
