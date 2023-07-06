@@ -40,7 +40,7 @@ the gateway and send appropriate responses.`,
 			return fmt.Errorf("parsing mqtt broker url: %v", err)
 		}
 
-		statusServer := server.New("api", apiAddr, nil, server.NewApiHandler(transactionStore))
+		apiServer := server.New("api", apiAddr, nil, server.NewApiHandler(transactionStore))
 
 		var v2gCertificates []*x509.Certificate
 		for _, pemFile := range v2gCertPEMFiles {
@@ -109,7 +109,7 @@ the gateway and send appropriate responses.`,
 		)
 
 		errCh := make(chan error, 1)
-		statusServer.Start(errCh)
+		apiServer.Start(errCh)
 		mqttHandler.Connect(errCh)
 
 		err = <-errCh
