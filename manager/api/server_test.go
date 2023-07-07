@@ -28,7 +28,7 @@ func (m *InMemoryChargeStationAuthStore) LookupChargeStationAuth(ctx context.Con
 	return m.chargeStations[chargeStationId], nil
 }
 
-func TestCreateChargeStation(t *testing.T) {
+func TestRegisterChargeStation(t *testing.T) {
 	authStore := new(InMemoryChargeStationAuthStore)
 	authStore.chargeStations = make(map[string]*store.ChargeStationAuth)
 
@@ -50,7 +50,7 @@ func TestCreateChargeStation(t *testing.T) {
 	assert.Equal(t, "", string(b))
 }
 
-func TestLookupChargeStation(t *testing.T) {
+func TestLookupChargeStationAuth(t *testing.T) {
 	authStore := new(InMemoryChargeStationAuthStore)
 	authStore.chargeStations = make(map[string]*store.ChargeStationAuth)
 	authStore.chargeStations["cs001"] = &store.ChargeStationAuth{
