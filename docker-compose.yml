@@ -62,8 +62,8 @@ services:
       - "/certificates/trust.pem"
       - "--mqtt-addr"
       - "mqtt://mqtt:1883"
-      - "--cs-password"
-      - "DEADBEEFDEADBEEF"
+      - "--manager-api-addr"
+      - "http://manager:9410"
     expose:
       - "9310"
       - "9311"

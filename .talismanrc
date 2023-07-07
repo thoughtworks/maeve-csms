@@ -9,6 +9,10 @@ fileignoreconfig:
     checksum: bebfd6c63f4d2a688fdda876093b7f4a95e38c331cb70bcec548b43b80c93cd7
   - filename: gateway/cmd/serve.go
     checksum: f08fe8f8c8710239376098c6e1b778d3fa9a1fb5f0653ff2a9a34e9c70d4194e
+  - filename: gateway/registry/remote.go
+    checksum: bcdef78dfc66e140acd32d12df1806b95c3541f51cc0208a43abff49552fdcd8
+  - filename: gateway/registry/remote_test.go
+    checksum: 5e2c48028cb8db96326336ba5f1d29faa88b52002d5df9dbd4c1a36865bf094a
   - filename: gateway/server/ws.go
     checksum: 4cbde936242380603e07cf8bd049dbca9d1c3108843d10e58f588540176c6d23
   - filename: gateway/server/ws_test.go

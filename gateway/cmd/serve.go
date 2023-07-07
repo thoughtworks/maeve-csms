@@ -3,10 +3,8 @@
 package cmd
 
 import (
-	"crypto/sha256"
 	"crypto/tls"
 	"crypto/x509"
-	"encoding/base64"
 	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/thoughtworks/maeve-csms/gateway/registry"
@@ -23,7 +21,7 @@ var tlsServerCert string
 var tlsServerKey string
 var tlsTrustCert []string
 var orgNames []string
-var csPassword string
+var managerApiAddr string
 
 // serveCmd represents the serve command
 var serveCmd = &cobra.Command{
@@ -35,31 +33,14 @@ var serveCmd = &cobra.Command{
 			return fmt.Errorf("parsing mqtt broker url: %v", err)
 		}
 
-		sha256pw := sha256.Sum256([]byte(csPassword))
-		mockRegistry := registry.NewMockRegistry()
-		mockRegistry.ChargeStations["cp001"] = &registry.ChargeStation{
-			ClientId:             "cp001",
-			SecurityProfile:      registry.UnsecuredTransportWithBasicAuth,
-			Base64SHA256Password: base64.StdEncoding.EncodeToString(sha256pw[:]),
+		remoteRegistry := registry.RemoteRegistry{
+			ManagerApiAddr: managerApiAddr,
 		}
-		mockRegistry.ChargeStations["cs001"] = &registry.ChargeStation{
-			ClientId:        "cs001",
-			SecurityProfile: registry.TLSWithClientSideCertificates,
-		}
-		mockRegistry.ChargeStations["cs002"] = &registry.ChargeStation{
-			ClientId:        "cs002",
-			SecurityProfile: registry.TLSWithClientSideCertificates,
-		}
-		mockRegistry.ChargeStations["cs003"] = &registry.ChargeStation{
-			ClientId:        "cs003",
-			SecurityProfile: registry.TLSWithClientSideCertificates,
-		}
-
 		statusServer := server.New("status", statusAddr, nil, server.NewStatusHandler())
 		websocketHandler := server.NewWebsocketHandler(
 			server.WithMqttBrokerUrl(brokerUrl),
 			server.WithMqttTopicPrefix("cs"),
-			server.WithDeviceRegistry(mockRegistry),
+			server.WithDeviceRegistry(remoteRegistry),
 			server.WithOrgNames(orgNames))
 		wsServer := server.New("ws", wsAddr, nil, websocketHandler)
 		var wssServer *server.Server
@@ -138,6 +119,6 @@ func init() {
 		"A file that contains a PEM encoded certificate to add to the TLS trust store")
 	serveCmd.Flags().StringSliceVarP(&orgNames, "org-name", "o", []string{"Thoughtworks"},
 		"A comma-separated list of organisation names that are valid in client certificates")
-	serveCmd.Flags().StringVar(&csPassword, "cs-password", "",
-		"The password to use for the charge station")
+	serveCmd.Flags().StringVarP(&managerApiAddr, "manager-api-addr", "r", "http://127.0.0.1:9410",
+		"The address of the CSMS manager API, e.g. http://127.0.0.1:9410")
 }

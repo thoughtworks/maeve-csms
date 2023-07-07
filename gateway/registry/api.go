@@ -17,5 +17,5 @@ type ChargeStation struct {
 }
 
 type DeviceRegistry interface {
-	LookupChargeStation(clientId string) *ChargeStation
+	LookupChargeStation(clientId string) (*ChargeStation, error)
 }

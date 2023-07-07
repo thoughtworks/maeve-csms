@@ -12,6 +12,6 @@ func NewMockRegistry() *MockRegistry {
 	}
 }
 
-func (m MockRegistry) LookupChargeStation(clientId string) *ChargeStation {
-	return m.ChargeStations[clientId]
+func (m MockRegistry) LookupChargeStation(clientId string) (*ChargeStation, error) {
+	return m.ChargeStations[clientId], nil
 }
