@@ -3,9 +3,12 @@
 package server
 
 import (
+	"github.com/rs/cors"
 	"github.com/twlabs/maeve-csms/manager/api"
 	"github.com/twlabs/maeve-csms/manager/store"
+	"github.com/unrolled/secure"
 	"net/http"
+	"os"
 	"text/template"
 
 	"github.com/go-chi/chi/v5"
@@ -16,23 +19,44 @@ import (
 )
 
 func NewApiHandler(engine store.Engine, transactionStore services.TransactionStore) http.Handler {
-	csm := api.ChargeStationManager{
-		ChargeStationAuthStore: engine,
+	apiServer := &api.Server{
+		Store: engine,
 	}
 
+	var isDevelopment bool
+	if os.Getenv("ENVIRONMENT") == "dev" {
+		isDevelopment = true
+	}
+	secureMiddleware := secure.New(secure.Options{
+		IsDevelopment:         isDevelopment,
+		BrowserXssFilter:      true,
+		ContentTypeNosniff:    true,
+		FrameDeny:             true,
+		ContentSecurityPolicy: "frame-ancestors: 'none'",
+	})
+
 	r := chi.NewRouter()
-	r.Use(middleware.Logger, middleware.Recoverer)
+	r.Use(middleware.Logger, middleware.Recoverer, secureMiddleware.Handler, cors.Default().Handler)
 	r.Get("/health", health)
 	r.Get("/transactions", transactions(transactionStore))
 	r.Handle("/metrics", promhttp.Handler())
-	r.Route("/api/v0", func(r chi.Router) {
-		// TODO: add secure middleware
-		r.Route("/cs/{csId}", func(r chi.Router) {
-			r.Post("/", csm.CreateChargeStation)
-			r.Get("/auth", csm.RetrieveChargeStationAuthDetails)
-		})
-	})
+	r.Get("/api/openapi.json", getSwaggerJson)
+	r.Mount("/api/v0", api.Handler(apiServer))
 	return r
+}
+
+func getSwaggerJson(w http.ResponseWriter, r *http.Request) {
+	swagger, err := api.GetSwagger()
+	if err != nil {
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+	json, err := swagger.MarshalJSON()
+	if err != nil {
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+	_, _ = w.Write(json)
 }
 
 func health(w http.ResponseWriter, r *http.Request) {

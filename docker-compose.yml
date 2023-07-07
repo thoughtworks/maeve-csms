@@ -102,6 +102,7 @@ services:
       redis:
         condition: service_healthy
     environment:
+      ENVIRONMENT: dev
       BIGTABLE_EMULATOR_HOST: bigtable:8086
     command:
       - "serve"

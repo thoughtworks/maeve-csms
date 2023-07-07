@@ -19,8 +19,10 @@ fileignoreconfig:
     checksum: 4a9379d10dc5a63bb6af399f77ef8598f6a6a289f60b4a634a9150c5cec03dcf
   - filename: manager/Dockerfile
     checksum: db69536d308b905d6214db1fb0e10442fe3e770ef3fed47809ca1f3ec099409d
-  - filename: manager/api/cs.go
-    checksum: 23de5efb5f42e9270862957b3835e35ed57d75c3bf201a4e1e72be0097ad8720
+  - filename: manager/api/api.gen.go
+    checksum: e27f3c7e43b53aac07021924fd689e799856009f3e3631087b2cc24fd29eb5f0
+  - filename: manager/api/server.go
+    checksum: 0cec14f62fc29e79b07d28fc99c82ff615689b3e74e9337e07486517e222fdb4
   - filename: manager/handlers/ocpp16/data_transfer_test.go
     checksum: ff19ad1feeb979a62c6a53e256ab3fe879bd540242153792b8b1148ae7010c4b
   - filename: manager/handlers/ocpp16/stop_transaction.go

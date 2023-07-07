@@ -1,0 +1,84 @@
+openapi: "3.0.0"
+info:
+  version: "0.0.0"
+  title: "MaEVe CSMS"
+  description: "Internal API to interact with the MaEVe CSMS, external clients should use OCPI."
+  contact:
+    name: "MaEVe team"
+    email: "maeve-team@thoughtworks.com"
+  license:
+    name: "Apache 2.0"
+servers:
+  - url: http://localhost:9410/api/v0
+    description: The local development server
+paths:
+  /cs/{csId}:
+    post:
+      summary: "Register a new charge station"
+      description: |
+        Registers a new charge station. The system will assume that the charge station
+        has not yet been provisioned and will place the charge station into a pending state
+        so it can been configured when it sends a boot notification.
+      operationId: "registerChargeStation"
+      parameters:
+        - name: "csId"
+          in: "path"
+          description: "The charge station identifier"
+          schema:
+            type: "string"
+            maxLength: 64
+      requestBody:
+        required: true
+        content:
+          "application/json":
+            schema:
+              $ref: "#/components/schemas/ChargeStationAuth"
+      responses:
+        "201":
+          description: "Created"
+        default:
+          description: "Unexpected error"
+  /cs/{csId}/auth:
+    get:
+      summary: "Returns the authentication details"
+      description: |
+        Returns the details required by the CSMS gateway to determine how to authenticate
+        the charge station
+      operationId: "lookupChargeStationAuth"
+      parameters:
+        - name: "csId"
+          in: "path"
+          description: "The charge station identifier"
+          schema:
+            type: "string"
+            maxLength: 64
+      responses:
+        "200":
+          description: "Charge station auth response"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChargeStationAuth"
+        "404":
+          description: "Unknown charge station"
+        default:
+          description: "Unexpected error"
+components:
+  schemas:
+    ChargeStationAuth:
+      type: "object"
+      description: "Connection details for a charge station"
+      required:
+        - "securityProfile"
+      properties:
+        securityProfile:
+          type: "integer"
+          description: >
+            The security profile to use for the charge station:
+            * `0` - unsecured transport with basic auth
+            * `1` - TLS with basic auth
+            * `2` - TLS with client certificate
+        base64SHA256Password:
+          type: "string"
+          maxLength: 64
+          description: "The base64 encoded, SHA-256 hash of the charge station password"

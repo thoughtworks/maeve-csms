@@ -32,16 +32,14 @@ func TestCreateChargeStation(t *testing.T) {
 	authStore := new(InMemoryChargeStationAuthStore)
 	authStore.chargeStations = make(map[string]*store.ChargeStationAuth)
 
-	csm := api.ChargeStationManager{
-		ChargeStationAuthStore: authStore,
-	}
+	srv := &api.Server{Store: authStore}
 
 	r := chi.NewRouter()
-	r.Post("/{csId}", csm.CreateChargeStation)
+	r.Mount("/", api.Handler(srv))
 	server := httptest.NewServer(r)
 	defer server.Close()
 
-	req := httptest.NewRequest(http.MethodPost, "/cs001", strings.NewReader("{}"))
+	req := httptest.NewRequest(http.MethodPost, "/cs/cs001", strings.NewReader("{}"))
 	req.Header.Set("content-type", "application/json")
 	rr := httptest.NewRecorder()
 	r.ServeHTTP(rr, req)
@@ -59,16 +57,14 @@ func TestLookupChargeStation(t *testing.T) {
 		SecurityProfile: 1,
 	}
 
-	csm := api.ChargeStationManager{
-		ChargeStationAuthStore: authStore,
-	}
+	srv := &api.Server{Store: authStore}
 
 	r := chi.NewRouter()
-	r.Get("/{csId}/auth", csm.RetrieveChargeStationAuthDetails)
+	r.Mount("/", api.Handler(srv))
 	server := httptest.NewServer(r)
 	defer server.Close()
 
-	req := httptest.NewRequest(http.MethodGet, "/cs001/auth", strings.NewReader("{}"))
+	req := httptest.NewRequest(http.MethodGet, "/cs/cs001/auth", strings.NewReader("{}"))
 	req.Header.Set("accept", "application/json")
 	rr := httptest.NewRecorder()
 	r.ServeHTTP(rr, req)
@@ -77,11 +73,11 @@ func TestLookupChargeStation(t *testing.T) {
 	b, err := io.ReadAll(rr.Result().Body)
 	require.NoError(t, err)
 
-	want := &api.ChargeStationAuthDetailsResponse{
+	want := &api.ChargeStationAuth{
 		SecurityProfile: 1,
 	}
 
-	got := new(api.ChargeStationAuthDetailsResponse)
+	got := new(api.ChargeStationAuth)
 	err = json.Unmarshal(b, &got)
 	require.NoError(t, err)
 
