@@ -3,7 +3,7 @@ package server_test
 import (
 	"context"
 	"fmt"
-	"github.com/twlabs/maeve-csms/manager/server"
+	"github.com/thoughtworks/maeve-csms/manager/server"
 	"net/http"
 	"testing"
 	"time"

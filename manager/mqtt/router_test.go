@@ -3,17 +3,17 @@ package mqtt_test
 import (
 	"context"
 	"errors"
-	"github.com/twlabs/maeve-csms/manager/handlers"
-	handlers201 "github.com/twlabs/maeve-csms/manager/handlers/ocpp201"
-	"github.com/twlabs/maeve-csms/manager/schemas"
+	"github.com/thoughtworks/maeve-csms/manager/handlers"
+	handlers201 "github.com/thoughtworks/maeve-csms/manager/handlers/ocpp201"
+	"github.com/thoughtworks/maeve-csms/manager/schemas"
 	"k8s.io/utils/clock"
 	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/twlabs/maeve-csms/manager/mqtt"
-	"github.com/twlabs/maeve-csms/manager/ocpp"
-	"github.com/twlabs/maeve-csms/manager/ocpp/ocpp201"
+	"github.com/thoughtworks/maeve-csms/manager/mqtt"
+	"github.com/thoughtworks/maeve-csms/manager/ocpp"
+	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
 )
 
 var heartbeatMsg = mqtt.Message{

@@ -7,8 +7,8 @@ import (
 	"encoding/base64"
 	"fmt"
 	"github.com/spf13/cobra"
-	"github.com/twlabs/maeve-csms/gateway/registry"
-	"github.com/twlabs/maeve-csms/gateway/server"
+	"github.com/thoughtworks/maeve-csms/gateway/registry"
+	"github.com/thoughtworks/maeve-csms/gateway/server"
 	"net/url"
 	"os"
 )

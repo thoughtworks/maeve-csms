@@ -2,7 +2,7 @@ package pipe
 
 import (
 	"encoding/json"
-	"github.com/twlabs/maeve-csms/gateway/ocpp"
+	"github.com/thoughtworks/maeve-csms/gateway/ocpp"
 )
 
 type GatewayMessage struct {

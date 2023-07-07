@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/rodaine/table"
 	"github.com/spf13/cobra"
-	handlers16 "github.com/twlabs/maeve-csms/manager/handlers/ocpp16"
+	handlers16 "github.com/thoughtworks/maeve-csms/manager/handlers/ocpp16"
 	"strconv"
 )
 

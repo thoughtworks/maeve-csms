@@ -1,7 +1,7 @@
 package server_test
 
 import (
-	"github.com/twlabs/maeve-csms/gateway/server"
+	"github.com/thoughtworks/maeve-csms/gateway/server"
 	"net/http"
 	"net/http/httptest"
 	"testing"

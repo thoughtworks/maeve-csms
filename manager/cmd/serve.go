@@ -9,10 +9,10 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/twlabs/maeve-csms/manager/mqtt"
-	v201 "github.com/twlabs/maeve-csms/manager/ocpp/ocpp201"
-	"github.com/twlabs/maeve-csms/manager/server"
-	"github.com/twlabs/maeve-csms/manager/services"
+	"github.com/thoughtworks/maeve-csms/manager/mqtt"
+	v201 "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
+	"github.com/thoughtworks/maeve-csms/manager/server"
+	"github.com/thoughtworks/maeve-csms/manager/services"
 )
 
 var mqttAddr string

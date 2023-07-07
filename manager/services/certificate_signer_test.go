@@ -11,7 +11,7 @@ import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/twlabs/maeve-csms/manager/services"
+	"github.com/thoughtworks/maeve-csms/manager/services"
 	"go.mozilla.org/pkcs7"
 	"io"
 	"math/big"

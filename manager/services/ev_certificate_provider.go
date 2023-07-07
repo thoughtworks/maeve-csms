@@ -8,7 +8,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/twlabs/maeve-csms/manager/ocpp/ocpp201"
+	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
 )
 
 const XsdMsgDefinition = "urn:iso:15118:2:2013:MsgDef"

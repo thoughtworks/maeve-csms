@@ -2,7 +2,7 @@ package pipe
 
 import (
 	"container/ring"
-	"github.com/twlabs/maeve-csms/gateway/ocpp"
+	"github.com/thoughtworks/maeve-csms/gateway/ocpp"
 	"log"
 	"time"
 )

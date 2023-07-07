@@ -3,9 +3,9 @@ package ocpp16
 import (
 	"context"
 	"github.com/google/uuid"
-	"github.com/twlabs/maeve-csms/manager/ocpp"
-	types "github.com/twlabs/maeve-csms/manager/ocpp/ocpp16"
-	"github.com/twlabs/maeve-csms/manager/services"
+	"github.com/thoughtworks/maeve-csms/manager/ocpp"
+	types "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp16"
+	"github.com/thoughtworks/maeve-csms/manager/services"
 	"k8s.io/utils/clock"
 	"log"
 	"math/rand"

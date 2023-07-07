@@ -2,8 +2,8 @@ package ocpp201
 
 import (
 	"context"
-	"github.com/twlabs/maeve-csms/manager/ocpp"
-	types "github.com/twlabs/maeve-csms/manager/ocpp/ocpp201"
+	"github.com/thoughtworks/maeve-csms/manager/ocpp"
+	types "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
 	"k8s.io/utils/clock"
 	"log"
 	"time"

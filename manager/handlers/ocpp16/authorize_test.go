@@ -3,9 +3,9 @@ package ocpp16_test
 import (
 	"context"
 	"github.com/stretchr/testify/assert"
-	handlers "github.com/twlabs/maeve-csms/manager/handlers/ocpp16"
-	types "github.com/twlabs/maeve-csms/manager/ocpp/ocpp16"
-	"github.com/twlabs/maeve-csms/manager/services"
+	handlers "github.com/thoughtworks/maeve-csms/manager/handlers/ocpp16"
+	types "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp16"
+	"github.com/thoughtworks/maeve-csms/manager/services"
 	"testing"
 )
 

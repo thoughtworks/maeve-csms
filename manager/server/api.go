@@ -7,8 +7,8 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/twlabs/maeve-csms/manager/services"
-	"github.com/twlabs/maeve-csms/manager/templates"
+	"github.com/thoughtworks/maeve-csms/manager/services"
+	"github.com/thoughtworks/maeve-csms/manager/templates"
 )
 
 func NewApiHandler(transactionStore services.TransactionStore) http.Handler {

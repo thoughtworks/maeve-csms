@@ -9,7 +9,7 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"github.com/twlabs/maeve-csms/manager/ocpp/ocpp201"
+	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
 	"golang.org/x/crypto/ocsp"
 	"io"
 	"log"

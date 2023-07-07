@@ -1,4 +1,4 @@
-module github.com/twlabs/maeve-csms/manager
+module github.com/thoughtworks/maeve-csms/manager
 
 go 1.20
 

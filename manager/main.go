@@ -1,6 +1,6 @@
 package main
 
-import "github.com/twlabs/maeve-csms/manager/cmd"
+import "github.com/thoughtworks/maeve-csms/manager/cmd"
 
 func main() {
 	cmd.Execute()

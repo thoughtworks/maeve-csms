@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 	"github.com/stretchr/testify/assert"
-	handlers "github.com/twlabs/maeve-csms/manager/handlers/ocpp201"
-	types "github.com/twlabs/maeve-csms/manager/ocpp/ocpp201"
-	"github.com/twlabs/maeve-csms/manager/services"
+	handlers "github.com/thoughtworks/maeve-csms/manager/handlers/ocpp201"
+	types "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
+	"github.com/thoughtworks/maeve-csms/manager/services"
 	"testing"
 )
 

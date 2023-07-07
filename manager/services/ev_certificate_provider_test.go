@@ -8,10 +8,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/twlabs/maeve-csms/manager/ocpp/ocpp201"
+	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/twlabs/maeve-csms/manager/services"
+	"github.com/thoughtworks/maeve-csms/manager/services"
 )
 
 const dummyExiResponse = "dummy exi response"

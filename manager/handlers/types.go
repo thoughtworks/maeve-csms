@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"context"
-	"github.com/twlabs/maeve-csms/manager/ocpp"
+	"github.com/thoughtworks/maeve-csms/manager/ocpp"
 )
 
 type CallHandler interface {

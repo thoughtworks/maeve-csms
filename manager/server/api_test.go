@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/twlabs/maeve-csms/manager/server"
+	"github.com/thoughtworks/maeve-csms/manager/server"
 )
 
 func TestHealthHandler(t *testing.T) {
