@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 package ocpp201
 
 // Contains a case insensitive identifier to use for the authorization and the type

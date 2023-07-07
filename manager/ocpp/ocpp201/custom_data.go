@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 package ocpp201
 
 // This class does not get 'AdditionalProperties = false' in the schema generation,

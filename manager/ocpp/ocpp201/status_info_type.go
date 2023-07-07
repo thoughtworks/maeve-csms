@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 package ocpp201
 
 // Element providing more information about the status.
