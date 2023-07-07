@@ -1,5 +1,5 @@
-[![Manager](https://github.com/twlabs/maeve-csms/workflows/Manager/badge.svg)](https://github.com/twlabs/maeve-csms/actions/workflows/manager.yml)
-[![Gateway](https://github.com/twlabs/maeve-csms/workflows/Gateway/badge.svg)](https://github.com/twlabs/maeve-csms/actions/workflows/gateway.yml)
+[![Manager](https://github.com/thoughtworks/maeve-csms/workflows/Manager/badge.svg)](https://github.com/thoughtworks/maeve-csms/actions/workflows/manager.yml)
+[![Gateway](https://github.com/thoughtworks/maeve-csms/workflows/Gateway/badge.svg)](https://github.com/thoughtworks/maeve-csms/actions/workflows/gateway.yml)
 
 # MaEVe
 
