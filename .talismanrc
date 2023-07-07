@@ -15,6 +15,8 @@ fileignoreconfig:
     checksum: 4a9379d10dc5a63bb6af399f77ef8598f6a6a289f60b4a634a9150c5cec03dcf
   - filename: manager/Dockerfile
     checksum: db69536d308b905d6214db1fb0e10442fe3e770ef3fed47809ca1f3ec099409d
+  - filename: manager/api/cs.go
+    checksum: 23de5efb5f42e9270862957b3835e35ed57d75c3bf201a4e1e72be0097ad8720
   - filename: manager/handlers/ocpp16/data_transfer_test.go
     checksum: ff19ad1feeb979a62c6a53e256ab3fe879bd540242153792b8b1148ae7010c4b
   - filename: manager/handlers/ocpp16/stop_transaction.go
@@ -67,6 +69,10 @@ fileignoreconfig:
     checksum: 893e918e122b2dd321bad4a02ee0523f25df1a3b501538e5541f9bbbbc4bd794
   - filename: manager/services/transaction.go
     checksum: 5c382cf7937a6d7ab2626620b44a73131c23fd6702b4ed00cfd744d41cfb63c0
+  - filename: manager/store/bigtable/cs.go
+    checksum: ea54fbbc402ee50dfe9b8a28243326d5e01af5dabfac2fbdd52f9b4bd2f09d95
+  - filename: manager/store/bigtable/cs_test.go
+    checksum: e7968710a2649f8fadc262c8d812f7e8614f526fe16444b4a8d7bec600ccc970
   - filename: scripts/generate-tls-cert.sh
     checksum: eab0c50edc72d8a53c2a2d0c4238924f9705666dc962a344384d793a501dea50
 scopeconfig:

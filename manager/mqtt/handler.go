@@ -11,6 +11,7 @@ import (
 	"github.com/eclipse/paho.golang/paho"
 	"github.com/thoughtworks/maeve-csms/manager/schemas"
 	"github.com/thoughtworks/maeve-csms/manager/services"
+	"github.com/thoughtworks/maeve-csms/manager/store"
 	"io/fs"
 	"k8s.io/utils/clock"
 	"log"
@@ -36,6 +37,7 @@ type Handler struct {
 	certProviderService   services.EvCertificateProvider
 	heartbeatInterval     time.Duration
 	schemaFS              fs.FS
+	storageEngine         store.Engine
 }
 
 type HandlerOpt func(h *Handler)
@@ -117,6 +119,12 @@ func WithHeartbeatInterval(heartbeatInterval time.Duration) HandlerOpt {
 func WithSchemaFS(fs fs.FS) HandlerOpt {
 	return func(h *Handler) {
 		h.schemaFS = fs
+	}
+}
+
+func WithStorageEngine(store store.Engine) HandlerOpt {
+	return func(h *Handler) {
+		h.storageEngine = store
 	}
 }
 

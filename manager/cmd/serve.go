@@ -3,10 +3,13 @@
 package cmd
 
 import (
+	"context"
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
 	"fmt"
+	store "github.com/twlabs/maeve-csms/manager/store"
+	"github.com/twlabs/maeve-csms/manager/store/bigtable"
 	"net/url"
 	"os"
 
@@ -17,13 +20,18 @@ import (
 	"github.com/thoughtworks/maeve-csms/manager/services"
 )
 
-var mqttAddr string
-var mqttPrefix string
-var mqttGroup string
-var apiAddr string
-var v2gCertPEMFiles []string
-var hubjectToken string
-var hubjectUrl string
+var (
+	mqttAddr         string
+	mqttPrefix       string
+	mqttGroup        string
+	apiAddr          string
+	v2gCertPEMFiles  []string
+	hubjectToken     string
+	hubjectUrl       string
+	storageEngine    string
+	gcloudProject    string
+	bigtableInstance string
+)
 
 // serveCmd represents the serve command
 var serveCmd = &cobra.Command{
@@ -42,7 +50,18 @@ the gateway and send appropriate responses.`,
 			return fmt.Errorf("parsing mqtt broker url: %v", err)
 		}
 
-		apiServer := server.New("api", apiAddr, nil, server.NewApiHandler(transactionStore))
+		var engine store.Engine
+		switch storageEngine {
+		case "bigtable":
+			engine, err = bigtable.NewStore(context.Background(), gcloudProject, bigtableInstance)
+			if err != nil {
+				return err
+			}
+		default:
+			return fmt.Errorf("unsupported storage engine %s", storageEngine)
+		}
+
+		apiServer := server.New("api", apiAddr, nil, server.NewApiHandler(engine, transactionStore))
 
 		var v2gCertificates []*x509.Certificate
 		for _, pemFile := range v2gCertPEMFiles {
@@ -108,6 +127,7 @@ the gateway and send appropriate responses.`,
 			mqtt.WithCertValidationService(certValidationService),
 			mqtt.WithCertSignerService(certSignerService),
 			mqtt.WithCertificateProviderService(certProviderService),
+			mqtt.WithStorageEngine(engine),
 		)
 
 		errCh := make(chan error, 1)
@@ -179,4 +199,10 @@ func init() {
 		"The Hubject Bearer token to use")
 	serveCmd.Flags().StringVar(&hubjectUrl, "hubject-url", "https://open.plugncharge-test.hubject.com",
 		"The Hubject Environment URL")
+	serveCmd.Flags().StringVarP(&storageEngine, "storage-engine", "s", "bigtable",
+		"The storage engine to use for persistence, one of [bigtable]")
+	serveCmd.Flags().StringVar(&gcloudProject, "gcloud-project", "",
+		"The google cloud project that hosts the bigtable instance (only if storage-engine is bigtable)")
+	serveCmd.Flags().StringVar(&bigtableInstance, "bigtable-instance", "",
+		"The bigtable instance to use (only if storage-engine is bigtable)")
 }

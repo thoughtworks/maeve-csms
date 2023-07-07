@@ -3,6 +3,8 @@
 package server
 
 import (
+	"github.com/twlabs/maeve-csms/manager/api"
+	"github.com/twlabs/maeve-csms/manager/store"
 	"net/http"
 	"text/template"
 
@@ -13,12 +15,23 @@ import (
 	"github.com/thoughtworks/maeve-csms/manager/templates"
 )
 
-func NewApiHandler(transactionStore services.TransactionStore) http.Handler {
+func NewApiHandler(engine store.Engine, transactionStore services.TransactionStore) http.Handler {
+	csm := api.ChargeStationManager{
+		ChargeStationAuthStore: engine,
+	}
+
 	r := chi.NewRouter()
 	r.Use(middleware.Logger, middleware.Recoverer)
 	r.Get("/health", health)
 	r.Get("/transactions", transactions(transactionStore))
 	r.Handle("/metrics", promhttp.Handler())
+	r.Route("/api/v0", func(r chi.Router) {
+		// TODO: add secure middleware
+		r.Route("/cs/{csId}", func(r chi.Router) {
+			r.Post("/", csm.CreateChargeStation)
+			r.Get("/auth", csm.RetrieveChargeStationAuthDetails)
+		})
+	})
 	return r
 }
 
