@@ -136,4 +136,14 @@ _Please note that all verbs should be at the present tense e.g. Add / ~~Adding~~
 
 ## Contributors
 
-_Come back to this later, we are currently working on it._
+**Core contributors** (not in any specific order):
+
+[<img src="https://github.com/subnova.png" width="40px;"/>](https://github.com/subnova)
+[<img src="https://github.com/vbdavid.png" width="40px;"/>](https://github.com/vbdavid)
+[<img src="https://github.com/belarte-tw.png" width="40px;"/>](https://github.com/belarte-tw)
+[<img src="https://github.com/gayathridevimallela.png" width="40px;"/>](https://github.com/gayathridevimallela)
+[<img src="https://github.com/alessioerosferri.png" width="40px;"/>](https://github.com/alessioerosferri)
+[<img src="https://github.com/ahl-tw.png" width="40px;"/>](https://github.com/ahl-tw)
+[<img src="https://github.com/andrewbryer-thoughtworks.png" width="40px;"/>](https://github.com/andrewbryer-thoughtworks)
+[<img src="https://github.com/dvelle-TW.png" width="40px;"/>](https://github.com/dvelle-TW)
+[<img src="https://github.com/carlosbarrostw.png" width="40px;"/>](https://github.com/carlosbarrostw)
