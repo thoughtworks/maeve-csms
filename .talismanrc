@@ -79,6 +79,10 @@ fileignoreconfig:
     checksum: ea54fbbc402ee50dfe9b8a28243326d5e01af5dabfac2fbdd52f9b4bd2f09d95
   - filename: manager/store/bigtable/cs_test.go
     checksum: e7968710a2649f8fadc262c8d812f7e8614f526fe16444b4a8d7bec600ccc970
+  - filename: manager/store/firestore/cs.go
+    checksum: 04aa0b00b290595b5d8d7a4693bf526a3d6ee1df8a1a2e7ca9a25f0a54eb7dd3
+  - filename: manager/store/firestore/cs_test.go
+    checksum: b31b2ed998237c77a6cd3501ce4231c2cbe15a2aca68db8715f4f43f9fc7e01c
   - filename: scripts/generate-tls-cert.sh
     checksum: eab0c50edc72d8a53c2a2d0c4238924f9705666dc962a344384d793a501dea50
 scopeconfig:

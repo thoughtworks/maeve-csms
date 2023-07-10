@@ -4,8 +4,8 @@ package server
 
 import (
 	"github.com/rs/cors"
-	"github.com/twlabs/maeve-csms/manager/api"
-	"github.com/twlabs/maeve-csms/manager/store"
+	"github.com/thoughtworks/maeve-csms/manager/api"
+	"github.com/thoughtworks/maeve-csms/manager/store"
 	"github.com/unrolled/secure"
 	"net/http"
 	"os"

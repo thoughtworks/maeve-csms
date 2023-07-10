@@ -61,8 +61,16 @@ paths:
                 $ref: "#/components/schemas/ChargeStationAuth"
         "404":
           description: "Unknown charge station"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Status"
         default:
           description: "Unexpected error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Status"
 components:
   schemas:
     ChargeStationAuth:
@@ -82,3 +90,12 @@ components:
           type: "string"
           maxLength: 64
           description: "The base64 encoded, SHA-256 hash of the charge station password"
+    Status:
+      type: "object"
+      description: "HTTP status"
+      required:
+        - "status"
+      properties:
+        status:
+          type: "string"
+          description: "The status description"

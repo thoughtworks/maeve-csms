@@ -3,7 +3,7 @@ package api
 import (
 	"fmt"
 	"github.com/go-chi/render"
-	"github.com/twlabs/maeve-csms/manager/store"
+	"github.com/thoughtworks/maeve-csms/manager/store"
 	"net/http"
 )
 

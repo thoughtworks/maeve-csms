@@ -1,30 +1,30 @@
-package bigtable_test
+package firestore_test
 
 import (
 	"context"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/thoughtworks/maeve-csms/manager/store"
-	"github.com/thoughtworks/maeve-csms/manager/store/bigtable"
+	"github.com/thoughtworks/maeve-csms/manager/store/firestore"
 	"testing"
 )
 
 func TestSetAndLookupChargeStationAuth(t *testing.T) {
 	ctx := context.Background()
 
-	authStore, err := bigtable.NewStore(ctx, "myproject", "myinstance")
+	authStore, err := firestore.NewStore(ctx, "myproject")
 	require.NoError(t, err)
-	assert.NotNil(t, authStore)
 
 	want := &store.ChargeStationAuth{
 		SecurityProfile:      store.TLSWithClientSideCertificates,
 		Base64SHA256Password: "DEADBEEF",
 	}
+
 	err = authStore.SetChargeStationAuth(ctx, "cs001", want)
 	require.NoError(t, err)
 
 	got, err := authStore.LookupChargeStationAuth(ctx, "cs001")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	assert.Equal(t, want, got)
 }
@@ -32,11 +32,10 @@ func TestSetAndLookupChargeStationAuth(t *testing.T) {
 func TestLookupChargeStationAuthWithUnregisteredChargeStation(t *testing.T) {
 	ctx := context.Background()
 
-	authStore, err := bigtable.NewStore(ctx, "myproject", "myinstance")
+	authStore, err := firestore.NewStore(ctx, "myproject")
 	require.NoError(t, err)
-	assert.NotNil(t, authStore)
 
-	got, err := authStore.LookupChargeStationAuth(ctx, "cs002")
-	assert.NoError(t, err)
+	got, err := authStore.LookupChargeStationAuth(ctx, "not-created")
+	require.NoError(t, err)
 	assert.Nil(t, got)
 }
