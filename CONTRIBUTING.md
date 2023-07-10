@@ -146,4 +146,3 @@ _Please note that all verbs should be at the present tense e.g. Add / ~~Adding~~
 [<img src="https://github.com/ahl-tw.png" width="40px;"/>](https://github.com/ahl-tw)
 [<img src="https://github.com/andrewbryer-thoughtworks.png" width="40px;"/>](https://github.com/andrewbryer-thoughtworks)
 [<img src="https://github.com/dvelle-TW.png" width="40px;"/>](https://github.com/dvelle-TW)
-[<img src="https://github.com/carlosbarrostw.png" width="40px;"/>](https://github.com/carlosbarrostw)
