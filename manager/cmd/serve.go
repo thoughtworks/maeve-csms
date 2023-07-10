@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/thoughtworks/maeve-csms/manager/store"
-	"github.com/thoughtworks/maeve-csms/manager/store/bigtable"
 	"github.com/thoughtworks/maeve-csms/manager/store/firestore"
 	"net/url"
 	"os"
@@ -22,16 +21,15 @@ import (
 )
 
 var (
-	mqttAddr         string
-	mqttPrefix       string
-	mqttGroup        string
-	apiAddr          string
-	v2gCertPEMFiles  []string
-	hubjectToken     string
-	hubjectUrl       string
-	storageEngine    string
-	gcloudProject    string
-	bigtableInstance string
+	mqttAddr        string
+	mqttPrefix      string
+	mqttGroup       string
+	apiAddr         string
+	v2gCertPEMFiles []string
+	hubjectToken    string
+	hubjectUrl      string
+	storageEngine   string
+	gcloudProject   string
 )
 
 // serveCmd represents the serve command
@@ -53,11 +51,6 @@ the gateway and send appropriate responses.`,
 
 		var engine store.Engine
 		switch storageEngine {
-		case "bigtable":
-			engine, err = bigtable.NewStore(context.Background(), gcloudProject, bigtableInstance)
-			if err != nil {
-				return err
-			}
 		case "firestore":
 			engine, err = firestore.NewStore(context.Background(), gcloudProject)
 			if err != nil {
@@ -206,9 +199,7 @@ func init() {
 	serveCmd.Flags().StringVar(&hubjectUrl, "hubject-url", "https://open.plugncharge-test.hubject.com",
 		"The Hubject Environment URL")
 	serveCmd.Flags().StringVarP(&storageEngine, "storage-engine", "s", "firestore",
-		"The storage engine to use for persistence, one of [bigtable, firestore]")
+		"The storage engine to use for persistence, one of [firestore]")
 	serveCmd.Flags().StringVar(&gcloudProject, "gcloud-project", "*detect-project-id*",
-		"The google cloud project that hosts the bigtable or firestore instance (if chosen storage-engine)")
-	serveCmd.Flags().StringVar(&bigtableInstance, "bigtable-instance", "",
-		"The bigtable instance to use (only if storage-engine is bigtable)")
+		"The google cloud project that hosts the firestore instance (if chosen storage-engine)")
 }
