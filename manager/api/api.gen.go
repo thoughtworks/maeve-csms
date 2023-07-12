@@ -12,10 +12,27 @@ import (
 	"net/url"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/deepmap/oapi-codegen/pkg/runtime"
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/go-chi/chi/v5"
+)
+
+// Defines values for TokenCacheMode.
+const (
+	ALLOWED        TokenCacheMode = "ALLOWED"
+	ALLOWEDOFFLINE TokenCacheMode = "ALLOWED_OFFLINE"
+	ALWAYS         TokenCacheMode = "ALWAYS"
+	NEVER          TokenCacheMode = "NEVER"
+)
+
+// Defines values for TokenType.
+const (
+	ADHOCUSER TokenType = "AD_HOC_USER"
+	APPUSER   TokenType = "APP_USER"
+	OTHER     TokenType = "OTHER"
+	RFID      TokenType = "RFID"
 )
 
 // ChargeStationAuth Connection details for a charge station
@@ -27,8 +44,65 @@ type ChargeStationAuth struct {
 	SecurityProfile int `json:"securityProfile"`
 }
 
+// Status HTTP status
+type Status struct {
+	// Error The error details
+	Error *string `json:"error,omitempty"`
+
+	// Status The status description
+	Status string `json:"status"`
+}
+
+// Token An authorization token
+type Token struct {
+	// CacheMode Indicates what type of token caching is allowed
+	CacheMode TokenCacheMode `json:"cacheMode"`
+
+	// ContractId The contract ID (eMAID) associated with the token (with optional component separators)
+	ContractId string `json:"contractId"`
+
+	// CountryCode The country code of the issuing eMSP
+	CountryCode string `json:"countryCode"`
+
+	// GroupId This id groups a couple of tokens to make two or more tokens work as one
+	GroupId *string `json:"groupId,omitempty"`
+
+	// Issuer Issuing company, most of the times the name of the company printed on the RFID card, not necessarily the eMSP
+	Issuer string `json:"issuer"`
+
+	// LanguageCode The preferred language to use encoded as ISO 639-1 language code
+	LanguageCode *string `json:"languageCode,omitempty"`
+
+	// LastUpdated The date the record was last updated (ignored on create/update)
+	LastUpdated *time.Time `json:"lastUpdated,omitempty"`
+
+	// PartyId The party id of the issuing eMSP
+	PartyId string `json:"partyId"`
+
+	// Type The type of token
+	Type TokenType `json:"type"`
+
+	// Uid The unique token id
+	Uid string `json:"uid"`
+
+	// Valid Is this token valid
+	Valid bool `json:"valid"`
+
+	// VisualNumber The visual/readable number/identification printed on an RFID card
+	VisualNumber *string `json:"visualNumber,omitempty"`
+}
+
+// TokenCacheMode Indicates what type of token caching is allowed
+type TokenCacheMode string
+
+// TokenType The type of token
+type TokenType string
+
 // RegisterChargeStationJSONRequestBody defines body for RegisterChargeStation for application/json ContentType.
 type RegisterChargeStationJSONRequestBody = ChargeStationAuth
+
+// SetTokenJSONRequestBody defines body for SetToken for application/json ContentType.
+type SetTokenJSONRequestBody = Token
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
@@ -38,6 +112,12 @@ type ServerInterface interface {
 	// Returns the authentication details
 	// (GET /cs/{csId}/auth)
 	LookupChargeStationAuth(w http.ResponseWriter, r *http.Request, csId string)
+	// Create/update an authorization token
+	// (POST /token)
+	SetToken(w http.ResponseWriter, r *http.Request)
+	// Lookup an authorization token
+	// (GET /token/{tokenUid})
+	LookupToken(w http.ResponseWriter, r *http.Request, tokenUid string)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -92,6 +172,47 @@ func (siw *ServerInterfaceWrapper) LookupChargeStationAuth(w http.ResponseWriter
 
 	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.LookupChargeStationAuth(w, r, csId)
+	})
+
+	for i := len(siw.HandlerMiddlewares) - 1; i >= 0; i-- {
+		handler = siw.HandlerMiddlewares[i](handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// SetToken operation middleware
+func (siw *ServerInterfaceWrapper) SetToken(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SetToken(w, r)
+	})
+
+	for i := len(siw.HandlerMiddlewares) - 1; i >= 0; i-- {
+		handler = siw.HandlerMiddlewares[i](handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// LookupToken operation middleware
+func (siw *ServerInterfaceWrapper) LookupToken(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "tokenUid" -------------
+	var tokenUid string
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "tokenUid", runtime.ParamLocationPath, chi.URLParam(r, "tokenUid"), &tokenUid)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tokenUid", Err: err})
+		return
+	}
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.LookupToken(w, r, tokenUid)
 	})
 
 	for i := len(siw.HandlerMiddlewares) - 1; i >= 0; i-- {
@@ -220,6 +341,12 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/cs/{csId}/auth", wrapper.LookupChargeStationAuth)
 	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/token", wrapper.SetToken)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/token/{tokenUid}", wrapper.LookupToken)
+	})
 
 	return r
 }
@@ -227,21 +354,34 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/8yV32/jNgzH/xVC29Pgq9OuV2B+WlcMuAI9rFhue7kWOFZmIl1tSpPopEGR/32gnKxN",
-	"4+1lGLA3W6b448sP6WdjQx8DE0s2zbPJ1lGP5fHKYVrSXFB84MtBnB62lG3yUY9MY64CM1l9gZYEfZdh",
-	"ERIg2HIX8njZVCamECmJp+L6ATNdnM8/XJ69v7jFnNchtcfePzmC0RKIbWiprWD+4fLd2fsLcJgdhAWI",
-	"ozfBIO4dVqbHpxvipaZ+cV4Z2UQyjcmSPC/NtjKZ7JC8bG5TWPiOplPYG0EcrUACDJlKpcfhG/gOvsy+",
-	"wDsYuNykFiQh5xiSwNqL05q8BRzEqe2p2n66mU99Ozv4ZjtPLGBVx4W3KHSn0u6q8iy0pGS228ok+mPw",
-	"iVrTfD6q8f6vG+HhK1kxW73heRG0fBtY0Io+Uo++M43pkVb0Tgj7H8WFYelkHdJjPrGhN5Vh7NXXR/z5",
-	"dwI1Ul0PRbxmocTYweXttYqnmSa0OzVUwvH21fzjvAJ62lmP5WbILgxdWyT/5er2+sRUpvOWOJd+7eJf",
-	"RrSO4OxkpvHFS/eSlfo1lVlRymNCs5PZaBciMUZvGvN9OapMRHEF0drm+tnm63arbzFkOabjV1r6LJQy",
-	"IDCt35BwAoWeTRbqYe27DjDnoScQhzJBzh07zMBBYEMCD0SsxK28Jk0tILejl9ihpSnwPUsAhEjcel6W",
-	"Y7rjHMALWOTRpQ288MuC5doR67dM3GoJDyGIxh/h0goKXzq45fW6fVXzwXYowiXsScUwzeepMXqbbEus",
-	"kSgZpc80RfoXoFR6U+32kUr/z7O8vR+ppyw/hXazR5m4tA1j7HY11V+zpvT8yvO3iRamMd/UL6uw3u3B",
-	"+ngJbg8HTNJA5SDHwHlcb2ez04ldmQiF2nE8Fjh0E0D9xvQUyQq1QCmFcZjz0PeYNq+0n8St2L5QW+Nu",
-	"Yy9pklwZEudC0X5z72uCh00517GBJQqtcaNj22p3e88ELqz1QCNoE8dNNAX0ET03ITwO8VjU/wk/Bz2c",
-	"/dcQveHjsL7yC9hnpNCcz86ngHnksOYjFP4NYy9kvGrwq1/8mHymtPr7ZnXBYgctragLsde/1mhvKjMk",
-	"/ak4kdjUdbFzIUvzw/nprMbo69XMbO+3fwYAAP//LnPMXJgIAAA=",
+	"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",
+	"fwYAAP//J3EIRFUVAAA=",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

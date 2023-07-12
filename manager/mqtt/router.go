@@ -16,6 +16,7 @@ import (
 	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
 	"github.com/thoughtworks/maeve-csms/manager/schemas"
 	"github.com/thoughtworks/maeve-csms/manager/services"
+	"github.com/thoughtworks/maeve-csms/manager/store"
 	"io/fs"
 	"k8s.io/utils/clock"
 	"log"
@@ -30,7 +31,7 @@ type Router struct {
 
 func NewV16Router(emitter Emitter,
 	clk clock.PassiveClock,
-	tokenStore services.TokenStore,
+	tokenStore store.TokenStore,
 	transactionStore services.TransactionStore,
 	certValidationService services.CertificateValidationService,
 	certSignerService services.CertificateSignerService,
@@ -180,7 +181,7 @@ func NewV16Router(emitter Emitter,
 
 func NewV201Router(emitter Emitter,
 	clk clock.PassiveClock,
-	tokenStore services.TokenStore,
+	storageEngine store.TokenStore,
 	transactionStore services.TransactionStore,
 	tariffService services.TariffService,
 	certValidationService services.CertificateValidationService,
@@ -225,7 +226,7 @@ func NewV201Router(emitter Emitter,
 				RequestSchema:  "ocpp201/AuthorizeRequest.json",
 				ResponseSchema: "ocpp201/AuthorizeResponse.json",
 				Handler: handlers201.AuthorizeHandler{
-					TokenStore:                   tokenStore,
+					TokenStore:                   storageEngine,
 					CertificateValidationService: certValidationService,
 				},
 			},

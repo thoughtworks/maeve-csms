@@ -38,6 +38,10 @@ paths:
           description: "Created"
         default:
           description: "Unexpected error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Status"
   /cs/{csId}/auth:
     get:
       summary: "Returns the authentication details"
@@ -71,6 +75,59 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Status"
+  /token:
+    post:
+      summary: "Create/update an authorization token"
+      description: |
+        Creates or updates a token that can be used to authorize a charge
+      operationId: "setToken"
+      requestBody:
+        required: true
+        content:
+          "application/json":
+            schema:
+              $ref: "#/components/schemas/Token"
+      responses:
+        "201":
+          description: "Created"
+        default:
+          description: "Unexpected error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Status"
+  /token/{tokenUid}:
+    get:
+      summary: "Lookup an authorization token"
+      description: |
+        Lookup a token that can be used to authorize a charge
+      operationId: "lookupToken"
+      parameters:
+        - required: true
+          in: "path"
+          name: "tokenUid"
+          schema:
+            type: "string"
+            maxLength: 36
+      responses:
+        "200":
+          description: "Authorization token details"
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/Token"
+        "404":
+          description: "Not found"
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/Status"
+        default:
+          description: "Unexpected error"
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/Status"
 components:
   schemas:
     ChargeStationAuth:
@@ -90,6 +147,75 @@ components:
           type: "string"
           maxLength: 64
           description: "The base64 encoded, SHA-256 hash of the charge station password"
+    Token:
+      type: "object"
+      description: "An authorization token"
+      required:
+        - countryCode
+        - partyId
+        - type
+        - uid
+        - contractId
+        - issuer
+        - valid
+        - cacheMode
+      properties:
+        countryCode:
+          type: "string"
+          minLength: 2
+          maxLength: 2
+          description: "The country code of the issuing eMSP"
+        partyId:
+          type: "string"
+          minLength: 3
+          maxLength: 3
+          description: "The party id of the issuing eMSP"
+        type:
+          type: "string"
+          enum:
+            - "AD_HOC_USER"
+            - "APP_USER"
+            - "OTHER"
+            - "RFID"
+          description: "The type of token"
+        uid:
+          type: "string"
+          description: "The unique token id"
+          maxLength: 36
+        contractId:
+          type: "string"
+          pattern: "([A-Za-z]{2})(-?)([A-Za-z]{3})(-?)([A-Za-z0-9]{9})(-?)([A-Za-z0-9])?"
+          description: "The contract ID (eMAID) associated with the token (with optional component separators)"
+        visualNumber:
+          type: "string"
+          description: "The visual/readable number/identification printed on an RFID card"
+        issuer:
+          type: "string"
+          description: "Issuing company, most of the times the name of the company printed on the RFID card, not necessarily the eMSP"
+        groupId:
+          type: "string"
+          maxLength: 36
+          description: "This id groups a couple of tokens to make two or more tokens work as one"
+        valid:
+          type: "boolean"
+          description: "Is this token valid"
+        languageCode:
+          type: "string"
+          minLength: 2
+          maxLength: 2
+          description: "The preferred language to use encoded as ISO 639-1 language code"
+        cacheMode:
+          type: "string"
+          enum:
+            - "ALWAYS"
+            - "ALLOWED"
+            - "ALLOWED_OFFLINE"
+            - "NEVER"
+          description: "Indicates what type of token caching is allowed"
+        lastUpdated:
+          type: "string"
+          format: "date-time"
+          description: "The date the record was last updated (ignored on create/update)"
     Status:
       type: "object"
       description: "HTTP status"
@@ -99,3 +225,6 @@ components:
         status:
           type: "string"
           description: "The status description"
+        error:
+          type: "string"
+          description: "The error details"

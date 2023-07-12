@@ -9,11 +9,12 @@ import (
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
 	types "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
 	"github.com/thoughtworks/maeve-csms/manager/services"
+	"github.com/thoughtworks/maeve-csms/manager/store"
 	"log"
 )
 
 type AuthorizeHandler struct {
-	TokenStore                   services.TokenStore
+	TokenStore                   store.TokenStore
 	CertificateValidationService services.CertificateValidationService
 }
 
@@ -22,7 +23,7 @@ func (a AuthorizeHandler) HandleCall(ctx context.Context, chargeStationId string
 	log.Printf("Charge station %s authorize token %s(%s)", chargeStationId, req.IdToken.IdToken, req.IdToken.Type)
 
 	status := types.AuthorizationStatusEnumTypeUnknown
-	tok, err := a.TokenStore.FindToken(string(req.IdToken.Type), req.IdToken.IdToken)
+	tok, err := a.TokenStore.LookupToken(ctx, req.IdToken.IdToken)
 	if err != nil {
 		return nil, err
 	}

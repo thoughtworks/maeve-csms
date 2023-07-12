@@ -7,6 +7,7 @@ import (
 	"github.com/thoughtworks/maeve-csms/manager/api"
 	"github.com/thoughtworks/maeve-csms/manager/store"
 	"github.com/unrolled/secure"
+	"k8s.io/utils/clock"
 	"net/http"
 	"os"
 	"text/template"
@@ -19,8 +20,9 @@ import (
 )
 
 func NewApiHandler(engine store.Engine, transactionStore services.TransactionStore) http.Handler {
-	apiServer := &api.Server{
-		Store: engine,
+	apiServer, err := api.NewServer(engine, clock.RealClock{})
+	if err != nil {
+		panic(err)
 	}
 
 	var isDevelopment bool
@@ -36,7 +38,7 @@ func NewApiHandler(engine store.Engine, transactionStore services.TransactionSto
 	})
 
 	r := chi.NewRouter()
-	r.Use(middleware.Logger, middleware.Recoverer, secureMiddleware.Handler, cors.Default().Handler)
+	r.Use(middleware.Logger, middleware.Recoverer, secureMiddleware.Handler, cors.Default().Handler, api.ValidationMiddleware)
 	r.Get("/health", health)
 	r.Get("/transactions", transactions(transactionStore))
 	r.Handle("/metrics", promhttp.Handler())

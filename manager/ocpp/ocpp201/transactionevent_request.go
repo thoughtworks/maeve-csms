@@ -102,7 +102,7 @@ type ReadingContextEnumType string
 const ReadingContextEnumTypeInterruptionBegin ReadingContextEnumType = "Interruption.Begin"
 const ReadingContextEnumTypeInterruptionEnd ReadingContextEnumType = "Interruption.End"
 const ReadingContextEnumTypeOther ReadingContextEnumType = "Other"
-const ReadingContextEnumTypeSampleClock ReadingContextEnumType = "Sample.Clock"
+const ReadingContextEnumTypeSampleClock ReadingContextEnumType = "Sample.clock"
 const ReadingContextEnumTypeSamplePeriodic ReadingContextEnumType = "Sample.Periodic"
 const ReadingContextEnumTypeTransactionBegin ReadingContextEnumType = "Transaction.Begin"
 const ReadingContextEnumTypeTransactionEnd ReadingContextEnumType = "Transaction.End"

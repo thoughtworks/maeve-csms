@@ -29,7 +29,6 @@ type Handler struct {
 	mqttConnectRetryDelay time.Duration
 	mqttKeepAliveInterval uint16
 	clock                 clock.PassiveClock
-	tokenStore            services.TokenStore
 	transactionStore      services.TransactionStore
 	tariffService         services.TariffService
 	certValidationService services.CertificateValidationService
@@ -71,12 +70,6 @@ func WithMqttConnectSettings(mqttConnectTimeout, mqttConnectRetryDelay, mqttKeep
 func WithClock(clock clock.PassiveClock) HandlerOpt {
 	return func(h *Handler) {
 		h.clock = clock
-	}
-}
-
-func WithTokenStore(tokenStore services.TokenStore) HandlerOpt {
-	return func(h *Handler) {
-		h.tokenStore = tokenStore
 	}
 }
 
@@ -182,8 +175,8 @@ func (h *Handler) Connect(errCh chan error) {
 	v16Emitter := &ProxyEmitter{}
 	v201Emitter := &ProxyEmitter{}
 
-	v16Router := NewV16Router(v16Emitter, h.clock, h.tokenStore, h.transactionStore, h.certValidationService, h.certSignerService, h.certProviderService, h.heartbeatInterval, h.schemaFS)
-	v201Router := NewV201Router(v201Emitter, h.clock, h.tokenStore, h.transactionStore, h.tariffService, h.certValidationService, h.certSignerService, h.certProviderService, h.heartbeatInterval)
+	v16Router := NewV16Router(v16Emitter, h.clock, h.storageEngine, h.transactionStore, h.certValidationService, h.certSignerService, h.certProviderService, h.heartbeatInterval, h.schemaFS)
+	v201Router := NewV201Router(v201Emitter, h.clock, h.storageEngine, h.transactionStore, h.tariffService, h.certValidationService, h.certSignerService, h.certProviderService, h.heartbeatInterval)
 
 	mqttV16Topic := fmt.Sprintf("$share/%s/%s/in/ocpp1.6/#", h.mqttGroup, h.mqttPrefix)
 	mqttV201Topic := fmt.Sprintf("$share/%s/%s/in/ocpp2.0.1/#", h.mqttGroup, h.mqttPrefix)

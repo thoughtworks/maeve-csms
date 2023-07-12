@@ -6,12 +6,12 @@ import (
 	"context"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
 	types "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp16"
-	"github.com/thoughtworks/maeve-csms/manager/services"
+	"github.com/thoughtworks/maeve-csms/manager/store"
 	"log"
 )
 
 type AuthorizeHandler struct {
-	TokenStore services.TokenStore
+	TokenStore store.TokenStore
 }
 
 func (a AuthorizeHandler) HandleCall(ctx context.Context, chargeStationId string, request ocpp.Request) (ocpp.Response, error) {
@@ -19,7 +19,7 @@ func (a AuthorizeHandler) HandleCall(ctx context.Context, chargeStationId string
 	log.Printf("Charge station %s authorize token %s", chargeStationId, req.IdTag)
 
 	status := types.AuthorizeResponseJsonIdTagInfoStatusInvalid
-	tok, err := a.TokenStore.FindToken("ISO14443", req.IdTag)
+	tok, err := a.TokenStore.LookupToken(ctx, req.IdTag)
 	if err != nil {
 		return nil, err
 	}

@@ -14,8 +14,8 @@ type chargeStation struct {
 }
 
 func (s *Store) SetChargeStationAuth(ctx context.Context, chargeStationId string, auth *store.ChargeStationAuth) error {
-	cs := s.client.Doc(fmt.Sprintf("ChargeStation/%s", chargeStationId))
-	_, err := cs.Set(ctx, &chargeStation{
+	csRef := s.client.Doc(fmt.Sprintf("ChargeStation/%s", chargeStationId))
+	_, err := csRef.Set(ctx, &chargeStation{
 		SecurityProfile:      int(auth.SecurityProfile),
 		Base64SHA256Password: auth.Base64SHA256Password,
 	})
@@ -26,8 +26,8 @@ func (s *Store) SetChargeStationAuth(ctx context.Context, chargeStationId string
 }
 
 func (s *Store) LookupChargeStationAuth(ctx context.Context, chargeStationId string) (*store.ChargeStationAuth, error) {
-	cs := s.client.Doc(fmt.Sprintf("ChargeStation/%s", chargeStationId))
-	snap, err := cs.Get(ctx)
+	csRef := s.client.Doc(fmt.Sprintf("ChargeStation/%s", chargeStationId))
+	snap, err := csRef.Get(ctx)
 	if err != nil {
 		if status.Code(err) == codes.NotFound {
 			return nil, nil
@@ -35,8 +35,7 @@ func (s *Store) LookupChargeStationAuth(ctx context.Context, chargeStationId str
 		return nil, fmt.Errorf("lookup charge station %s: %w", chargeStationId, err)
 	}
 	var csData chargeStation
-	err = snap.DataTo(&csData)
-	if err != nil {
+	if err = snap.DataTo(&csData); err != nil {
 		return nil, fmt.Errorf("map charge station %s: %w", chargeStationId, err)
 	}
 	return &store.ChargeStationAuth{

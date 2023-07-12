@@ -16,6 +16,7 @@ func NewStore(ctx context.Context, gcloudProject string) (store.Engine, error) {
 	if err != nil {
 		return nil, fmt.Errorf("create new firestore client in %s: %w", gcloudProject, err)
 	}
+
 	return &Store{
 		client: client,
 	}, nil

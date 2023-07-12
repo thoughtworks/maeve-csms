@@ -5,22 +5,32 @@ package ocpp16_test
 import (
 	"context"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	handlers "github.com/thoughtworks/maeve-csms/manager/handlers/ocpp16"
 	types "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp16"
-	"github.com/thoughtworks/maeve-csms/manager/services"
+	"github.com/thoughtworks/maeve-csms/manager/store"
+	"github.com/thoughtworks/maeve-csms/manager/store/inmemory"
 	"testing"
+	"time"
 )
 
 func TestAuthorizeKnownRfidCard(t *testing.T) {
+	engine := inmemory.NewStore()
+	err := engine.SetToken(context.Background(), &store.Token{
+		CountryCode: "GB",
+		PartyId:     "TWK",
+		Type:        "RFID",
+		Uid:         "MYRFIDCARD",
+		ContractId:  "GBTWK012345678V",
+		Issuer:      "Thoughtworks",
+		Valid:       true,
+		CacheMode:   "NEVER",
+		LastUpdated: time.Now().Format(time.RFC3339),
+	})
+	require.NoError(t, err)
+
 	ah := handlers.AuthorizeHandler{
-		TokenStore: services.InMemoryTokenStore{
-			Tokens: map[string]*services.Token{
-				"ISO14443:MYRFIDCARD": {
-					Type: "ISO14443",
-					Uid:  "MYRFIDCARD",
-				},
-			},
-		},
+		TokenStore: engine,
 	}
 
 	req := &types.AuthorizeJson{
@@ -40,15 +50,10 @@ func TestAuthorizeKnownRfidCard(t *testing.T) {
 }
 
 func TestAuthorizeWithUnknownRfidCard(t *testing.T) {
+	engine := inmemory.NewStore()
+
 	ah := handlers.AuthorizeHandler{
-		TokenStore: services.InMemoryTokenStore{
-			Tokens: map[string]*services.Token{
-				"ISO14443:MYRFIDCARD": {
-					Type: "ISO14443",
-					Uid:  "MYRFIDCARD",
-				},
-			},
-		},
+		TokenStore: engine,
 	}
 
 	req := &types.AuthorizeJson{

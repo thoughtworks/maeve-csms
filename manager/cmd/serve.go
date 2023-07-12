@@ -10,12 +10,12 @@ import (
 	"fmt"
 	"github.com/thoughtworks/maeve-csms/manager/store"
 	"github.com/thoughtworks/maeve-csms/manager/store/firestore"
+	"github.com/thoughtworks/maeve-csms/manager/store/inmemory"
 	"net/url"
 	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/thoughtworks/maeve-csms/manager/mqtt"
-	v201 "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
 	"github.com/thoughtworks/maeve-csms/manager/server"
 	"github.com/thoughtworks/maeve-csms/manager/services"
 )
@@ -56,6 +56,8 @@ the gateway and send appropriate responses.`,
 			if err != nil {
 				return err
 			}
+		case "inmemory":
+			engine = inmemory.NewStore()
 		default:
 			return fmt.Errorf("unsupported storage engine %s", storageEngine)
 		}
@@ -69,31 +71,6 @@ the gateway and send appropriate responses.`,
 				return fmt.Errorf("reading certificates from PEM file: %s: %v", pemFile, err)
 			}
 			v2gCertificates = append(v2gCertificates, parsedCerts...)
-		}
-
-		tokenStore := services.InMemoryTokenStore{
-			Tokens: map[string]*services.Token{
-				"ISO14443:DEADBEEF": {
-					Type: string(v201.IdTokenEnumTypeISO14443),
-					Uid:  "DEADBEEF",
-				},
-				"eMAID:EMP77TWTW00002": {
-					Type: string(v201.IdTokenEnumTypeEMAID),
-					Uid:  "EMP77TWTW00002",
-				},
-				"eMAID:EMP77TWTW00003": {
-					Type: string(v201.IdTokenEnumTypeEMAID),
-					Uid:  "EMP77TWTW00003",
-				},
-				"eMAID:EMP77TWTW00005": {
-					Type: string(v201.IdTokenEnumTypeEMAID),
-					Uid:  "EMP77TWTW00005",
-				},
-				"eMAID:EMP77TWTW99999": {
-					Type: string(v201.IdTokenEnumTypeEMAID),
-					Uid:  "EMP77TWTW99999",
-				},
-			},
 		}
 
 		tariffService := services.BasicKwhTariffService{}
@@ -120,7 +97,6 @@ the gateway and send appropriate responses.`,
 			mqtt.WithMqttBrokerUrl(brokerUrl),
 			mqtt.WithMqttPrefix(mqttPrefix),
 			mqtt.WithMqttGroup(mqttGroup),
-			mqtt.WithTokenStore(tokenStore),
 			mqtt.WithTransactionStore(transactionStore),
 			mqtt.WithTariffService(tariffService),
 			mqtt.WithCertValidationService(certValidationService),
@@ -199,7 +175,7 @@ func init() {
 	serveCmd.Flags().StringVar(&hubjectUrl, "hubject-url", "https://open.plugncharge-test.hubject.com",
 		"The Hubject Environment URL")
 	serveCmd.Flags().StringVarP(&storageEngine, "storage-engine", "s", "firestore",
-		"The storage engine to use for persistence, one of [firestore]")
+		"The storage engine to use for persistence, one of [firestore, inmemory]")
 	serveCmd.Flags().StringVar(&gcloudProject, "gcloud-project", "*detect-project-id*",
 		"The google cloud project that hosts the firestore instance (if chosen storage-engine)")
 }

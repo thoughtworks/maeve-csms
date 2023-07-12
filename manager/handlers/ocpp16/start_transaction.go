@@ -8,6 +8,7 @@ import (
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
 	types "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp16"
 	"github.com/thoughtworks/maeve-csms/manager/services"
+	"github.com/thoughtworks/maeve-csms/manager/store"
 	"k8s.io/utils/clock"
 	"log"
 	"math/rand"
@@ -16,7 +17,7 @@ import (
 
 type StartTransactionHandler struct {
 	Clock            clock.PassiveClock
-	TokenStore       services.TokenStore
+	TokenStore       store.TokenStore
 	TransactionStore services.TransactionStore
 }
 
@@ -27,7 +28,7 @@ func (t StartTransactionHandler) HandleCall(ctx context.Context, chargeStationId
 
 	transactionId := -1
 	status := types.StartTransactionResponseJsonIdTagInfoStatusInvalid
-	tok, err := t.TokenStore.FindToken("", req.IdTag)
+	tok, err := t.TokenStore.LookupToken(ctx, req.IdTag)
 	if err != nil {
 		return nil, err
 	}

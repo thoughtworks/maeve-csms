@@ -9,20 +9,28 @@ import (
 	handlers "github.com/thoughtworks/maeve-csms/manager/handlers/ocpp16"
 	types "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp16"
 	"github.com/thoughtworks/maeve-csms/manager/services"
+	"github.com/thoughtworks/maeve-csms/manager/store"
+	"github.com/thoughtworks/maeve-csms/manager/store/inmemory"
 	clockTest "k8s.io/utils/clock/testing"
 	"testing"
 	"time"
 )
 
 func TestStopTransactionHandler(t *testing.T) {
-	tokenStore := services.InMemoryTokenStore{
-		Tokens: map[string]*services.Token{
-			"ISO14443:MYRFIDTAG": {
-				Type: "ISO14443",
-				Uid:  "MYRFIDTAG",
-			},
-		},
-	}
+	engine := inmemory.NewStore()
+
+	err := engine.SetToken(context.Background(), &store.Token{
+		CountryCode: "GB",
+		PartyId:     "TWK",
+		Type:        "RFID",
+		Uid:         "MYRFIDTAG",
+		ContractId:  "GBTWK012345678V",
+		Issuer:      "Thoughtworks",
+		Valid:       true,
+		CacheMode:   "NEVER",
+		LastUpdated: time.Now().Format(time.RFC3339),
+	})
+	require.NoError(t, err)
 
 	now, err := time.Parse(time.RFC3339, "2023-06-15T15:06:00+01:00")
 	require.NoError(t, err)
@@ -32,7 +40,7 @@ func TestStopTransactionHandler(t *testing.T) {
 	startContext := "Transaction.Begin"
 	startMeasurand := "MeterValue"
 	startLocation := "Outlet"
-	transactionStore.CreateTransaction("cs001", handlers.ConvertToUUID(42), "MYRFIDTAG", "ISO14443",
+	err = transactionStore.CreateTransaction("cs001", handlers.ConvertToUUID(42), "MYRFIDTAG", "ISO14443",
 		[]services.MeterValue{
 			{
 				SampledValues: []services.SampledValue{
@@ -46,10 +54,11 @@ func TestStopTransactionHandler(t *testing.T) {
 				Timestamp: now.Format(time.RFC3339),
 			},
 		}, 0, false)
+	require.NoError(t, err)
 
 	handler := handlers.StopTransactionHandler{
 		Clock:            clockTest.NewFakePassiveClock(now),
-		TokenStore:       tokenStore,
+		TokenStore:       engine,
 		TransactionStore: transactionStore,
 	}
 

@@ -20,9 +20,9 @@ fileignoreconfig:
   - filename: manager/Dockerfile
     checksum: db69536d308b905d6214db1fb0e10442fe3e770ef3fed47809ca1f3ec099409d
   - filename: manager/api/api.gen.go
-    checksum: e27f3c7e43b53aac07021924fd689e799856009f3e3631087b2cc24fd29eb5f0
+    checksum: 904b7ebf2b97a4400cc4e868d323442685985eb0c20d3d8bb169a674abf8177c
   - filename: manager/api/server.go
-    checksum: 0cec14f62fc29e79b07d28fc99c82ff615689b3e74e9337e07486517e222fdb4
+    checksum: 22cd986022106ada9fbc8c88d41a96dbedce68e4442fe32f1ae3ac081a2bde0d
   - filename: manager/handlers/ocpp16/data_transfer_test.go
     checksum: ff19ad1feeb979a62c6a53e256ab3fe879bd540242153792b8b1148ae7010c4b
   - filename: manager/handlers/ocpp16/stop_transaction.go
@@ -33,6 +33,8 @@ fileignoreconfig:
     checksum: 9660c626538042009cebcba874730e4222c115fdf24c9dba12c5d4601c69b613
   - filename: manager/mqtt/router.go
     checksum: 880513a5d3f0070619c4890b5aab9fcf10650afc79550a83c1ad9a986c7e7367
+  - filename: manager/ocpp/emaid_test.go
+    checksum: 9a7e7aa8c3e8c2ea5ea2ad070d4fc734c086fc796bc06148d6db891a413ed4af
   - filename: manager/ocpp/ocpp201/authorize_request.go
     checksum: 0d8a2377b6f329c6c765c9be5f5720c1b6a06de8569be8251747e70e94538b69
   - filename: manager/ocpp/ocpp201/certificate_signed_request.go
@@ -75,10 +77,6 @@ fileignoreconfig:
     checksum: 893e918e122b2dd321bad4a02ee0523f25df1a3b501538e5541f9bbbbc4bd794
   - filename: manager/services/transaction.go
     checksum: 5c382cf7937a6d7ab2626620b44a73131c23fd6702b4ed00cfd744d41cfb63c0
-  - filename: manager/store/bigtable/cs.go
-    checksum: ea54fbbc402ee50dfe9b8a28243326d5e01af5dabfac2fbdd52f9b4bd2f09d95
-  - filename: manager/store/bigtable/cs_test.go
-    checksum: e7968710a2649f8fadc262c8d812f7e8614f526fe16444b4a8d7bec600ccc970
   - filename: manager/store/firestore/cs.go
     checksum: 04aa0b00b290595b5d8d7a4693bf526a3d6ee1df8a1a2e7ca9a25f0a54eb7dd3
   - filename: manager/store/firestore/cs_test.go

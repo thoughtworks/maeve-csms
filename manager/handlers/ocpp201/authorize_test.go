@@ -6,10 +6,14 @@ import (
 	"context"
 	"errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	handlers "github.com/thoughtworks/maeve-csms/manager/handlers/ocpp201"
 	types "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
 	"github.com/thoughtworks/maeve-csms/manager/services"
+	"github.com/thoughtworks/maeve-csms/manager/store"
+	"github.com/thoughtworks/maeve-csms/manager/store/inmemory"
 	"testing"
+	"time"
 )
 
 type mockCertValidationService struct {
@@ -46,16 +50,45 @@ func (m mockCertValidationService) ValidateHashedCertificateChain(ocspRequestDat
 	return nil, nil
 }
 
+func setupTokenStore(tokenStore store.TokenStore) error {
+	err := tokenStore.SetToken(context.Background(), &store.Token{
+		CountryCode: "GB",
+		PartyId:     "TWK",
+		Type:        "RFID",
+		Uid:         "MYRFIDCARD",
+		ContractId:  "GBTWK012345678V",
+		Issuer:      "Thoughtworks",
+		Valid:       true,
+		CacheMode:   "NEVER",
+		LastUpdated: time.Now().Format(time.RFC3339),
+	})
+	if err != nil {
+		return err
+	}
+	err = tokenStore.SetToken(context.Background(), &store.Token{
+		CountryCode: "GB",
+		PartyId:     "TWK",
+		Type:        "OTHER",
+		Uid:         "MYEMAID",
+		ContractId:  "GBTWK123456789B",
+		Issuer:      "Thoughtworks",
+		Valid:       true,
+		CacheMode:   "NEVER",
+		LastUpdated: time.Now().Format(time.RFC3339),
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func TestAuthorizeKnownRfidCard(t *testing.T) {
+	engine := inmemory.NewStore()
+	err := setupTokenStore(engine)
+	require.NoError(t, err)
+
 	ah := handlers.AuthorizeHandler{
-		TokenStore: services.InMemoryTokenStore{
-			Tokens: map[string]*services.Token{
-				"ISO14443:MYRFIDCARD": {
-					Type: string(types.IdTokenEnumTypeISO14443),
-					Uid:  "MYRFIDCARD",
-				},
-			},
-		},
+		TokenStore: engine,
 	}
 
 	req := &types.AuthorizeRequestJson{
@@ -78,15 +111,12 @@ func TestAuthorizeKnownRfidCard(t *testing.T) {
 }
 
 func TestAuthorizeWithUnknownRfidCard(t *testing.T) {
+	engine := inmemory.NewStore()
+	err := setupTokenStore(engine)
+	require.NoError(t, err)
+
 	ah := handlers.AuthorizeHandler{
-		TokenStore: services.InMemoryTokenStore{
-			Tokens: map[string]*services.Token{
-				"ISO14443:MYRFIDCARD": {
-					Type: string(types.IdTokenEnumTypeISO14443),
-					Uid:  "MYRFIDCARD",
-				},
-			},
-		},
+		TokenStore: engine,
 	}
 
 	req := &types.AuthorizeRequestJson{
@@ -109,15 +139,12 @@ func TestAuthorizeWithUnknownRfidCard(t *testing.T) {
 }
 
 func TestAuthorizeWithEmaidAndCertificateChain(t *testing.T) {
+	engine := inmemory.NewStore()
+	err := setupTokenStore(engine)
+	require.NoError(t, err)
+
 	ah := handlers.AuthorizeHandler{
-		TokenStore: services.InMemoryTokenStore{
-			Tokens: map[string]*services.Token{
-				"eMAID:MYEMAID": {
-					Type: string(types.IdTokenEnumTypeEMAID),
-					Uid:  "MYEMAID",
-				},
-			},
-		},
+		TokenStore:                   engine,
 		CertificateValidationService: mockCertValidationService{},
 	}
 
@@ -145,15 +172,12 @@ func TestAuthorizeWithEmaidAndCertificateChain(t *testing.T) {
 }
 
 func TestAuthorizeWithEmaidAndInvalidCertificateChain(t *testing.T) {
+	engine := inmemory.NewStore()
+	err := setupTokenStore(engine)
+	require.NoError(t, err)
+
 	ah := handlers.AuthorizeHandler{
-		TokenStore: services.InMemoryTokenStore{
-			Tokens: map[string]*services.Token{
-				"eMAID:MYEMAID": {
-					Type: string(types.IdTokenEnumTypeEMAID),
-					Uid:  "MYEMAID",
-				},
-			},
-		},
+		TokenStore:                   engine,
 		CertificateValidationService: mockCertValidationService{},
 	}
 
@@ -192,15 +216,12 @@ func TestAuthorizeWithEmaidAndInvalidCertificateChain(t *testing.T) {
 }
 
 func TestAuthorizeWithEmaidAndCertificateHashes(t *testing.T) {
+	engine := inmemory.NewStore()
+	err := setupTokenStore(engine)
+	require.NoError(t, err)
+
 	ah := handlers.AuthorizeHandler{
-		TokenStore: services.InMemoryTokenStore{
-			Tokens: map[string]*services.Token{
-				"eMAID:MYEMAID": {
-					Type: string(types.IdTokenEnumTypeEMAID),
-					Uid:  "MYEMAID",
-				},
-			},
-		},
+		TokenStore:                   engine,
 		CertificateValidationService: mockCertValidationService{},
 	}
 
@@ -231,15 +252,12 @@ func TestAuthorizeWithEmaidAndCertificateHashes(t *testing.T) {
 }
 
 func TestAuthorizeWithEmaidAndInvalidCertificateHashes(t *testing.T) {
+	engine := inmemory.NewStore()
+	err := setupTokenStore(engine)
+	require.NoError(t, err)
+
 	ah := handlers.AuthorizeHandler{
-		TokenStore: services.InMemoryTokenStore{
-			Tokens: map[string]*services.Token{
-				"eMAID:MYEMAID": {
-					Type: string(types.IdTokenEnumTypeEMAID),
-					Uid:  "MYEMAID",
-				},
-			},
-		},
+		TokenStore:                   engine,
 		CertificateValidationService: mockCertValidationService{},
 	}
 
@@ -282,15 +300,12 @@ func TestAuthorizeWithEmaidAndInvalidCertificateHashes(t *testing.T) {
 }
 
 func TestAuthorizeWithEmaidAndNoCertificateData(t *testing.T) {
+	engine := inmemory.NewStore()
+	err := setupTokenStore(engine)
+	require.NoError(t, err)
+
 	ah := handlers.AuthorizeHandler{
-		TokenStore: services.InMemoryTokenStore{
-			Tokens: map[string]*services.Token{
-				"eMAID:MYEMAID": {
-					Type: string(types.IdTokenEnumTypeEMAID),
-					Uid:  "MYEMAID",
-				},
-			},
-		},
+		TokenStore:                   engine,
 		CertificateValidationService: mockCertValidationService{},
 	}
 

@@ -9,3 +9,11 @@ func (c ChargeStationAuth) Bind(r *http.Request) error {
 func (c ChargeStationAuth) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
+
+func (t Token) Bind(r *http.Request) error {
+	return nil
+}
+
+func (t Token) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}
