@@ -184,8 +184,8 @@ func (h *Handler) Connect(errCh chan error) {
 	readyCh := make(chan struct{})
 
 	mqttRouter := paho.NewStandardRouter()
-	mqttRouter.RegisterHandler(mqttV16Topic, NewGatewayMessageHandler(ctx, v16Router, v16Emitter, h.schemaFS))
-	mqttRouter.RegisterHandler(mqttV201Topic, NewGatewayMessageHandler(ctx, v201Router, v201Emitter, h.schemaFS))
+	mqttRouter.RegisterHandler(mqttV16Topic, NewGatewayMessageHandler(context.Background(), v16Router, v16Emitter, h.schemaFS))
+	mqttRouter.RegisterHandler(mqttV201Topic, NewGatewayMessageHandler(context.Background(), v201Router, v201Emitter, h.schemaFS))
 
 	var mqttConn *autopaho.ConnectionManager
 	mqttConn, err := autopaho.NewConnection(context.Background(), autopaho.ClientConfig{
@@ -244,6 +244,7 @@ func NewGatewayMessageHandler(ctx context.Context, router *Router, emitter Emitt
 		}
 		err = router.Route(ctx, chargeStationId, msg, emitter, schemaFS)
 		if err != nil {
+			log.Printf("ERROR: %s - %s: %v", chargeStationId, msg.Action, err)
 			var mqttError *Error
 			var errMsg *Message
 			if errors.As(err, &mqttError) {

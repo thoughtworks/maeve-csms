@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-var emaidPattern = regexp.MustCompile("([A-Za-z]{2})(-?)([A-Za-z]{3})(-?)([A-Za-z0-9]{9})(-?)([A-Za-z0-9])?")
+var emaidPattern = regexp.MustCompile("([A-Za-z]{2})(-?)([A-Za-z0-9]{3})(-?)([A-Za-z0-9]{9})(-?)([A-Za-z0-9])?")
 
 func NormalizeEmaid(emaid string) (string, error) {
 	norm, err := normalizeEmaid(emaid)

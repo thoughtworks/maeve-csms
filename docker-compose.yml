@@ -103,7 +103,6 @@ services:
         condition: service_healthy
     environment:
       ENVIRONMENT: dev
-      BIGTABLE_EMULATOR_HOST: bigtable:8086
       FIRESTORE_EMULATOR_HOST: firestore:8080
     command:
       - "serve"
@@ -141,3 +140,5 @@ services:
       - firestore
       - start
       - --host-port=0.0.0.0:8080
+    ports:
+      - "8080:8080"
