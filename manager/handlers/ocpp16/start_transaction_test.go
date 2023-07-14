@@ -4,16 +4,16 @@ package ocpp16_test
 
 import (
 	"context"
+	"testing"
+	"time"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	handlers "github.com/thoughtworks/maeve-csms/manager/handlers/ocpp16"
 	types "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp16"
-	"github.com/thoughtworks/maeve-csms/manager/services"
 	"github.com/thoughtworks/maeve-csms/manager/store"
 	"github.com/thoughtworks/maeve-csms/manager/store/inmemory"
 	clockTest "k8s.io/utils/clock/testing"
-	"testing"
-	"time"
 )
 
 func TestStartTransaction(t *testing.T) {
@@ -32,7 +32,7 @@ func TestStartTransaction(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	transactionStore := services.NewInMemoryTransactionStore()
+	transactionStore := inmemory.NewStore()
 
 	now, err := time.Parse(time.RFC3339, "2023-06-15T15:05:00+01:00")
 	require.NoError(t, err)
@@ -51,7 +51,8 @@ func TestStartTransaction(t *testing.T) {
 		Timestamp:     now.Format(time.RFC3339),
 	}
 
-	resp, err := handler.HandleCall(context.Background(), "cs001", req)
+	ctx := context.Background()
+	resp, err := handler.HandleCall(ctx, "cs001", req)
 	require.NoError(t, err)
 	got := resp.(*types.StartTransactionResponseJson)
 
@@ -67,24 +68,24 @@ func TestStartTransaction(t *testing.T) {
 
 	require.NoError(t, err)
 	transactionId := handlers.ConvertToUUID(got.TransactionId)
-	found, err := transactionStore.FindTransaction("cs001", transactionId)
+	found, err := transactionStore.FindTransaction(ctx, "cs001", transactionId)
 	require.NoError(t, err)
 
 	expectedContext := "Transaction.Begin"
 	expectedMeasurand := "MeterValue"
-	expected := &services.Transaction{
+	expected := &store.Transaction{
 		ChargeStationId: "cs001",
 		TransactionId:   transactionId,
 		IdToken:         "MYRFIDTAG",
 		TokenType:       "ISO14443",
-		MeterValues: []services.MeterValue{
+		MeterValues: []store.MeterValue{
 			{
 				Timestamp: now.Format(time.RFC3339),
-				SampledValues: []services.SampledValue{
+				SampledValues: []store.SampledValue{
 					{
 						Context:   &expectedContext,
 						Measurand: &expectedMeasurand,
-						UnitOfMeasure: &services.UnitOfMeasure{
+						UnitOfMeasure: &store.UnitOfMeasure{
 							Unit:      "Wh",
 							Multipler: 1,
 						},
@@ -118,7 +119,7 @@ func TestStartTransactionWithInvalidRFID(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	transactionStore := services.NewInMemoryTransactionStore()
+	transactionStore := inmemory.NewStore()
 
 	now, err := time.Parse(time.RFC3339, "2023-06-15T15:05:00+01:00")
 	require.NoError(t, err)

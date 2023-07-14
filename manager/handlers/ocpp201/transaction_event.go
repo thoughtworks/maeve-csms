@@ -4,14 +4,16 @@ package ocpp201
 
 import (
 	"context"
+	"log"
+
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
 	types "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
 	"github.com/thoughtworks/maeve-csms/manager/services"
-	"log"
+	"github.com/thoughtworks/maeve-csms/manager/store"
 )
 
 type TransactionEventHandler struct {
-	TransactionStore services.TransactionStore
+	TransactionStore store.TransactionStore
 	TariffService    services.TariffService
 }
 
@@ -28,7 +30,9 @@ func (t TransactionEventHandler) HandleCall(ctx context.Context, chargeStationId
 	var err error
 	switch req.EventType {
 	case types.TransactionEventEnumTypeStarted:
-		err = t.TransactionStore.CreateTransaction(chargeStationId,
+		err = t.TransactionStore.CreateTransaction(
+			ctx,
+			chargeStationId,
 			req.TransactionInfo.TransactionId,
 			idToken,
 			tokenType,
@@ -36,11 +40,15 @@ func (t TransactionEventHandler) HandleCall(ctx context.Context, chargeStationId
 			req.SeqNo,
 			req.Offline)
 	case types.TransactionEventEnumTypeUpdated:
-		err = t.TransactionStore.UpdateTransaction(chargeStationId,
+		err = t.TransactionStore.UpdateTransaction(
+			ctx,
+			chargeStationId,
 			req.TransactionInfo.TransactionId,
 			convertMeterValues(req.MeterValue))
 	case types.TransactionEventEnumTypeEnded:
-		err = t.TransactionStore.EndTransaction(chargeStationId,
+		err = t.TransactionStore.EndTransaction(
+			ctx,
+			chargeStationId,
 			req.TransactionInfo.TransactionId,
 			idToken,
 			tokenType,
@@ -55,7 +63,7 @@ func (t TransactionEventHandler) HandleCall(ctx context.Context, chargeStationId
 	response := &types.TransactionEventResponseJson{}
 
 	if req.EventType == types.TransactionEventEnumTypeEnded {
-		transaction, err := t.TransactionStore.FindTransaction(chargeStationId, req.TransactionInfo.TransactionId)
+		transaction, err := t.TransactionStore.FindTransaction(ctx, chargeStationId, req.TransactionInfo.TransactionId)
 		if err != nil {
 			return nil, err
 		}
@@ -71,31 +79,31 @@ func (t TransactionEventHandler) HandleCall(ctx context.Context, chargeStationId
 	return response, nil
 }
 
-func convertMeterValues(meterValues []types.MeterValueType) []services.MeterValue {
-	var converted []services.MeterValue
+func convertMeterValues(meterValues []types.MeterValueType) []store.MeterValue {
+	var converted []store.MeterValue
 	for _, meterValue := range meterValues {
 		converted = append(converted, convertMeterValue(meterValue))
 	}
 	return converted
 }
 
-func convertMeterValue(meterValue types.MeterValueType) services.MeterValue {
-	return services.MeterValue{
+func convertMeterValue(meterValue types.MeterValueType) store.MeterValue {
+	return store.MeterValue{
 		SampledValues: convertSampledValues(meterValue.SampledValue),
 		Timestamp:     meterValue.Timestamp,
 	}
 }
 
-func convertSampledValues(sampledValues []types.SampledValueType) []services.SampledValue {
-	var converted []services.SampledValue
+func convertSampledValues(sampledValues []types.SampledValueType) []store.SampledValue {
+	var converted []store.SampledValue
 	for _, sampledValue := range sampledValues {
 		converted = append(converted, convertSampledValue(sampledValue))
 	}
 	return converted
 }
 
-func convertSampledValue(sampledValue types.SampledValueType) services.SampledValue {
-	return services.SampledValue{
+func convertSampledValue(sampledValue types.SampledValueType) store.SampledValue {
+	return store.SampledValue{
 		Context:       (*string)(sampledValue.Context),
 		Location:      (*string)(sampledValue.Location),
 		Measurand:     (*string)(sampledValue.Measurand),
@@ -105,12 +113,12 @@ func convertSampledValue(sampledValue types.SampledValueType) services.SampledVa
 	}
 }
 
-func convertUnitOfMeasure(unitOfMeasure *types.UnitOfMeasureType) *services.UnitOfMeasure {
+func convertUnitOfMeasure(unitOfMeasure *types.UnitOfMeasureType) *store.UnitOfMeasure {
 	if unitOfMeasure == nil {
 		return nil
 	}
 
-	return &services.UnitOfMeasure{
+	return &store.UnitOfMeasure{
 		Unit:      unitOfMeasure.Unit,
 		Multipler: unitOfMeasure.Multiplier,
 	}

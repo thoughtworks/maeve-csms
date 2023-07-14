@@ -7,6 +7,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/fs"
+	"log"
+	"reflect"
+	"time"
+
 	"github.com/santhosh-tekuri/jsonschema"
 	"github.com/thoughtworks/maeve-csms/manager/handlers"
 	handlers16 "github.com/thoughtworks/maeve-csms/manager/handlers/ocpp16"
@@ -17,11 +22,7 @@ import (
 	"github.com/thoughtworks/maeve-csms/manager/schemas"
 	"github.com/thoughtworks/maeve-csms/manager/services"
 	"github.com/thoughtworks/maeve-csms/manager/store"
-	"io/fs"
 	"k8s.io/utils/clock"
-	"log"
-	"reflect"
-	"time"
 )
 
 type Router struct {
@@ -32,7 +33,7 @@ type Router struct {
 func NewV16Router(emitter Emitter,
 	clk clock.PassiveClock,
 	tokenStore store.TokenStore,
-	transactionStore services.TransactionStore,
+	transactionStore store.TransactionStore,
 	certValidationService services.CertificateValidationService,
 	certSignerService services.CertificateSignerService,
 	certProviderService services.EvCertificateProvider,
@@ -181,8 +182,8 @@ func NewV16Router(emitter Emitter,
 
 func NewV201Router(emitter Emitter,
 	clk clock.PassiveClock,
-	storageEngine store.TokenStore,
-	transactionStore services.TransactionStore,
+	tokenStore store.TokenStore,
+	transactionStore store.TransactionStore,
 	tariffService services.TariffService,
 	certValidationService services.CertificateValidationService,
 	certSignerService services.CertificateSignerService,
@@ -226,7 +227,7 @@ func NewV201Router(emitter Emitter,
 				RequestSchema:  "ocpp201/AuthorizeRequest.json",
 				ResponseSchema: "ocpp201/AuthorizeResponse.json",
 				Handler: handlers201.AuthorizeHandler{
-					TokenStore:                   storageEngine,
+					TokenStore:                   tokenStore,
 					CertificateValidationService: certValidationService,
 				},
 			},

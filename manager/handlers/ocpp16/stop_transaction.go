@@ -5,20 +5,20 @@ package ocpp16
 import (
 	"context"
 	"errors"
-	"github.com/thoughtworks/maeve-csms/manager/ocpp"
-	types "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp16"
-	"github.com/thoughtworks/maeve-csms/manager/services"
-	"github.com/thoughtworks/maeve-csms/manager/store"
-	"k8s.io/utils/clock"
 	"log"
 	"strconv"
 	"time"
+
+	"github.com/thoughtworks/maeve-csms/manager/ocpp"
+	types "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp16"
+	"github.com/thoughtworks/maeve-csms/manager/store"
+	"k8s.io/utils/clock"
 )
 
 type StopTransactionHandler struct {
 	Clock            clock.PassiveClock
 	TokenStore       store.TokenStore
-	TransactionStore services.TransactionStore
+	TransactionStore store.TransactionStore
 }
 
 func (s StopTransactionHandler) HandleCall(ctx context.Context, chargeStationId string, request ocpp.Request) (response ocpp.Response, err error) {
@@ -46,7 +46,7 @@ func (s StopTransactionHandler) HandleCall(ctx context.Context, chargeStationId 
 		}
 	}
 
-	transaction, err := s.TransactionStore.FindTransaction("cs001", transactionId)
+	transaction, err := s.TransactionStore.FindTransaction(ctx, "cs001", transactionId)
 	if err != nil {
 		return nil, err
 	}
@@ -66,13 +66,13 @@ func (s StopTransactionHandler) HandleCall(ctx context.Context, chargeStationId 
 		return nil, err
 	}
 
-	var previousMeterValues []services.MeterValue
+	var previousMeterValues []store.MeterValue
 	if transaction != nil {
 		previousMeterValues = transaction.MeterValues
 	}
 	meterValues = calculateTransactionEndOutletEnergy(s.Clock, meterValues, previousMeterValues, req.MeterStop)
 
-	err = s.TransactionStore.EndTransaction(chargeStationId, transactionId, idToken, tokenType, meterValues, seqNo)
+	err = s.TransactionStore.EndTransaction(ctx, chargeStationId, transactionId, idToken, tokenType, meterValues, seqNo)
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +82,7 @@ func (s StopTransactionHandler) HandleCall(ctx context.Context, chargeStationId 
 	}, nil
 }
 
-func calculateTransactionEndOutletEnergy(clock clock.PassiveClock, transactionValues []services.MeterValue, previousValues []services.MeterValue, meterStop int) []services.MeterValue {
+func calculateTransactionEndOutletEnergy(clock clock.PassiveClock, transactionValues []store.MeterValue, previousValues []store.MeterValue, meterStop int) []store.MeterValue {
 	if findOutletEnergyReading(transactionValues) {
 		return transactionValues
 	}
@@ -93,8 +93,8 @@ func calculateTransactionEndOutletEnergy(clock clock.PassiveClock, transactionVa
 		outletLocation := "Outlet"
 		energyRegisteredMeasurand := "Energy.Active.Import.Register"
 
-		transactionValues = append(transactionValues, services.MeterValue{
-			SampledValues: []services.SampledValue{
+		transactionValues = append(transactionValues, store.MeterValue{
+			SampledValues: []store.SampledValue{
 				{
 					Context:   &transactionEndContext,
 					Location:  &outletLocation,
@@ -109,7 +109,7 @@ func calculateTransactionEndOutletEnergy(clock clock.PassiveClock, transactionVa
 	return transactionValues
 }
 
-func findOutletEnergyReading(values []services.MeterValue) bool {
+func findOutletEnergyReading(values []store.MeterValue) bool {
 	for _, value := range values {
 		for _, sv := range value.SampledValues {
 			if sv.Context != nil && *sv.Context == "Transaction.End" &&
@@ -122,7 +122,7 @@ func findOutletEnergyReading(values []services.MeterValue) bool {
 	return false
 }
 
-func findTransactionBeginMeterValues(values []services.MeterValue) (int, bool) {
+func findTransactionBeginMeterValues(values []store.MeterValue) (int, bool) {
 	for _, value := range values {
 		for _, sv := range value.SampledValues {
 			if sv.Context != nil && *sv.Context == "Transaction.Begin" &&
@@ -136,8 +136,8 @@ func findTransactionBeginMeterValues(values []services.MeterValue) (int, bool) {
 	return 0, false
 }
 
-func convertMeterValues(meterValues []types.StopTransactionJsonTransactionDataElem) ([]services.MeterValue, error) {
-	var converted []services.MeterValue
+func convertMeterValues(meterValues []types.StopTransactionJsonTransactionDataElem) ([]store.MeterValue, error) {
+	var converted []store.MeterValue
 	for _, meterValue := range meterValues {
 		convertedMeterValue, err := convertMeterValue(meterValue)
 		if err != nil {
@@ -148,19 +148,19 @@ func convertMeterValues(meterValues []types.StopTransactionJsonTransactionDataEl
 	return converted, nil
 }
 
-func convertMeterValue(meterValue types.StopTransactionJsonTransactionDataElem) (services.MeterValue, error) {
+func convertMeterValue(meterValue types.StopTransactionJsonTransactionDataElem) (store.MeterValue, error) {
 	sampledValues, err := convertSampledValues(meterValue.SampledValue)
 	if err != nil {
-		return services.MeterValue{}, err
+		return store.MeterValue{}, err
 	}
-	return services.MeterValue{
+	return store.MeterValue{
 		SampledValues: sampledValues,
 		Timestamp:     meterValue.Timestamp,
 	}, nil
 }
 
-func convertSampledValues(sampledValues []types.StopTransactionJsonTransactionDataElemSampledValueElem) ([]services.SampledValue, error) {
-	var converted []services.SampledValue
+func convertSampledValues(sampledValues []types.StopTransactionJsonTransactionDataElemSampledValueElem) ([]store.SampledValue, error) {
+	var converted []store.SampledValue
 	for _, sampleValue := range sampledValues {
 		convertedSampleValue, err := convertSampleValue(sampleValue)
 		if err != nil {
@@ -171,12 +171,12 @@ func convertSampledValues(sampledValues []types.StopTransactionJsonTransactionDa
 	return converted, nil
 }
 
-func convertSampleValue(sampleValue types.StopTransactionJsonTransactionDataElemSampledValueElem) (services.SampledValue, error) {
+func convertSampleValue(sampleValue types.StopTransactionJsonTransactionDataElemSampledValueElem) (store.SampledValue, error) {
 	value, err := convertValue(sampleValue.Format, sampleValue.Value)
 	if err != nil {
-		return services.SampledValue{}, err
+		return store.SampledValue{}, err
 	}
-	return services.SampledValue{
+	return store.SampledValue{
 		Context:       (*string)(sampleValue.Context),
 		Location:      (*string)(sampleValue.Location),
 		Measurand:     (*string)(sampleValue.Measurand),
@@ -194,12 +194,12 @@ func convertValue(format *types.StopTransactionJsonTransactionDataElemSampledVal
 	return strconv.ParseFloat(value, 64)
 }
 
-func convertUnitOfMeasure(unit *types.StopTransactionJsonTransactionDataElemSampledValueElemUnit) *services.UnitOfMeasure {
+func convertUnitOfMeasure(unit *types.StopTransactionJsonTransactionDataElemSampledValueElemUnit) *store.UnitOfMeasure {
 	if unit == nil {
 		return nil
 	}
 
-	return &services.UnitOfMeasure{
+	return &store.UnitOfMeasure{
 		Unit:      string(*unit),
 		Multipler: 1,
 	}

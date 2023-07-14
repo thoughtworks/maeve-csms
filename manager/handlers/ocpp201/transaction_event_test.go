@@ -4,16 +4,19 @@ package ocpp201_test
 
 import (
 	"context"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	handlers "github.com/thoughtworks/maeve-csms/manager/handlers/ocpp201"
 	types "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
 	"github.com/thoughtworks/maeve-csms/manager/services"
-	"testing"
+	"github.com/thoughtworks/maeve-csms/manager/store/inmemory"
 )
 
 func TestTransactionEventHandlerWithStartedEvent(t *testing.T) {
-	transactionStore := services.NewInMemoryTransactionStore()
+	ctx := context.Background()
+	transactionStore := inmemory.NewStore()
 	tariffService := services.BasicKwhTariffService{}
 
 	handler := handlers.TransactionEventHandler{
@@ -48,19 +51,20 @@ func TestTransactionEventHandlerWithStartedEvent(t *testing.T) {
 		},
 	}
 
-	got, err := handler.HandleCall(context.Background(), "cs001", req)
+	got, err := handler.HandleCall(ctx, "cs001", req)
 	assert.NoError(t, err)
 
 	want := &types.TransactionEventResponseJson{}
 	assert.Equal(t, want, got)
 
-	transaction, err := transactionStore.FindTransaction("cs001", "5555")
+	transaction, err := transactionStore.FindTransaction(ctx, "cs001", "5555")
 	require.NoError(t, err)
 	assert.NotNil(t, transaction)
 }
 
 func TestTransactionEventHandlerWithUpdatedEvent(t *testing.T) {
-	transactionStore := services.NewInMemoryTransactionStore()
+	ctx := context.Background()
+	transactionStore := inmemory.NewStore()
 	tariffService := services.BasicKwhTariffService{}
 
 	handler := handlers.TransactionEventHandler{
@@ -91,19 +95,20 @@ func TestTransactionEventHandlerWithUpdatedEvent(t *testing.T) {
 		},
 	}
 
-	got, err := handler.HandleCall(context.Background(), "cs001", req)
+	got, err := handler.HandleCall(ctx, "cs001", req)
 	assert.NoError(t, err)
 
 	want := &types.TransactionEventResponseJson{}
 	assert.Equal(t, want, got)
 
-	transaction, err := transactionStore.FindTransaction("cs001", "5555")
+	transaction, err := transactionStore.FindTransaction(ctx, "cs001", "5555")
 	require.NoError(t, err)
 	assert.NotNil(t, transaction)
 }
 
 func TestTransactionEventHandlerWithEndedEvent(t *testing.T) {
-	transactionStore := services.NewInMemoryTransactionStore()
+	ctx := context.Background()
+	transactionStore := inmemory.NewStore()
 	tariffService := services.BasicKwhTariffService{}
 
 	handler := handlers.TransactionEventHandler{
@@ -135,7 +140,7 @@ func TestTransactionEventHandlerWithEndedEvent(t *testing.T) {
 		},
 	}
 
-	got, err := handler.HandleCall(context.Background(), "cs001", req)
+	got, err := handler.HandleCall(ctx, "cs001", req)
 	assert.NoError(t, err)
 
 	want := &types.TransactionEventResponseJson{
@@ -143,7 +148,7 @@ func TestTransactionEventHandlerWithEndedEvent(t *testing.T) {
 	}
 	assert.Equal(t, want, got)
 
-	transaction, err := transactionStore.FindTransaction("cs001", "5555")
+	transaction, err := transactionStore.FindTransaction(ctx, "cs001", "5555")
 	require.NoError(t, err)
 	assert.NotNil(t, transaction)
 }

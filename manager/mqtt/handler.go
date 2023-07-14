@@ -7,18 +7,19 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/eclipse/paho.golang/autopaho"
-	"github.com/eclipse/paho.golang/paho"
-	"github.com/thoughtworks/maeve-csms/manager/schemas"
-	"github.com/thoughtworks/maeve-csms/manager/services"
-	"github.com/thoughtworks/maeve-csms/manager/store"
 	"io/fs"
-	"k8s.io/utils/clock"
 	"log"
 	"math/rand"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/eclipse/paho.golang/autopaho"
+	"github.com/eclipse/paho.golang/paho"
+	"github.com/thoughtworks/maeve-csms/manager/schemas"
+	"github.com/thoughtworks/maeve-csms/manager/services"
+	"github.com/thoughtworks/maeve-csms/manager/store"
+	"k8s.io/utils/clock"
 )
 
 type Handler struct {
@@ -29,7 +30,6 @@ type Handler struct {
 	mqttConnectRetryDelay time.Duration
 	mqttKeepAliveInterval uint16
 	clock                 clock.PassiveClock
-	transactionStore      services.TransactionStore
 	tariffService         services.TariffService
 	certValidationService services.CertificateValidationService
 	certSignerService     services.CertificateSignerService
@@ -70,12 +70,6 @@ func WithMqttConnectSettings(mqttConnectTimeout, mqttConnectRetryDelay, mqttKeep
 func WithClock(clock clock.PassiveClock) HandlerOpt {
 	return func(h *Handler) {
 		h.clock = clock
-	}
-}
-
-func WithTransactionStore(transactionStore services.TransactionStore) HandlerOpt {
-	return func(h *Handler) {
-		h.transactionStore = transactionStore
 	}
 }
 
@@ -175,8 +169,8 @@ func (h *Handler) Connect(errCh chan error) {
 	v16Emitter := &ProxyEmitter{}
 	v201Emitter := &ProxyEmitter{}
 
-	v16Router := NewV16Router(v16Emitter, h.clock, h.storageEngine, h.transactionStore, h.certValidationService, h.certSignerService, h.certProviderService, h.heartbeatInterval, h.schemaFS)
-	v201Router := NewV201Router(v201Emitter, h.clock, h.storageEngine, h.transactionStore, h.tariffService, h.certValidationService, h.certSignerService, h.certProviderService, h.heartbeatInterval)
+	v16Router := NewV16Router(v16Emitter, h.clock, h.storageEngine, h.storageEngine, h.certValidationService, h.certSignerService, h.certProviderService, h.heartbeatInterval, h.schemaFS)
+	v201Router := NewV201Router(v201Emitter, h.clock, h.storageEngine, h.storageEngine, h.tariffService, h.certValidationService, h.certSignerService, h.certProviderService, h.heartbeatInterval)
 
 	mqttV16Topic := fmt.Sprintf("$share/%s/%s/in/ocpp1.6/#", h.mqttGroup, h.mqttPrefix)
 	mqttV201Topic := fmt.Sprintf("$share/%s/%s/in/ocpp2.0.1/#", h.mqttGroup, h.mqttPrefix)

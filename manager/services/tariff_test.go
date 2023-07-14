@@ -3,10 +3,12 @@
 package services_test
 
 import (
-	"github.com/stretchr/testify/assert"
-	"github.com/thoughtworks/maeve-csms/manager/services"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/thoughtworks/maeve-csms/manager/services"
+	"github.com/thoughtworks/maeve-csms/manager/store"
 )
 
 func makePtr[T any](t T) *T {
@@ -15,11 +17,11 @@ func makePtr[T any](t T) *T {
 }
 
 func TestBasicKwhTariffServiceCanCalculateCost(t *testing.T) {
-	transaction := &services.Transaction{
-		MeterValues: []services.MeterValue{
+	transaction := &store.Transaction{
+		MeterValues: []store.MeterValue{
 			{
 				Timestamp: time.Now().Format(time.RFC3339),
-				SampledValues: []services.SampledValue{
+				SampledValues: []store.SampledValue{
 					{
 						Context:   makePtr("Transaction.End"),
 						Measurand: makePtr("Energy.Active.Import.Register"),
@@ -45,7 +47,7 @@ func TestBasicKwhTariffServiceErrorsWithNilTransaction(t *testing.T) {
 }
 
 func TestBasicKwhTariffServiceErrorsWhenNoKwhReading(t *testing.T) {
-	transaction := &services.Transaction{}
+	transaction := &store.Transaction{}
 	tariffService := services.BasicKwhTariffService{}
 	cost, err := tariffService.CalculateCost(transaction)
 	assert.ErrorContains(t, err, "no output energy reading found in transaction")

@@ -7,15 +7,17 @@ import (
 	"fmt"
 	"sort"
 	"time"
+
+	"github.com/thoughtworks/maeve-csms/manager/store"
 )
 
 type TariffService interface {
-	CalculateCost(transaction *Transaction) (float64, error)
+	CalculateCost(transaction *store.Transaction) (float64, error)
 }
 
 type BasicKwhTariffService struct{}
 
-func (BasicKwhTariffService) CalculateCost(transaction *Transaction) (float64, error) {
+func (BasicKwhTariffService) CalculateCost(transaction *store.Transaction) (float64, error) {
 	var cost float64
 
 	if transaction == nil {
@@ -32,7 +34,7 @@ func (BasicKwhTariffService) CalculateCost(transaction *Transaction) (float64, e
 	return cost, nil
 }
 
-func findMostRecentOutletEnergyReading(transaction *Transaction) (float64, bool) {
+func findMostRecentOutletEnergyReading(transaction *store.Transaction) (float64, bool) {
 	sort.Slice(transaction.MeterValues, func(i, j int) bool {
 		ts1, err := time.Parse(time.RFC3339, transaction.MeterValues[i].Timestamp)
 		if err != nil {

@@ -3,23 +3,23 @@
 package server
 
 import (
+	"net/http"
+	"os"
+	"text/template"
+
 	"github.com/rs/cors"
 	"github.com/thoughtworks/maeve-csms/manager/api"
 	"github.com/thoughtworks/maeve-csms/manager/store"
 	"github.com/unrolled/secure"
 	"k8s.io/utils/clock"
-	"net/http"
-	"os"
-	"text/template"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/thoughtworks/maeve-csms/manager/services"
 	"github.com/thoughtworks/maeve-csms/manager/templates"
 )
 
-func NewApiHandler(engine store.Engine, transactionStore services.TransactionStore) http.Handler {
+func NewApiHandler(engine store.Engine) http.Handler {
 	apiServer, err := api.NewServer(engine, clock.RealClock{})
 	if err != nil {
 		panic(err)
@@ -40,7 +40,7 @@ func NewApiHandler(engine store.Engine, transactionStore services.TransactionSto
 	r := chi.NewRouter()
 	r.Use(middleware.Logger, middleware.Recoverer, secureMiddleware.Handler, cors.Default().Handler, api.ValidationMiddleware)
 	r.Get("/health", health)
-	r.Get("/transactions", transactions(transactionStore))
+	r.Get("/transactions", transactions(engine))
 	r.Handle("/metrics", promhttp.Handler())
 	r.Get("/api/openapi.json", getSwaggerJson)
 	r.Mount("/api/v0", api.Handler(apiServer))
@@ -66,9 +66,9 @@ func health(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write([]byte(`{"status":"OK"}`))
 }
 
-func transactions(transactionStore services.TransactionStore) func(w http.ResponseWriter, r *http.Request) {
+func transactions(transactionStore store.Engine) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ts, err := transactionStore.Transactions()
+		ts, err := transactionStore.Transactions(r.Context())
 		if err != nil {
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return

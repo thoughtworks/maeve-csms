@@ -4,16 +4,16 @@ package ocpp16_test
 
 import (
 	"context"
+	"testing"
+	"time"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	handlers "github.com/thoughtworks/maeve-csms/manager/handlers/ocpp16"
 	types "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp16"
-	"github.com/thoughtworks/maeve-csms/manager/services"
 	"github.com/thoughtworks/maeve-csms/manager/store"
 	"github.com/thoughtworks/maeve-csms/manager/store/inmemory"
 	clockTest "k8s.io/utils/clock/testing"
-	"testing"
-	"time"
 )
 
 func TestStopTransactionHandler(t *testing.T) {
@@ -35,15 +35,15 @@ func TestStopTransactionHandler(t *testing.T) {
 	now, err := time.Parse(time.RFC3339, "2023-06-15T15:06:00+01:00")
 	require.NoError(t, err)
 
-	transactionStore := services.NewInMemoryTransactionStore()
+	transactionStore := inmemory.NewStore()
 
 	startContext := "Transaction.Begin"
 	startMeasurand := "MeterValue"
 	startLocation := "Outlet"
-	err = transactionStore.CreateTransaction("cs001", handlers.ConvertToUUID(42), "MYRFIDTAG", "ISO14443",
-		[]services.MeterValue{
+	err = transactionStore.CreateTransaction(context.TODO(), "cs001", handlers.ConvertToUUID(42), "MYRFIDTAG", "ISO14443",
+		[]store.MeterValue{
 			{
-				SampledValues: []services.SampledValue{
+				SampledValues: []store.SampledValue{
 					{
 						Context:   &startContext,
 						Measurand: &startMeasurand,
@@ -99,22 +99,22 @@ func TestStopTransactionHandler(t *testing.T) {
 
 	assert.Equal(t, want, got)
 
-	found, err := transactionStore.FindTransaction("cs001", handlers.ConvertToUUID(42))
+	found, err := transactionStore.FindTransaction(context.TODO(), "cs001", handlers.ConvertToUUID(42))
 	require.NoError(t, err)
 
 	expectedTransactionEndContext := "Transaction.End"
 	expectedPeriodicContext := "Sample.Periodic"
 	expectedOutletLocation := "Outlet"
 	expectedMeasurand := "Energy.Active.Import.Register"
-	expected := &services.Transaction{
+	expected := &store.Transaction{
 		ChargeStationId: "cs001",
 		TransactionId:   handlers.ConvertToUUID(42),
 		IdToken:         "MYRFIDTAG",
 		TokenType:       "ISO14443",
-		MeterValues: []services.MeterValue{
+		MeterValues: []store.MeterValue{
 			{
 				Timestamp: now.Format(time.RFC3339),
-				SampledValues: []services.SampledValue{
+				SampledValues: []store.SampledValue{
 					{
 						Context:   &startContext,
 						Location:  &startLocation,
@@ -125,7 +125,7 @@ func TestStopTransactionHandler(t *testing.T) {
 			},
 			{
 				Timestamp: now.Format(time.RFC3339),
-				SampledValues: []services.SampledValue{
+				SampledValues: []store.SampledValue{
 					{
 						Context:   &expectedPeriodicContext,
 						Location:  &expectedOutletLocation,
@@ -136,7 +136,7 @@ func TestStopTransactionHandler(t *testing.T) {
 			},
 			{
 				Timestamp: now.Format(time.RFC3339),
-				SampledValues: []services.SampledValue{
+				SampledValues: []store.SampledValue{
 					{
 						Context:   &expectedTransactionEndContext,
 						Location:  &expectedOutletLocation,

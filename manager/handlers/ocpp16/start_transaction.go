@@ -4,21 +4,21 @@ package ocpp16
 
 import (
 	"context"
-	"github.com/google/uuid"
-	"github.com/thoughtworks/maeve-csms/manager/ocpp"
-	types "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp16"
-	"github.com/thoughtworks/maeve-csms/manager/services"
-	"github.com/thoughtworks/maeve-csms/manager/store"
-	"k8s.io/utils/clock"
 	"log"
 	"math/rand"
 	"time"
+
+	"github.com/google/uuid"
+	"github.com/thoughtworks/maeve-csms/manager/ocpp"
+	types "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp16"
+	"github.com/thoughtworks/maeve-csms/manager/store"
+	"k8s.io/utils/clock"
 )
 
 type StartTransactionHandler struct {
 	Clock            clock.PassiveClock
 	TokenStore       store.TokenStore
-	TransactionStore services.TransactionStore
+	TransactionStore store.TransactionStore
 }
 
 func (t StartTransactionHandler) HandleCall(ctx context.Context, chargeStationId string, request ocpp.Request) (ocpp.Response, error) {
@@ -41,15 +41,15 @@ func (t StartTransactionHandler) HandleCall(ctx context.Context, chargeStationId
 	contextTransactionBegin := types.MeterValuesJsonMeterValueElemSampledValueElemContextTransactionBegin
 	meterValueMeasurand := "MeterValue"
 	transactionUuid := ConvertToUUID(transactionId)
-	err = t.TransactionStore.CreateTransaction(chargeStationId, transactionUuid, req.IdTag, "ISO14443",
-		[]services.MeterValue{
+	err = t.TransactionStore.CreateTransaction(ctx, chargeStationId, transactionUuid, req.IdTag, "ISO14443",
+		[]store.MeterValue{
 			{
 				Timestamp: t.Clock.Now().Format(time.RFC3339),
-				SampledValues: []services.SampledValue{
+				SampledValues: []store.SampledValue{
 					{
 						Context:   (*string)(&contextTransactionBegin),
 						Measurand: &meterValueMeasurand,
-						UnitOfMeasure: &services.UnitOfMeasure{
+						UnitOfMeasure: &store.UnitOfMeasure{
 							Unit:      string(types.MeterValuesJsonMeterValueElemSampledValueElemUnitWh),
 							Multipler: 1,
 						},

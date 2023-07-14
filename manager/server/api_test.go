@@ -11,7 +11,7 @@ import (
 )
 
 func TestHealthHandler(t *testing.T) {
-	handler := server.NewApiHandler(nil, nil)
+	handler := server.NewApiHandler(nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/health", nil)
 	w := httptest.NewRecorder()
