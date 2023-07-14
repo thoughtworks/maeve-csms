@@ -3,12 +3,13 @@
 package cmd
 
 import (
+	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/thoughtworks/maeve-csms/manager/services"
+	"github.com/thoughtworks/maeve-csms/manager/store"
+	"github.com/thoughtworks/maeve-csms/manager/store/firestore"
 )
 
 var long = `Get transactions from the transaction store.
@@ -20,13 +21,14 @@ var getTransactionsCmd = &cobra.Command{
 	Short: "Get transaction details from the store",
 	Long:  long,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		transactionStore := services.NewRedisTransactionStore(redisAddr)
-		if transactionStore == nil {
-			return errors.New("unable to connect to transaction store at address " + redisAddr)
+		ctx := context.Background()
+		transactionStore, err := firestore.NewStore(ctx, gcloudProject)
+		if err != nil {
+			return fmt.Errorf("creating transaction store: %w", err)
 		}
 
 		if len(args) == 0 {
-			transactions, err := transactionStore.Transactions()
+			transactions, err := transactionStore.Transactions(ctx)
 			if err != nil {
 				return fmt.Errorf("getting transactions: %w", err)
 			}
@@ -45,7 +47,7 @@ var getTransactionsCmd = &cobra.Command{
 		}
 
 		for i := 0; i < len(args); i += 2 {
-			transaction, err := transactionStore.FindTransaction(args[i], args[i+1])
+			transaction, err := transactionStore.FindTransaction(ctx, args[i], args[i+1])
 			if err != nil {
 				fmt.Println("transaction not found:", args)
 			}
@@ -60,7 +62,7 @@ var getTransactionsCmd = &cobra.Command{
 	},
 }
 
-func formatTransaction(transaction *services.Transaction) (string, error) {
+func formatTransaction(transaction *store.Transaction) (string, error) {
 	b, err := json.MarshalIndent(transaction, "", "  ")
 	if err != nil {
 		return "", err
@@ -71,6 +73,8 @@ func formatTransaction(transaction *services.Transaction) (string, error) {
 func init() {
 	transactionCmd.AddCommand(getTransactionsCmd)
 
-	getTransactionsCmd.Flags().StringVarP(&redisAddr, "redis-addr", "r", "127.0.0.1:6379",
-		"The address of the Redis store, e.g. 127.0.0.1:6379")
+	transactionCmd.Flags().StringVarP(&storageEngine, "storage-engine", "s", "firestore",
+		"The storage engine to use for persistence, one of [firestore, inmemory]")
+	transactionCmd.Flags().StringVarP(&gcloudProject, "gcloud-project", "g", "",
+		"The name of the gcloud project to use for firestore")
 }
