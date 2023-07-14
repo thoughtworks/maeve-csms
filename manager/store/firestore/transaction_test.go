@@ -103,6 +103,31 @@ func TestCreateTransactionWithExistingTransaction(t *testing.T) {
 	assert.Equal(t, want, got)
 }
 
+func TestTransactionStoreGetAllTransactions(t *testing.T) {
+	ctx := context.Background()
+
+	transactionStore, err := firestore.NewStore(ctx, "myproject")
+	require.NoError(t, err)
+
+	transactionsBefore, err := transactionStore.Transactions(ctx)
+	assert.NoError(t, err)
+
+	meterValues := NewMeterValues(100)
+	err = transactionStore.CreateTransaction(ctx, "cs006", "1234", idToken, tokenType, meterValues, 0, false)
+	assert.NoError(t, err)
+
+	err = transactionStore.CreateTransaction(ctx, "cs006", "1235", idToken, tokenType, meterValues, 0, false)
+	assert.NoError(t, err)
+
+	err = transactionStore.CreateTransaction(ctx, "cs006", "1236", idToken, tokenType, meterValues, 0, false)
+	assert.NoError(t, err)
+
+	transactionsAfter, err := transactionStore.Transactions(ctx)
+	assert.NoError(t, err)
+	got := len(transactionsAfter) - len(transactionsBefore)
+	assert.Equal(t, got, 3)
+}
+
 func TestTransactionStoreUpdateCreatedTransaction(t *testing.T) {
 	ctx := context.Background()
 

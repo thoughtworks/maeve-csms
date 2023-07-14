@@ -58,6 +58,25 @@ func (s *Store) FindTransaction(ctx context.Context, chargeStationId, transactio
 	return &transaction, nil
 }
 
+func (s *Store) Transactions(ctx context.Context) ([]*store.Transaction, error) {
+	transactionRefs, err := s.client.Collection("Transaction").Documents(ctx).GetAll()
+	if err != nil {
+		return nil, fmt.Errorf("getting transactions: %w", err)
+	}
+
+	transactions := make([]*store.Transaction, 0, len(transactionRefs))
+	for _, transactionRef := range transactionRefs {
+		fmt.Printf("transactionRef: %v\n", transactionRef)
+		var transaction store.Transaction
+		if err = transactionRef.DataTo(&transaction); err != nil {
+			return nil, fmt.Errorf("map transaction %s: %w", transactionRef.Ref.ID, err)
+		}
+		transactions = append(transactions, &transaction)
+	}
+
+	return transactions, nil
+}
+
 func (s *Store) UpdateTransaction(ctx context.Context, chargeStationId, transactionId string, meterValue []store.MeterValue) error {
 	transaction, err := s.FindTransaction(ctx, chargeStationId, transactionId)
 	if err != nil {

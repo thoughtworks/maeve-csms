@@ -66,7 +66,7 @@ func (s *Store) updateTransaction(transaction *store.Transaction) {
 	s.transactions[key] = transaction
 }
 
-func (s *Store) Transactions() ([]*store.Transaction, error) {
+func (s *Store) Transactions(_ context.Context) ([]*store.Transaction, error) {
 	s.Lock()
 	defer s.Unlock()
 
