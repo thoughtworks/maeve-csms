@@ -35,9 +35,8 @@ in addition to the [Manager](./docs/manager.md) and [Gateway](./docs/gateway.md)
   This is used to decouple the stateful connections required by OCPP from the stateless message handlers. The system
   currently connects to the MQTT broker anonymously.
 
-- #### Redis
-  The system uses [Redis](https://redis.io/) as a storage engine for transaction details. The manager connects to the
-  store anonymously.
+- #### Firestore
+  The system uses [Firestore](https://firebase.google.com/docs/firestore) as a storage engine for persistence layer.
 
 - #### Load balancer
   A load balancer implemented through [envoyproxy](https://www.envoyproxy.io/) to load balance calls coming from the
@@ -56,18 +55,25 @@ _You will need to run this from the correct sub-directory (e.g. ./gateway or ./m
 
 ## Testing
 
-Each Go project contains a set of tests that are when a commit reaches the remote repository.
+Each Go project contains a set of tests that are run when a commit reaches the remote repository.
 These tests also run as part of our [git hooks](#install-the-hooks) before committing to the local repository.
 
-If you wish to run the tests manually, you can run the following:
+If you wish to run the unit tests manually, you can run the following:
 
 ```shell
-$ export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
-$ export DOCKER_HOST=$(docker context inspect -f '{{ .Endpoints.docker.Host }}')
-$ go test ./...
+go test ./...
 ```
 
+The project also has integration tests to validate integration with third party services.
+Some of those tests use TestContainers, thus require Docker.
+
 _Please ensure the docker daemon is running on your machine before running these tests._
+
+```shell
+export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
+export DOCKER_HOST=$(docker context inspect -f '{{ .Endpoints.docker.Host }}')
+go test ./... --tags=integration
+```
 
 ## How to report a bug and track issues
 
