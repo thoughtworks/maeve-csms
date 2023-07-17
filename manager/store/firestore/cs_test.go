@@ -1,12 +1,17 @@
+// SPDX-License-Identifier: Apache-2.0
+
+//go:build integration
+
 package firestore_test
 
 import (
 	"context"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/thoughtworks/maeve-csms/manager/store"
 	"github.com/thoughtworks/maeve-csms/manager/store/firestore"
-	"testing"
 )
 
 func TestSetAndLookupChargeStationAuth(t *testing.T) {

@@ -34,9 +34,10 @@ jobs:
         go install github.com/securego/gosec/v2/cmd/gosec@latest
         gosec ./...
     - name: Test & Coverage
-      run: | 
+      run: |
         go test ./... -coverprofile=coverage.out
         go tool cover -html=coverage.out -o cover.html
+        go test ./store/... --tags=integration
     - uses: actions/upload-artifact@v3
       with:
         name: code-coverage

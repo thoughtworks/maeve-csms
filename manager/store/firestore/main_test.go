@@ -1,12 +1,17 @@
+//SPDX-License-Identifier: Apache-2.0
+
+//go:build integration
+
 package firestore_test
 
 import (
 	"context"
-	"github.com/testcontainers/testcontainers-go"
-	"github.com/testcontainers/testcontainers-go/wait"
 	"log"
 	"os"
 	"testing"
+
+	"github.com/testcontainers/testcontainers-go"
+	"github.com/testcontainers/testcontainers-go/wait"
 )
 
 var endpoint string
