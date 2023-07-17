@@ -80,26 +80,11 @@ services:
       retries: 3
     user: "10000:10000"
 
-  redis:
-    image: redis:latest
-    restart: always
-    healthcheck:
-      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
-    entrypoint: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
-    environment:
-      - ALLOW_EMPTY_PASSWORD=yes
-    ports:
-      - "6379:6379"
-    volumes:
-      - ./data/redis-data:/data
-
   manager:
     build:
       context: manager
     depends_on:
       mqtt:
-        condition: service_healthy
-      redis:
         condition: service_healthy
     environment:
       ENVIRONMENT: dev
@@ -110,8 +95,6 @@ services:
       - ":9410"
       - "--mqtt-addr"
       - "mqtt://mqtt:1883"
-      - "--redis-addr"
-      - "redis:6379"
       - "--v2g-pem-file"
       - "/certificates/root-V2G-cert.pem"
       - "--hubject-token"
