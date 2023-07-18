@@ -75,6 +75,6 @@ func init() {
 
 	transactionCmd.Flags().StringVarP(&storageEngine, "storage-engine", "s", "firestore",
 		"The storage engine to use for persistence, one of [firestore, inmemory]")
-	transactionCmd.Flags().StringVarP(&gcloudProject, "gcloud-project", "g", "",
-		"The name of the gcloud project to use for firestore")
+	transactionCmd.Flags().StringVar(&gcloudProject, "gcloud-project", "*detect-project-id*",
+		"The google cloud project that hosts the firestore instance (if chosen storage-engine)")
 }
