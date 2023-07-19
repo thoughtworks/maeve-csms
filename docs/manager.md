@@ -19,23 +19,23 @@ for creating the handler instances and providing them with their dependencies.
 
 All integration points are decoupled from the OCPP handlers and provided to the handler as dependencies. At present 
 the following integration points are used:
-* [CertificateSignerService](../manager/services/certificate_signer.go): provides support for signing the TLS
+* [services.CertificateSignerService](../manager/services/certificate_signer.go): provides support for signing the TLS
 certificates used by charge stations (for either the V2G or CPO interfaces). Current implementation uses Hubject EST
 and assumes the same certificate will be used for both interfaces.
-* [CertificateValidationService](../manager/services/certificate_validation.go): provides support for verifying a
+* [services.CertificateValidationService](../manager/services/certificate_validation.go): provides support for verifying a
 contract certificate chain based on either receiving the chain as a PEM encoded string or via certificate element
 hashes. Current implementation uses an OCSP server to verify that the certificates have not been revoked.
-* [EVCertificateProvider](../manager/services/ev_certificate_provider.go): provides supports for retrieving a contract
+* [services.EVCertificateProvider](../manager/services/ev_certificate_provider.go): provides supports for retrieving a contract
 certificate given an ISO-15118-2 get EV certificate request. Current implementation uses the Hubject contract
 certificate pool.
-* [TariffService](../manager/services/tariff.go): provides support for calculating the cost of a transaction. Current
+* [services.TariffService](../manager/services/tariff.go): provides support for calculating the cost of a transaction. Current
 implementation applies a fixed charge per kWh energy consumed.
-* [TokenStore](../manager/services/token.go): provides support for looking up token details. Current implementation
-uses an in-memory map.
-* [TransactionStore](../manager/services/transaction.go): provides support for storing details of an ongoing
-transaction. Current implementations are either in-memory (N.B. this is not stateless) or use Redis as a store.
+* [store.Engine](../manager/store/engine.go): provides support for persisting various entities. Current implementations
+use either [Firestore](https://firebase.google.com/docs/firestore) or an in-memory store for testing.
 
 There are separate interfaces that a handler implements for handling a call
 (a [CallHandler](../manager/handlers/types.go)) and a call result (a [CallResultHandler](../manager/handlers/types.go)).
 A handler that wants to initiate a call to a charge station can use a [CallMaker](../manager/handlers/types.go)
 to send an OCPP message to a charge station.
+
+The manager has a [RESTful API](../manager/api/api-spec.yaml) that allows the CSMS to be configured.

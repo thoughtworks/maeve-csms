@@ -40,3 +40,5 @@ There are individual MQTT topics for each charge station:
 
 Where `<prefix>` is a configured prefix for all the topics (defaults to `cs`), `<ocpp-version>` is the
 version of OCPP being used: either `ocpp16` or `ocpp201` and `<cs-id>` is the charge station identifier.
+
+The authentication details for the charge station are read via the [manager](manager.md) API.

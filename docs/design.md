@@ -18,7 +18,7 @@ are disconnected at any specific point.
 There are high-performance MQTT brokers that can process millions of messages per second, so this is not
 expected to be a limiting factor.
 
-The use of Redis to store transaction details enables the manager component to be stateless.
+The use of a database to store state allows the handlers themselves to be stateless.
 
 ![Diagram showing how multiple charge stations can connect to multiple instances of the CSMS gateway via a load balancer and on to multiple instances of the CSMS manager via an MQTT broker](assets/scaling.png)
 

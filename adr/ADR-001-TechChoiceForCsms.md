@@ -15,13 +15,13 @@ The original purpose of this project was a timeboxed PoC. But after the PoC, whe
 
 ## Decision
 
-We will use Go (golang) for development of this component. The main reason being that the PoC was started in Go due to historical /circumstancial reasons. 
+We will use Go (golang) for development of this component. The main reason being that the PoC was started in Go due to historical / circumstantial reasons. 
 
 ## Consequences
 
 *Advantages*:
 
-* Base code already developped in Go
+* Base code already developed in Go
 * Go scores high in performance and memory footprint
 * Easy for local development; no need for complex build scripts; new developers can get started very quickly.
 
