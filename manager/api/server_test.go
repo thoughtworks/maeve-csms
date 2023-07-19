@@ -147,7 +147,9 @@ func TestLookupToken(t *testing.T) {
 	err = decoder.Decode(&got)
 	require.NoError(t, err)
 
-	lastUpdated := now.Round(time.Second)
+	lastUpdatedStr := now.Format(time.RFC3339)
+	lastUpdated, err := time.Parse(time.RFC3339, lastUpdatedStr)
+	require.NoError(t, err)
 	want := api.Token{
 		CacheMode:   "ALWAYS",
 		ContractId:  "GBTWK012345678V",
