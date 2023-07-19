@@ -37,7 +37,8 @@ jobs:
       run: |
         go test ./... -coverprofile=coverage.out
         go tool cover -html=coverage.out -o cover.html
-        go test ./store/... --tags=integration
+        # Temporarily disable integration test: https://github.com/moby/moby/issues/45935
+        # go test ./store/... --tags=integration
     - uses: actions/upload-artifact@v3
       with:
         name: code-coverage
