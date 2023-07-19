@@ -3,7 +3,7 @@ package registry_test
 import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/twlabs/maeve-csms/gateway/registry"
+	"github.com/thoughtworks/maeve-csms/gateway/registry"
 	"net/http"
 	"net/http/httptest"
 	"testing"
