@@ -23,6 +23,8 @@ fileignoreconfig:
     checksum: 904b7ebf2b97a4400cc4e868d323442685985eb0c20d3d8bb169a674abf8177c
   - filename: manager/api/server.go
     checksum: 22cd986022106ada9fbc8c88d41a96dbedce68e4442fe32f1ae3ac081a2bde0d
+  - filename: manager/cmd/encode.go
+    checksum: 919ddba28a6b11835b0c2d3d8c40ad040264f29891f6d58f92a4dfa984c69aba
   - filename: manager/handlers/ocpp16/data_transfer_test.go
     checksum: ff19ad1feeb979a62c6a53e256ab3fe879bd540242153792b8b1148ae7010c4b
   - filename: manager/handlers/ocpp16/stop_transaction.go
@@ -75,8 +77,6 @@ fileignoreconfig:
     checksum: 100d8f7a7fe642abae94812a2e9f6938f5045bbd22c358b2e0adc684a45698ce
   - filename: manager/services/certificate_validation_test.go
     checksum: 893e918e122b2dd321bad4a02ee0523f25df1a3b501538e5541f9bbbbc4bd794
-  - filename: manager/services/transaction.go
-    checksum: 5c382cf7937a6d7ab2626620b44a73131c23fd6702b4ed00cfd744d41cfb63c0
   - filename: manager/store/firestore/cs.go
     checksum: 04aa0b00b290595b5d8d7a4693bf526a3d6ee1df8a1a2e7ca9a25f0a54eb7dd3
   - filename: manager/store/firestore/cs_test.go
