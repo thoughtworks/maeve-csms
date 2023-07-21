@@ -22,6 +22,7 @@ import (
 	"github.com/thoughtworks/maeve-csms/manager/store"
 	"github.com/thoughtworks/maeve-csms/manager/store/inmemory"
 	"io"
+	"k8s.io/utils/clock"
 	clockTest "k8s.io/utils/clock/testing"
 	"math/big"
 	"net/http"
@@ -88,7 +89,8 @@ func TestLookupChargeStationAuthThatDoesNotExist(t *testing.T) {
 }
 
 func TestSetToken(t *testing.T) {
-	server, r, engine, now := setupServer(t)
+	server, r, engine, c := setupServer(t)
+	now := c.Now()
 	defer server.Close()
 
 	token := api.Token{
@@ -132,7 +134,8 @@ func TestSetToken(t *testing.T) {
 }
 
 func TestLookupToken(t *testing.T) {
-	server, r, engine, now := setupServer(t)
+	server, r, engine, c := setupServer(t)
+	now := c.Now()
 	defer server.Close()
 
 	err := engine.SetToken(context.Background(), &store.Token{
@@ -261,11 +264,12 @@ func TestLookupCertificate(t *testing.T) {
 	assert.JSONEq(t, fmt.Sprintf(`{"certificate":"%s"}`, strings.Replace(string(pemCert), "\n", "\\n", -1)), string(b))
 }
 
-func setupServer(t *testing.T) (*httptest.Server, *chi.Mux, store.Engine, time.Time) {
+func setupServer(t *testing.T) (*httptest.Server, *chi.Mux, store.Engine, clock.PassiveClock) {
 	engine := inmemory.NewStore()
 
-	now := time.Now()
-	srv, err := api.NewServer(engine, clockTest.NewFakePassiveClock(now))
+	now := time.Now().UTC()
+	c := clockTest.NewFakePassiveClock(now)
+	srv, err := api.NewServer(engine, c)
 	require.NoError(t, err)
 
 	r := chi.NewRouter()
@@ -273,7 +277,7 @@ func setupServer(t *testing.T) (*httptest.Server, *chi.Mux, store.Engine, time.T
 	r.Mount("/", api.Handler(srv))
 	server := httptest.NewServer(r)
 
-	return server, r, engine, now
+	return server, r, engine, c
 }
 
 func generateCertificate(t *testing.T) *x509.Certificate {
