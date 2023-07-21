@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 package cmd
 
 import (
@@ -9,7 +11,7 @@ import (
 
 // encodePasswordCmd represents the encodePassword command
 var encodePasswordCmd = &cobra.Command{
-	Use:   "encode-pAassword",
+	Use:   "encode-password",
 	Short: "Encode a password for storage in the database",
 	Run: func(cmd *cobra.Command, args []string) {
 		for _, pwd := range args {

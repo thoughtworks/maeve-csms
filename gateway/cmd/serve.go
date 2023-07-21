@@ -13,15 +13,18 @@ import (
 	"os"
 )
 
-var mqttAddr string
-var wsAddr string
-var wssAddr string
-var statusAddr string
-var tlsServerCert string
-var tlsServerKey string
-var tlsTrustCert []string
-var orgNames []string
-var managerApiAddr string
+var (
+	mqttAddr          string
+	wsAddr            string
+	wssAddr           string
+	statusAddr        string
+	tlsServerCert     string
+	tlsServerKey      string
+	tlsTrustCert      []string
+	orgNames          []string
+	managerApiAddr    string
+	trustProxyHeaders bool
+)
 
 // serveCmd represents the serve command
 var serveCmd = &cobra.Command{
@@ -41,7 +44,8 @@ var serveCmd = &cobra.Command{
 			server.WithMqttBrokerUrl(brokerUrl),
 			server.WithMqttTopicPrefix("cs"),
 			server.WithDeviceRegistry(remoteRegistry),
-			server.WithOrgNames(orgNames))
+			server.WithOrgNames(orgNames),
+			server.WithTrustProxyHeaders(trustProxyHeaders))
 		wsServer := server.New("ws", wsAddr, nil, websocketHandler)
 		var wssServer *server.Server
 
@@ -121,4 +125,6 @@ func init() {
 		"A comma-separated list of organisation names that are valid in client certificates")
 	serveCmd.Flags().StringVarP(&managerApiAddr, "manager-api-addr", "r", "http://127.0.0.1:9410",
 		"The address of the CSMS manager API, e.g. http://127.0.0.1:9410")
+	serveCmd.Flags().BoolVar(&trustProxyHeaders, "trust-proxy", false,
+		"Trust proxy headers when determining the client's TLS status")
 }

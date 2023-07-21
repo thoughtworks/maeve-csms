@@ -128,6 +128,89 @@ paths:
             "application/json":
               schema:
                 $ref: "#/components/schemas/Status"
+  /certificate:
+    post:
+      summary: "Upload a certificate"
+      description: |
+        Uploads a client certificate to the CSMS. The CSMS can use the certificate to authenticate
+        the charge station using mutual TLS when the TLS operations are being offloaded to a load-balancer.
+      operationId: "uploadCertificate"
+      requestBody:
+        required: true
+        content:
+          "application/json":
+            schema:
+              $ref: '#/components/schemas/Certificate'
+      responses:
+        "201":
+          description: "Created"
+        default:
+          description: "Unexpected error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Status"
+  /certificate/{certificateHash}:
+    get:
+      summary: "Lookup a certificate"
+      description: |
+        Lookup a client certificate that has been uploaded to the CSMS using a base64 encoded SHA-256 hash
+        of the DER bytes.
+      operationId: "lookupCertificate"
+      parameters:
+        - required: true
+          in: "path"
+          name: "certificateHash"
+          schema:
+            type: "string"
+            maxLength: 64
+      responses:
+        "200":
+          description: "Certificate details"
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/Certificate"
+        "404":
+          description: "Not found"
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/Status"
+        default:
+          description: "Unexpected error"
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/Status"
+    delete:
+      summary: "Delete a certificate"
+      description: |
+        Deletes a client certificate that has been uploaded to the CSMS using a base64 encoded SHA-256 hash
+        of the DER bytes.
+      operationId: "deleteCertificate"
+      parameters:
+        - required: true
+          in: "path"
+          name: "certificateHash"
+          schema:
+            type: "string"
+            maxLength: 64
+      responses:
+        "204":
+          description: "No content"
+        "404":
+          description: "Not found"
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/Status"
+        default:
+          description: "Unexpected error"
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/Status"
 components:
   schemas:
     ChargeStationAuth:
@@ -228,3 +311,12 @@ components:
         error:
           type: "string"
           description: "The error details"
+    Certificate:
+      type: "object"
+      description: "A client certificate"
+      required:
+        - "certificate"
+      properties:
+        certificate:
+          type: "string"
+          description: "The PEM encoded certificate with newlines replaced by `\\n`"

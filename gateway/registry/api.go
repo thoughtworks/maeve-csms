@@ -2,6 +2,8 @@
 
 package registry
 
+import "crypto/x509"
+
 type SecurityProfile int
 
 const (
@@ -18,4 +20,5 @@ type ChargeStation struct {
 
 type DeviceRegistry interface {
 	LookupChargeStation(clientId string) (*ChargeStation, error)
+	LookupCertificate(certHash string) (*x509.Certificate, error)
 }

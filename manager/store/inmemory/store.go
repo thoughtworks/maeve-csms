@@ -1,7 +1,13 @@
+// SPDX-License-Identifier: Apache-2.0
+
 package inmemory
 
 import (
 	"context"
+	"crypto/sha256"
+	"crypto/x509"
+	"encoding/base64"
+	"encoding/pem"
 	"fmt"
 	"sync"
 
@@ -16,6 +22,7 @@ type Store struct {
 	chargeStationAuth map[string]*store.ChargeStationAuth
 	tokens            map[string]*store.Token
 	transactions      map[string]*store.Transaction
+	certificates      map[string]string
 }
 
 func NewStore() *Store {
@@ -23,6 +30,7 @@ func NewStore() *Store {
 		chargeStationAuth: make(map[string]*store.ChargeStationAuth),
 		tokens:            make(map[string]*store.Token),
 		transactions:      make(map[string]*store.Transaction),
+		certificates:      make(map[string]string),
 	}
 }
 
@@ -150,5 +158,57 @@ func (s *Store) EndTransaction(_ context.Context, chargeStationId, transactionId
 		transaction.MeterValues = append(transaction.MeterValues, meterValues...)
 		transaction.EndedSeqNo = seqNo
 	}
+	return nil
+}
+
+func (s *Store) SetCertificate(_ context.Context, pemCertificate string) error {
+	s.Lock()
+	defer s.Unlock()
+
+	b64Hash, err := getPEMCertificateHash(pemCertificate)
+	if err != nil {
+		return err
+	}
+
+	s.certificates[b64Hash] = pemCertificate
+
+	return nil
+}
+
+func getPEMCertificateHash(pemCertificate string) (string, error) {
+	var cert *x509.Certificate
+	block, _ := pem.Decode([]byte(pemCertificate))
+	if block != nil {
+		if block.Type == "CERTIFICATE" {
+			var err error
+			cert, err = x509.ParseCertificate(block.Bytes)
+			if err != nil {
+				return "", err
+			}
+		} else {
+			return "", fmt.Errorf("pem block does not contain certificate, but %s", block.Type)
+		}
+	} else {
+		return "", fmt.Errorf("pem block not found")
+	}
+
+	hash := sha256.Sum256(cert.Raw)
+	b64Hash := base64.URLEncoding.EncodeToString(hash[:])
+	return b64Hash, nil
+}
+
+func (s *Store) LookupCertificate(_ context.Context, certificateHash string) (string, error) {
+	s.Lock()
+	defer s.Unlock()
+
+	return s.certificates[certificateHash], nil
+}
+
+func (s *Store) DeleteCertificate(ctx context.Context, certificateHash string) error {
+	s.Lock()
+	defer s.Unlock()
+
+	delete(s.certificates, certificateHash)
+
 	return nil
 }

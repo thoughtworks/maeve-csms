@@ -35,6 +35,12 @@ const (
 	RFID      TokenType = "RFID"
 )
 
+// Certificate A client certificate
+type Certificate struct {
+	// Certificate The PEM encoded certificate with newlines replaced by `\n`
+	Certificate string `json:"certificate"`
+}
+
 // ChargeStationAuth Connection details for a charge station
 type ChargeStationAuth struct {
 	// Base64SHA256Password The base64 encoded, SHA-256 hash of the charge station password
@@ -98,6 +104,9 @@ type TokenCacheMode string
 // TokenType The type of token
 type TokenType string
 
+// UploadCertificateJSONRequestBody defines body for UploadCertificate for application/json ContentType.
+type UploadCertificateJSONRequestBody = Certificate
+
 // RegisterChargeStationJSONRequestBody defines body for RegisterChargeStation for application/json ContentType.
 type RegisterChargeStationJSONRequestBody = ChargeStationAuth
 
@@ -106,6 +115,15 @@ type SetTokenJSONRequestBody = Token
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// Upload a certificate
+	// (POST /certificate)
+	UploadCertificate(w http.ResponseWriter, r *http.Request)
+	// Delete a certificate
+	// (DELETE /certificate/{certificateHash})
+	DeleteCertificate(w http.ResponseWriter, r *http.Request, certificateHash string)
+	// Lookup a certificate
+	// (GET /certificate/{certificateHash})
+	LookupCertificate(w http.ResponseWriter, r *http.Request, certificateHash string)
 	// Register a new charge station
 	// (POST /cs/{csId})
 	RegisterChargeStation(w http.ResponseWriter, r *http.Request, csId string)
@@ -128,6 +146,73 @@ type ServerInterfaceWrapper struct {
 }
 
 type MiddlewareFunc func(http.Handler) http.Handler
+
+// UploadCertificate operation middleware
+func (siw *ServerInterfaceWrapper) UploadCertificate(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.UploadCertificate(w, r)
+	})
+
+	for i := len(siw.HandlerMiddlewares) - 1; i >= 0; i-- {
+		handler = siw.HandlerMiddlewares[i](handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// DeleteCertificate operation middleware
+func (siw *ServerInterfaceWrapper) DeleteCertificate(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "certificateHash" -------------
+	var certificateHash string
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "certificateHash", runtime.ParamLocationPath, chi.URLParam(r, "certificateHash"), &certificateHash)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "certificateHash", Err: err})
+		return
+	}
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteCertificate(w, r, certificateHash)
+	})
+
+	for i := len(siw.HandlerMiddlewares) - 1; i >= 0; i-- {
+		handler = siw.HandlerMiddlewares[i](handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// LookupCertificate operation middleware
+func (siw *ServerInterfaceWrapper) LookupCertificate(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "certificateHash" -------------
+	var certificateHash string
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "certificateHash", runtime.ParamLocationPath, chi.URLParam(r, "certificateHash"), &certificateHash)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "certificateHash", Err: err})
+		return
+	}
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.LookupCertificate(w, r, certificateHash)
+	})
+
+	for i := len(siw.HandlerMiddlewares) - 1; i >= 0; i-- {
+		handler = siw.HandlerMiddlewares[i](handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
 
 // RegisterChargeStation operation middleware
 func (siw *ServerInterfaceWrapper) RegisterChargeStation(w http.ResponseWriter, r *http.Request) {
@@ -336,6 +421,15 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	}
 
 	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/certificate", wrapper.UploadCertificate)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/certificate/{certificateHash}", wrapper.DeleteCertificate)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/certificate/{certificateHash}", wrapper.LookupCertificate)
+	})
+	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/cs/{csId}", wrapper.RegisterChargeStation)
 	})
 	r.Group(func(r chi.Router) {
@@ -354,34 +448,38 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
-	"fwYAAP//J3EIRFUVAAA=",
+	"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",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

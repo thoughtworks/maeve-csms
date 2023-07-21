@@ -68,7 +68,7 @@ static_resources:
       type: LOGICAL_DNS
       dns_lookup_family: V4_ONLY
       load_assignment:
-        cluster_name: gateway
+        cluster_name: manager
         endpoints:
           - lb_endpoints:
               - endpoint:

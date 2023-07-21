@@ -4,7 +4,7 @@ fileignoreconfig:
   - filename: CONTRIBUTING.md
     checksum: 75534cf22b02aef4e54959044a33d16bd2532383fe4bafdcf8585aed58f10eaf
   - filename: config/envoy/envoy.yaml
-    checksum: eecf2e1431c914fd681f6be482e399fa9b8f61f11eb33cc354bd5781af28df5d
+    checksum: 90b8cf1a728636d65356a9d0041cc853024f5847e903ad093a0e032279b29429
   - filename: docker-compose.yml
     checksum: bebfd6c63f4d2a688fdda876093b7f4a95e38c331cb70bcec548b43b80c93cd7
   - filename: gateway/cmd/serve.go
@@ -12,7 +12,7 @@ fileignoreconfig:
   - filename: gateway/registry/remote.go
     checksum: bcdef78dfc66e140acd32d12df1806b95c3541f51cc0208a43abff49552fdcd8
   - filename: gateway/registry/remote_test.go
-    checksum: 5e2c48028cb8db96326336ba5f1d29faa88b52002d5df9dbd4c1a36865bf094a
+    checksum: f5aa4dbb5e14d772613612eeb02df83ae4458875487e3c408eff2950b460c298
   - filename: gateway/server/ws.go
     checksum: 4cbde936242380603e07cf8bd049dbca9d1c3108843d10e58f588540176c6d23
   - filename: gateway/server/ws_test.go
@@ -20,11 +20,11 @@ fileignoreconfig:
   - filename: manager/Dockerfile
     checksum: db69536d308b905d6214db1fb0e10442fe3e770ef3fed47809ca1f3ec099409d
   - filename: manager/api/api.gen.go
-    checksum: 904b7ebf2b97a4400cc4e868d323442685985eb0c20d3d8bb169a674abf8177c
+    checksum: 78218831bd13202e02d367253c69baee2b18c8e04f3992df29956e14827e70db
   - filename: manager/api/server.go
     checksum: 22cd986022106ada9fbc8c88d41a96dbedce68e4442fe32f1ae3ac081a2bde0d
-  - filename: manager/cmd/encode.go
-    checksum: 919ddba28a6b11835b0c2d3d8c40ad040264f29891f6d58f92a4dfa984c69aba
+  - filename: manager/api/server_test.go
+    checksum: 297c27a0f612af86cfdce543d5e4a21e60e70f4eb48b57d3c833257bb1b05647
   - filename: manager/handlers/ocpp16/data_transfer_test.go
     checksum: ff19ad1feeb979a62c6a53e256ab3fe879bd540242153792b8b1148ae7010c4b
   - filename: manager/handlers/ocpp16/stop_transaction.go
@@ -77,10 +77,14 @@ fileignoreconfig:
     checksum: 100d8f7a7fe642abae94812a2e9f6938f5045bbd22c358b2e0adc684a45698ce
   - filename: manager/services/certificate_validation_test.go
     checksum: 893e918e122b2dd321bad4a02ee0523f25df1a3b501538e5541f9bbbbc4bd794
+  - filename: manager/store/firestore/cert_test.go
+    checksum: 5882e08beca19cfcaab9abda418c87aa13251b49424817e9c3a54a4be4bb268c
   - filename: manager/store/firestore/cs.go
     checksum: 04aa0b00b290595b5d8d7a4693bf526a3d6ee1df8a1a2e7ca9a25f0a54eb7dd3
   - filename: manager/store/firestore/cs_test.go
     checksum: b31b2ed998237c77a6cd3501ce4231c2cbe15a2aca68db8715f4f43f9fc7e01c
+  - filename: manager/store/inmemory/cert_test.go
+    checksum: 535591f9b2a347dd1fc00f07aa3742660c96a636dae8f724c9e2842e09b95356
   - filename: scripts/generate-tls-cert.sh
     checksum: eab0c50edc72d8a53c2a2d0c4238924f9705666dc962a344384d793a501dea50
 scopeconfig:

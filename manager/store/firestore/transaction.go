@@ -66,7 +66,6 @@ func (s *Store) Transactions(ctx context.Context) ([]*store.Transaction, error) 
 
 	transactions := make([]*store.Transaction, 0, len(transactionRefs))
 	for _, transactionRef := range transactionRefs {
-		fmt.Printf("transactionRef: %v\n", transactionRef)
 		var transaction store.Transaction
 		if err = transactionRef.DataTo(&transaction); err != nil {
 			return nil, fmt.Errorf("map transaction %s: %w", transactionRef.Ref.ID, err)

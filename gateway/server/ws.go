@@ -34,6 +34,7 @@ type WebsocketHandler struct {
 	deviceRegistry        registry.DeviceRegistry
 	orgNames              []string
 	pipeOptions           []pipe.Opt
+	trustProxyHeaders     bool
 }
 
 type WebsocketOpt func(handler *WebsocketHandler)
@@ -92,6 +93,12 @@ func WithOrgNames(orgNames []string) WebsocketOpt {
 	}
 }
 
+func WithTrustProxyHeaders(trustProxyHeaders bool) WebsocketOpt {
+	return func(handler *WebsocketHandler) {
+		handler.trustProxyHeaders = trustProxyHeaders
+	}
+}
+
 func WithPipeOption(pipeOption pipe.Opt) WebsocketOpt {
 	return func(handler *WebsocketHandler) {
 		handler.pipeOptions = append(handler.pipeOptions, pipeOption)
@@ -115,6 +122,9 @@ func NewWebsocketHandler(opts ...WebsocketOpt) http.Handler {
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger, middleware.Recoverer)
+	if s.trustProxyHeaders {
+		r.Use(TLSOffload(s.deviceRegistry))
+	}
 	r.Handle("/ws/{id}", s)
 	return r
 }
