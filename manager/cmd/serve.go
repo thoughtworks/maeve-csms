@@ -21,17 +21,17 @@ import (
 )
 
 var (
-	mqttAddr        string
-	mqttPrefix      string
-	mqttGroup       string
-	apiAddr         string
-	v2gCertPEMFiles []string
-	csoOPCPToken    string
-	csoOPCPUrl      string
-	moOPCPToken     string
-	moOPCPUrl       string
-	storageEngine   string
-	gcloudProject   string
+	mqttAddr                string
+	mqttPrefix              string
+	mqttGroup               string
+	apiAddr                 string
+	trustAnchorCertPEMFiles []string
+	csoOPCPToken            string
+	csoOPCPUrl              string
+	moOPCPToken             string
+	moOPCPUrl               string
+	storageEngine           string
+	gcloudProject           string
 )
 
 // serveCmd represents the serve command
@@ -62,7 +62,7 @@ the gateway and send appropriate responses.`,
 		apiServer := server.New("api", apiAddr, nil, server.NewApiHandler(engine))
 
 		var v2gCertificates []*x509.Certificate
-		for _, pemFile := range v2gCertPEMFiles {
+		for _, pemFile := range trustAnchorCertPEMFiles {
 			parsedCerts, err := readCertificatesFromPEMFile(pemFile)
 			if err != nil {
 				return fmt.Errorf("reading certificates from PEM file: %s: %v", pemFile, err)
@@ -162,7 +162,7 @@ func init() {
 		"The MQTT group to use for the shared subscription, e.g. manager")
 	serveCmd.Flags().StringVarP(&apiAddr, "api-addr", "a", "127.0.0.1:9410",
 		"The address that the API server will listen on for connections, e.g. 127.0.0.1:9410")
-	serveCmd.Flags().StringSliceVar(&v2gCertPEMFiles, "v2g-pem-file", []string{},
+	serveCmd.Flags().StringSliceVar(&trustAnchorCertPEMFiles, "trust-anchor-pem-file", []string{},
 		"The set of PEM files containing trusted V2G certificates")
 	serveCmd.Flags().StringVar(&csoOPCPToken, "cso-opcp-token", "",
 		"The token to use when integrating with the CSO OPCP (e.g. Hubject's token)")
