@@ -126,7 +126,7 @@ func TestHubjectCertificateSignerService(t *testing.T) {
 	server := httptest.NewServer(hubject)
 	defer server.Close()
 
-	hubjectSigner := services.CPOCertificateSignerService{
+	hubjectSigner := services.OpcpCpoCertificateSignerService{
 		BaseURL:     server.URL,
 		BearerToken: "TestToken",
 		ISOVersion:  services.ISO15118V2,

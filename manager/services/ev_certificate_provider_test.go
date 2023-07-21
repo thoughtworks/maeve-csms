@@ -91,7 +91,7 @@ func TestEvCertificateProvider(t *testing.T) {
 	server := httptest.NewServer(&hubject)
 	defer server.Close()
 
-	provider := services.MOEvCertificateProvider{
+	provider := services.OpcpMoEvCertificateProvider{
 		BaseURL:     server.URL,
 		BearerToken: "TestToken",
 	}
@@ -109,7 +109,7 @@ func TestEvCertificateProviderWithFlakyResponses(t *testing.T) {
 	server := httptest.NewServer(&hubject)
 	defer server.Close()
 
-	provider := services.MOEvCertificateProvider{
+	provider := services.OpcpMoEvCertificateProvider{
 		BaseURL:     server.URL,
 		BearerToken: "TestToken",
 	}
@@ -138,7 +138,7 @@ func TestEvCertificateProviderFailureCases(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			provider := services.MOEvCertificateProvider{
+			provider := services.OpcpMoEvCertificateProvider{
 				BaseURL:     server.URL,
 				BearerToken: tc.token,
 			}
