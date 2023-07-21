@@ -97,8 +97,10 @@ services:
       - "mqtt://mqtt:1883"
       - "--v2g-pem-file"
       - "/certificates/root-V2G-cert.pem"
-      - "--hubject-token"
-      - "${HUBJECT_TOKEN}"
+      - "--cso-opcp-token"
+      - "${CSO_OPCP_TOKEN}"
+      - "--mo-opcp-token"
+      - "${MO_OPCP_TOKEN}"
       - "--storage-engine"
       - "${STORAGE_ENGINE:-firestore}"
     volumes:

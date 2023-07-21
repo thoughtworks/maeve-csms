@@ -26,8 +26,10 @@ var (
 	mqttGroup       string
 	apiAddr         string
 	v2gCertPEMFiles []string
-	hubjectToken    string
-	hubjectUrl      string
+	csoOPCPToken    string
+	csoOPCPUrl      string
+	moOPCPToken     string
+	moOPCPUrl       string
 	storageEngine   string
 	gcloudProject   string
 )
@@ -76,15 +78,15 @@ the gateway and send appropriate responses.`,
 
 		var certSignerService services.CertificateSignerService
 		var certProviderService services.EvCertificateProvider
-		if hubjectToken != "" && hubjectUrl != "" {
+		if csoOPCPToken != "" && csoOPCPUrl != "" {
 			certSignerService = services.HubjectCertificateSignerService{
-				BaseURL:     hubjectUrl,
-				BearerToken: hubjectToken,
+				BaseURL:     csoOPCPUrl,
+				BearerToken: csoOPCPToken,
 				ISOVersion:  services.ISO15118V2,
 			}
 			certProviderService = services.HubjectEvCertificateProvider{
-				BaseURL:     hubjectUrl,
-				BearerToken: hubjectToken,
+				BaseURL:     csoOPCPUrl,
+				BearerToken: csoOPCPToken,
 			}
 		}
 
@@ -162,10 +164,14 @@ func init() {
 		"The address that the API server will listen on for connections, e.g. 127.0.0.1:9410")
 	serveCmd.Flags().StringSliceVar(&v2gCertPEMFiles, "v2g-pem-file", []string{},
 		"The set of PEM files containing trusted V2G certificates")
-	serveCmd.Flags().StringVar(&hubjectToken, "hubject-token", "",
-		"The Hubject Bearer token to use")
-	serveCmd.Flags().StringVar(&hubjectUrl, "hubject-url", "https://open.plugncharge-test.hubject.com",
-		"The Hubject Environment URL")
+	serveCmd.Flags().StringVar(&csoOPCPToken, "cso-opcp-token", "",
+		"The token to use when integrating with the CSO OPCP (e.g. Hubject's token)")
+	serveCmd.Flags().StringVar(&csoOPCPUrl, "cso-opcp-url", "https://open.plugncharge-test.hubject.com",
+		"The Environment URL to integrate with the CSO OPCP (e.g. Hubject's environment)")
+	serveCmd.Flags().StringVar(&moOPCPToken, "mo-opcp-token", "",
+		"The token to use when integrating with the MO OPCP (e.g. Hubject's token)")
+	serveCmd.Flags().StringVar(&moOPCPUrl, "mo-opcp-url", "https://open.plugncharge-test.hubject.com",
+		"The Environment URL to integrate with the MO OPCP (e.g. Hubject's environment)")
 	serveCmd.Flags().StringVarP(&storageEngine, "storage-engine", "s", "firestore",
 		"The storage engine to use for persistence, one of [firestore, inmemory]")
 	serveCmd.Flags().StringVar(&gcloudProject, "gcloud-project", "*detect-project-id*",
