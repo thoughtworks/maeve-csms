@@ -30,8 +30,8 @@ const (
 	ISO15118V20 ISOVersion = "ISO15118-20"
 )
 
-// The HubjectCertificateSignerService issues certificates using the Hubject cpo CA
-type HubjectCertificateSignerService struct {
+// The OpcpCpoCertificateSignerService issues certificates using the CPO CA
+type OpcpCpoCertificateSignerService struct {
 	BaseURL     string
 	BearerToken string
 	ISOVersion  ISOVersion
@@ -44,7 +44,7 @@ func (h HttpError) Error() string {
 	return fmt.Sprintf("http status: %d", h)
 }
 
-func (h HubjectCertificateSignerService) SignCertificate(typ CertificateType, pemEncodedCSR string) (string, error) {
+func (h OpcpCpoCertificateSignerService) SignCertificate(typ CertificateType, pemEncodedCSR string) (string, error) {
 	csr, err := convertCSR(pemEncodedCSR)
 	if err != nil {
 		return "", err

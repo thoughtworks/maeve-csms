@@ -4,15 +4,17 @@ command_exists() {
   command -v "$1" >/dev/null 2>&1
 }
 
-BEARER_TOKEN="$1"
-if [[ "$BEARER_TOKEN" == "" ]]; then
+CSO_OPCP_TOKEN="$1"
+MO_OPCP_TOKEN="$2"
+if [[ "$CSO_OPCP_TOKEN" == "" ]]; then
   echo "You must provide a bearer token"
-  echo "Usage: run.sh <BEARER_TOKEN>"
-  echo "       BEARER_TOKEN can be obtained from the Hubject test environment: "
+  echo "Usage: run.sh <CSO_OPCP_TOKEN> <MO_OPCP_TOKEN>"
+  echo "       CSO_OPCP_TOKEN and MO_OPCP_TOKEN can be obtained from the Hubject test environment: "
   echo "       https://hubject.stoplight.io/docs/open-plugncharge/6bb8b3bc79c2e-authorization-token"
   exit 1
 fi
-BEARER_TOKEN=${BEARER_TOKEN#"Bearer "}
+CSO_OPCP_TOKEN=${CSO_OPCP_TOKEN#"Bearer "}
+MO_OPCP_TOKEN=${MO_OPCP_TOKEN#"Bearer "}
 
 shift
 
@@ -29,4 +31,4 @@ else
   fi
 fi
 
-HUBJECT_TOKEN="Bearer "$BEARER_TOKEN $DOCKER_COMPOSE_CMD up "$@"
+MO_OPCP_TOKEN="Bearer "$MO_OPCP_TOKEN ;CSO_OPCP_TOKEN="Bearer "$CSO_OPCP_TOKEN ;$DOCKER_COMPOSE_CMD up "${@:2}"

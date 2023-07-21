@@ -21,15 +21,17 @@ import (
 )
 
 var (
-	mqttAddr        string
-	mqttPrefix      string
-	mqttGroup       string
-	apiAddr         string
-	v2gCertPEMFiles []string
-	hubjectToken    string
-	hubjectUrl      string
-	storageEngine   string
-	gcloudProject   string
+	mqttAddr                  string
+	mqttPrefix                string
+	mqttGroup                 string
+	apiAddr                   string
+	moTrustAnchorCertPEMFiles []string
+	csoOPCPToken              string
+	csoOPCPUrl                string
+	moOPCPToken               string
+	moOPCPUrl                 string
+	storageEngine             string
+	gcloudProject             string
 )
 
 // serveCmd represents the serve command
@@ -60,7 +62,7 @@ the gateway and send appropriate responses.`,
 		apiServer := server.New("api", apiAddr, nil, server.NewApiHandler(engine))
 
 		var v2gCertificates []*x509.Certificate
-		for _, pemFile := range v2gCertPEMFiles {
+		for _, pemFile := range moTrustAnchorCertPEMFiles {
 			parsedCerts, err := readCertificatesFromPEMFile(pemFile)
 			if err != nil {
 				return fmt.Errorf("reading certificates from PEM file: %s: %v", pemFile, err)
@@ -76,15 +78,15 @@ the gateway and send appropriate responses.`,
 
 		var certSignerService services.CertificateSignerService
 		var certProviderService services.EvCertificateProvider
-		if hubjectToken != "" && hubjectUrl != "" {
-			certSignerService = services.HubjectCertificateSignerService{
-				BaseURL:     hubjectUrl,
-				BearerToken: hubjectToken,
+		if csoOPCPToken != "" && csoOPCPUrl != "" {
+			certSignerService = services.OpcpCpoCertificateSignerService{
+				BaseURL:     csoOPCPUrl,
+				BearerToken: csoOPCPToken,
 				ISOVersion:  services.ISO15118V2,
 			}
-			certProviderService = services.HubjectEvCertificateProvider{
-				BaseURL:     hubjectUrl,
-				BearerToken: hubjectToken,
+			certProviderService = services.OpcpMoEvCertificateProvider{
+				BaseURL:     moOPCPUrl,
+				BearerToken: moOPCPToken,
 			}
 		}
 
@@ -160,12 +162,16 @@ func init() {
 		"The MQTT group to use for the shared subscription, e.g. manager")
 	serveCmd.Flags().StringVarP(&apiAddr, "api-addr", "a", "127.0.0.1:9410",
 		"The address that the API server will listen on for connections, e.g. 127.0.0.1:9410")
-	serveCmd.Flags().StringSliceVar(&v2gCertPEMFiles, "v2g-pem-file", []string{},
-		"The set of PEM files containing trusted V2G certificates")
-	serveCmd.Flags().StringVar(&hubjectToken, "hubject-token", "",
-		"The Hubject Bearer token to use")
-	serveCmd.Flags().StringVar(&hubjectUrl, "hubject-url", "https://open.plugncharge-test.hubject.com",
-		"The Hubject Environment URL")
+	serveCmd.Flags().StringSliceVar(&moTrustAnchorCertPEMFiles, "mo-trust-anchor-pem-file", []string{},
+		"The set of PEM files containing trusted MO certificates")
+	serveCmd.Flags().StringVar(&csoOPCPToken, "cso-opcp-token", "",
+		"The token to use when integrating with the CSO OPCP (e.g. Hubject's token)")
+	serveCmd.Flags().StringVar(&csoOPCPUrl, "cso-opcp-url", "https://open.plugncharge-test.hubject.com",
+		"The Environment URL to integrate with the CSO OPCP (e.g. Hubject's environment)")
+	serveCmd.Flags().StringVar(&moOPCPToken, "mo-opcp-token", "",
+		"The token to use when integrating with the MO OPCP (e.g. Hubject's token)")
+	serveCmd.Flags().StringVar(&moOPCPUrl, "mo-opcp-url", "https://open.plugncharge-test.hubject.com",
+		"The Environment URL to integrate with the MO OPCP (e.g. Hubject's environment)")
 	serveCmd.Flags().StringVarP(&storageEngine, "storage-engine", "s", "firestore",
 		"The storage engine to use for persistence, one of [firestore, inmemory]")
 	serveCmd.Flags().StringVar(&gcloudProject, "gcloud-project", "*detect-project-id*",
