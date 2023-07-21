@@ -19,7 +19,7 @@ type EvCertificateProvider interface {
 	ProvideCertificate(exiRequest string) (EvCertificate15118Response, error)
 }
 
-type HubjectEvCertificateProvider struct {
+type MOEvCertificateProvider struct {
 	BaseURL     string
 	BearerToken string
 	HttpClient  *http.Client
@@ -47,7 +47,7 @@ type SignedContractDataResponse struct {
 	XsdMsgDefNamespace string `json:"xsdMsgDefNamespace"`
 }
 
-func (h HubjectEvCertificateProvider) ProvideCertificate(exiRequest string) (EvCertificate15118Response, error) {
+func (h MOEvCertificateProvider) ProvideCertificate(exiRequest string) (EvCertificate15118Response, error) {
 	client := h.HttpClient
 	if client == nil {
 		client = http.DefaultClient
@@ -64,7 +64,7 @@ func (h HubjectEvCertificateProvider) ProvideCertificate(exiRequest string) (EvC
 	}
 
 	resp, err := withRetries(func() (*http.Response, error) {
-		req, err := h.hubjectRequest(requestUrl, marshalledBody)
+		req, err := h.moRequest(requestUrl, marshalledBody)
 		if err != nil {
 			return &http.Response{}, fmt.Errorf("requesting certificate: %w", err)
 		}
@@ -120,7 +120,7 @@ func (h HubjectEvCertificateProvider) ProvideCertificate(exiRequest string) (EvC
 	return response, nil
 }
 
-func (h HubjectEvCertificateProvider) hubjectRequest(requestUrl string, marshalledBody []byte) (*http.Request, error) {
+func (h MOEvCertificateProvider) moRequest(requestUrl string, marshalledBody []byte) (*http.Request, error) {
 	req, err := http.NewRequest("POST", requestUrl, bytes.NewReader(marshalledBody))
 	if err != nil {
 		return nil, err

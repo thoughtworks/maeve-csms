@@ -79,14 +79,14 @@ the gateway and send appropriate responses.`,
 		var certSignerService services.CertificateSignerService
 		var certProviderService services.EvCertificateProvider
 		if csoOPCPToken != "" && csoOPCPUrl != "" {
-			certSignerService = services.HubjectCertificateSignerService{
+			certSignerService = services.CPOCertificateSignerService{
 				BaseURL:     csoOPCPUrl,
 				BearerToken: csoOPCPToken,
 				ISOVersion:  services.ISO15118V2,
 			}
-			certProviderService = services.HubjectEvCertificateProvider{
-				BaseURL:     csoOPCPUrl,
-				BearerToken: csoOPCPToken,
+			certProviderService = services.MOEvCertificateProvider{
+				BaseURL:     moOPCPUrl,
+				BearerToken: moOPCPToken,
 			}
 		}
 

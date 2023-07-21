@@ -40,7 +40,7 @@ func TestCertificateValidationServiceWithHubjectCertificate(t *testing.T) {
 		t.Fatal("no bearer token for Hubject API - set the HUBJECT_TOKEN environment variable")
 	}
 
-	certSignerService := services.HubjectCertificateSignerService{
+	certSignerService := services.CPOCertificateSignerService{
 		BearerToken: bearerToken,
 		BaseURL:     "https://open.plugncharge-test.hubject.com",
 		ISOVersion:  services.ISO15118V2,
@@ -70,7 +70,7 @@ func TestCertificateValidationServiceWithHubjectCertificateHashes(t *testing.T) 
 		t.Fatal("no bearer token for Hubject API - set the HUBJECT_TOKEN environment variable")
 	}
 
-	certSignerService := services.HubjectCertificateSignerService{
+	certSignerService := services.CPOCertificateSignerService{
 		BearerToken: bearerToken,
 		BaseURL:     "https://open.plugncharge-test.hubject.com",
 		ISOVersion:  services.ISO15118V2,
