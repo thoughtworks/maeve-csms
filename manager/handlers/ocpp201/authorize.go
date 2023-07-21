@@ -6,11 +6,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
 	types "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
 	"github.com/thoughtworks/maeve-csms/manager/services"
 	"github.com/thoughtworks/maeve-csms/manager/store"
-	"log"
+	"golang.org/x/exp/slog"
 )
 
 type AuthorizeHandler struct {
@@ -20,8 +21,9 @@ type AuthorizeHandler struct {
 
 func (a AuthorizeHandler) HandleCall(ctx context.Context, chargeStationId string, request ocpp.Request) (ocpp.Response, error) {
 	req := request.(*types.AuthorizeRequestJson)
-	log.Printf("Charge station %s authorize token %s(%s)", chargeStationId, req.IdToken.IdToken, req.IdToken.Type)
-
+	slog.Info("checking", slog.String("chargeStationId", chargeStationId),
+		slog.String("idToken", req.IdToken.IdToken),
+		slog.String("idTokenType", string(req.IdToken.Type)))
 	status := types.AuthorizationStatusEnumTypeUnknown
 	tok, err := a.TokenStore.LookupToken(ctx, req.IdToken.IdToken)
 	if err != nil {
@@ -48,7 +50,9 @@ func (a AuthorizeHandler) HandleCall(ctx context.Context, chargeStationId string
 	}
 
 	if status == types.AuthorizationStatusEnumTypeAccepted {
-		log.Printf("Charge station %s with token %s(%s) is authorized", chargeStationId, req.IdToken.IdToken, req.IdToken.Type)
+		slog.Info("charge station authorized", slog.String("chargeStationId", chargeStationId),
+			slog.String("idToken", req.IdToken.IdToken),
+			slog.String("type", string(req.IdToken.Type)))
 	} else {
 		var certStatus types.AuthorizeCertificateStatusEnumType
 		if certificateStatus != nil {
@@ -56,8 +60,11 @@ func (a AuthorizeHandler) HandleCall(ctx context.Context, chargeStationId string
 		} else {
 			certStatus = types.AuthorizeCertificateStatusEnumTypeNoCertificateAvailable
 		}
-		log.Printf("Charge station %s with token %s(%s) not authorized - cert status: %s",
-			chargeStationId, req.IdToken.IdToken, req.IdToken.Type, certStatus)
+		slog.Warn("charge station not authorized",
+			slog.String("chargeStationId", chargeStationId),
+			slog.String("idToken", req.IdToken.IdToken),
+			slog.String("type", string(req.IdToken.Type)),
+			slog.String("certStatus", string(certStatus)))
 	}
 
 	return &types.AuthorizeResponseJson{
@@ -83,7 +90,7 @@ func handleCertificateValidationError(err error) (types.AuthorizationStatusEnumT
 			certStatus = types.AuthorizeCertificateStatusEnumTypeCertChainError
 		}
 	} else if err != nil {
-		log.Printf("general validation error: %v", err)
+		slog.Error("general validation error", err)
 		status = types.AuthorizationStatusEnumTypeBlocked
 		certStatus = types.AuthorizeCertificateStatusEnumTypeSignatureError
 	}

@@ -4,11 +4,12 @@ package ocpp201
 
 import (
 	"context"
+	"time"
+
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
 	types "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
+	"golang.org/x/exp/slog"
 	"k8s.io/utils/clock"
-	"log"
-	"time"
 )
 
 type BootNotificationHandler struct {
@@ -24,7 +25,9 @@ func (b BootNotificationHandler) HandleCall(ctx context.Context, chargeStationId
 	} else {
 		serialNumber = "*unknown*"
 	}
-	log.Printf("Charge station %s with serial number %s booting for reason %s", chargeStationId, serialNumber, req.Reason)
+	slog.Info("booting", slog.String("chargeStationId", chargeStationId),
+		slog.String("serialNumber", serialNumber),
+		slog.String("reason", string(req.Reason)))
 	return &types.BootNotificationResponseJson{
 		CurrentTime: b.Clock.Now().Format(time.RFC3339),
 		Interval:    b.HeartbeatInterval,

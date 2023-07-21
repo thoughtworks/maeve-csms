@@ -4,11 +4,12 @@ package ocpp16
 
 import (
 	"context"
+	"time"
+
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
 	types "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp16"
+	"golang.org/x/exp/slog"
 	"k8s.io/utils/clock"
-	"log"
-	"time"
 )
 
 type HeartbeatHandler struct {
@@ -16,7 +17,7 @@ type HeartbeatHandler struct {
 }
 
 func (h HeartbeatHandler) HandleCall(ctx context.Context, chargeStationId string, request ocpp.Request) (ocpp.Response, error) {
-	log.Printf("Charge station %s heartbeat", chargeStationId)
+	slog.Info("heartbeat", slog.String("chargeStationId", chargeStationId))
 	return &types.HeartbeatResponseJson{
 		CurrentTime: h.Clock.Now().Format(time.RFC3339),
 	}, nil

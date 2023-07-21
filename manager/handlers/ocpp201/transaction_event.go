@@ -4,12 +4,12 @@ package ocpp201
 
 import (
 	"context"
-	"log"
 
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
 	types "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
 	"github.com/thoughtworks/maeve-csms/manager/services"
 	"github.com/thoughtworks/maeve-csms/manager/store"
+	"golang.org/x/exp/slog"
 )
 
 type TransactionEventHandler struct {
@@ -19,8 +19,11 @@ type TransactionEventHandler struct {
 
 func (t TransactionEventHandler) HandleCall(ctx context.Context, chargeStationId string, request ocpp.Request) (ocpp.Response, error) {
 	req := request.(*types.TransactionEventRequestJson)
-	log.Printf("Charge station %s transaction %s event: %s %s %d", chargeStationId, req.TransactionInfo.TransactionId, req.EventType, req.TriggerReason, req.SeqNo)
-
+	slog.Info("transaction event", slog.String("chargeStationId", chargeStationId),
+		slog.String("transactionId", req.TransactionInfo.TransactionId),
+		slog.String("eventType", string(req.EventType)),
+		slog.String("triggerReason", string(req.TriggerReason)),
+		slog.Int("seqNo", req.SeqNo))
 	var idToken, tokenType string
 	if req.IdToken != nil {
 		idToken = req.IdToken.IdToken
@@ -69,9 +72,9 @@ func (t TransactionEventHandler) HandleCall(ctx context.Context, chargeStationId
 		}
 		cost, err := t.TariffService.CalculateCost(transaction)
 		if err != nil {
-			log.Printf("error calculating tariff: %v", err)
+			slog.Error("error calculating tariff", err)
 		} else {
-			log.Printf("total cost: %f", cost)
+			slog.Info("total cost", slog.Float64("cost", cost))
 			response.TotalCost = &cost
 		}
 	}

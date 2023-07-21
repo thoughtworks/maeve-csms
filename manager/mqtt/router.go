@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
-	"log"
 	"reflect"
 	"time"
 
@@ -22,6 +21,7 @@ import (
 	"github.com/thoughtworks/maeve-csms/manager/schemas"
 	"github.com/thoughtworks/maeve-csms/manager/services"
 	"github.com/thoughtworks/maeve-csms/manager/store"
+	"golang.org/x/exp/slog"
 	"k8s.io/utils/clock"
 )
 
@@ -312,7 +312,7 @@ func (r Router) Route(ctx context.Context, chargeStationId string, message Messa
 		err = schemas.Validate(responseJson, schemaFS, route.ResponseSchema)
 		if err != nil {
 			mqttErr := NewError(ErrorPropertyConstraintViolation, err)
-			log.Printf("warning: response to %s is not valid: %v", message.Action, mqttErr)
+			slog.Warn("response not valid", slog.String("action", message.Action), mqttErr)
 		}
 		out := &Message{
 			MessageType:     MessageTypeCallResult,

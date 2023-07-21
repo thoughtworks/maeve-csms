@@ -11,12 +11,13 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
-	"golang.org/x/crypto/ocsp"
 	"io"
-	"log"
 	"math/big"
 	"net/http"
+
+	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
+	"golang.org/x/crypto/ocsp"
+	"golang.org/x/exp/slog"
 )
 
 // OCSPError is an error returned by the OCSP server in response to a check
@@ -213,7 +214,7 @@ func performOCSPCheck(ocspResponderUrls []string, ocspRequest []byte, issuerCert
 		if errors.As(err, &ocspError) {
 			return ocspResponse, fmt.Errorf("ocsp check status: %d: %w", ocspError, ValidationErrorCertRevoked)
 		}
-		log.Printf("ocsp check attempt %d/%d failed: %v", attempt, maxAttempts, err)
+		slog.Warn("ocsp check", slog.Int("attempt", attempt), slog.Int("maxAttempts", maxAttempts), err)
 	}
 
 	return nil, fmt.Errorf("failed to perform ocsp check after %d attempts", maxAttempts)

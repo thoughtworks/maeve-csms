@@ -4,7 +4,6 @@ package ocpp16
 
 import (
 	"context"
-	"log"
 	"math/rand"
 	"time"
 
@@ -12,6 +11,7 @@ import (
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
 	types "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp16"
 	"github.com/thoughtworks/maeve-csms/manager/store"
+	"golang.org/x/exp/slog"
 	"k8s.io/utils/clock"
 )
 
@@ -24,7 +24,7 @@ type StartTransactionHandler struct {
 func (t StartTransactionHandler) HandleCall(ctx context.Context, chargeStationId string, request ocpp.Request) (ocpp.Response, error) {
 	req := request.(*types.StartTransactionJson)
 
-	log.Printf("Start transaction: %v", req)
+	slog.Info("starting transaction", slog.Any("request", req))
 
 	transactionId := -1
 	status := types.StartTransactionResponseJsonIdTagInfoStatusInvalid
