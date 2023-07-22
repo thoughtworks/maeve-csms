@@ -5,13 +5,13 @@ package ocpp16
 import (
 	"context"
 	"errors"
-	"log"
 	"strconv"
 	"time"
 
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
 	types "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp16"
 	"github.com/thoughtworks/maeve-csms/manager/store"
+	"golang.org/x/exp/slog"
 	"k8s.io/utils/clock"
 )
 
@@ -29,7 +29,7 @@ func (s StopTransactionHandler) HandleCall(ctx context.Context, chargeStationId 
 		reason = string(*req.Reason)
 	}
 	transactionId := ConvertToUUID(req.TransactionId)
-	log.Printf("Stop transaction %s for reason %s", transactionId, reason)
+	slog.Info("stopping transaction", slog.String("transactionId", transactionId), slog.String("reason", reason))
 
 	var idTagInfo *types.StopTransactionResponseJsonIdTagInfo
 	if req.IdTag != nil {

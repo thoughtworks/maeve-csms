@@ -6,12 +6,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/fs"
+
 	"github.com/thoughtworks/maeve-csms/manager/handlers"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
 	types "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp16"
 	"github.com/thoughtworks/maeve-csms/manager/schemas"
-	"io/fs"
-	"log"
+	"golang.org/x/exp/slog"
 )
 
 type DataTransferHandler struct {
@@ -26,7 +27,8 @@ func (d DataTransferHandler) HandleCall(ctx context.Context, chargeStationId str
 	if req.MessageId != nil {
 		messageId = *req.MessageId
 	}
-	log.Printf("Data transfer %s:%s", req.VendorId, messageId)
+	slog.Info("data transfer",
+		slog.String("vendorId", req.VendorId), slog.String("messageId", messageId))
 
 	vendorMap, ok := d.CallRoutes[req.VendorId]
 	if !ok {
@@ -67,7 +69,7 @@ func (d DataTransferHandler) HandleCall(ctx context.Context, chargeStationId str
 		}
 		err = schemas.Validate(b, d.SchemaFS, route.ResponseSchema)
 		if err != nil {
-			log.Printf("warning: data transfer response to %s:%s is not valid: %v", req.VendorId, messageId, err)
+			slog.Warn("data transfer response is not valid", slog.String("vendorId", req.VendorId), slog.String("messageId", messageId), err)
 		}
 		dataTransferResponseString := string(b)
 		dataTransferResponseData = &dataTransferResponseString

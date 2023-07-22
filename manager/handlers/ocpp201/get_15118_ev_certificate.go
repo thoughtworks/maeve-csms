@@ -4,10 +4,11 @@ package ocpp201
 
 import (
 	"context"
+
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
 	types "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
 	"github.com/thoughtworks/maeve-csms/manager/services"
-	"log"
+	"golang.org/x/exp/slog"
 )
 
 type Get15118EvCertificateHandler struct {
@@ -25,7 +26,7 @@ func (g Get15118EvCertificateHandler) HandleCall(_ context.Context, _ string, re
 		res, err := g.EvCertificateProvider.ProvideCertificate(req.ExiRequest)
 
 		if err != nil {
-			log.Printf("failed to provide certificate: %v", err)
+			slog.Error("failed to provide certificate", err)
 		} else {
 			response = types.Get15118EVCertificateResponseJson{
 				Status:      res.Status,

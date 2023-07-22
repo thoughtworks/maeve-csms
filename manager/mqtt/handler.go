@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
-	"log"
 	"math/rand"
 	"net/url"
 	"strings"
@@ -19,6 +18,7 @@ import (
 	"github.com/thoughtworks/maeve-csms/manager/schemas"
 	"github.com/thoughtworks/maeve-csms/manager/services"
 	"github.com/thoughtworks/maeve-csms/manager/store"
+	"golang.org/x/exp/slog"
 	"k8s.io/utils/clock"
 )
 
@@ -200,8 +200,8 @@ func (h *Handler) Connect(errCh chan error) {
 				errCh <- err
 			}
 
-			log.Printf("subscribed to gateway+ocpp1.6 on %+v/%s", h.mqttBrokerUrls, mqttV16Topic)
-			log.Printf("subscribed to gateway+ocpp2.0.1 on %+v/%s", h.mqttBrokerUrls, mqttV201Topic)
+			slog.Info("subscribed to gateway+ocpp1.6", slog.String("brokerUrls", fmt.Sprintf("%+v", h.mqttBrokerUrls)), slog.String("topic", mqttV16Topic))
+			slog.Info("subscribed to gateway+ocpp2.0.1", slog.String("brokerUrls", fmt.Sprintf("%+v", h.mqttBrokerUrls)), slog.String("topic", mqttV201Topic))
 
 			readyCh <- struct{}{}
 		},
@@ -233,12 +233,12 @@ func NewGatewayMessageHandler(ctx context.Context, router *Router, emitter Emitt
 			errMsg := NewErrorMessage("", "-1", ErrorInternalError, err)
 			err = emitter.Emit(ctx, chargeStationId, errMsg)
 			if err != nil {
-				log.Printf("unable to emit error message: %v", err)
+				slog.Error("unable to emit error message", err)
 			}
 		}
 		err = router.Route(ctx, chargeStationId, msg, emitter, schemaFS)
 		if err != nil {
-			log.Printf("ERROR: %s - %s: %v", chargeStationId, msg.Action, err)
+			slog.Error("unable to route message", slog.String("chargeStationId", chargeStationId), slog.String("action", msg.Action), err)
 			var mqttError *Error
 			var errMsg *Message
 			if errors.As(err, &mqttError) {
@@ -248,7 +248,7 @@ func NewGatewayMessageHandler(ctx context.Context, router *Router, emitter Emitt
 			}
 			err = emitter.Emit(ctx, chargeStationId, errMsg)
 			if err != nil {
-				log.Printf("unable to emit error message: %v", err)
+				slog.Error("unable to emit error message", err)
 			}
 		}
 	}

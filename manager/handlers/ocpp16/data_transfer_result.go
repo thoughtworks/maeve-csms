@@ -6,12 +6,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/fs"
+
 	"github.com/thoughtworks/maeve-csms/manager/handlers"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
 	types "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp16"
 	"github.com/thoughtworks/maeve-csms/manager/schemas"
-	"io/fs"
-	"log"
+	"golang.org/x/exp/slog"
 )
 
 type DataTransferResultHandler struct {
@@ -27,7 +28,8 @@ func (d DataTransferResultHandler) HandleCallResult(ctx context.Context, chargeS
 	if req.MessageId != nil {
 		messageId = *req.MessageId
 	}
-	log.Printf("Data transfer result %s:%s", req.VendorId, messageId)
+	slog.Info("data transfer result",
+		slog.String("vendorId", req.VendorId), slog.String("messageId", messageId))
 
 	vendorMap, ok := d.CallResultRoutes[req.VendorId]
 	if !ok {

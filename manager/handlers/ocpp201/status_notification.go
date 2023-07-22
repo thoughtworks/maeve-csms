@@ -4,13 +4,15 @@ package ocpp201
 
 import (
 	"context"
+
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
 	types "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
-	"log"
+	"golang.org/x/exp/slog"
 )
 
 func StatusNotificationHandler(ctx context.Context, chargeStationId string, request ocpp.Request) (ocpp.Response, error) {
 	req := request.(*types.StatusNotificationRequestJson)
-	log.Printf("Charge station %s, EVSE %d, connection %d status: %s", chargeStationId, req.EvseId, req.ConnectorId, req.ConnectorStatus)
+	slog.Info("status notification", slog.String("chargeStationId", chargeStationId),
+		slog.Int("evseId", req.EvseId), slog.Int("connectorId", req.ConnectorId), slog.Any("connectorStatus", req.ConnectorStatus))
 	return &types.StatusNotificationResponseJson{}, nil
 }

@@ -4,10 +4,11 @@ package ocpp16
 
 import (
 	"context"
+
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
 	types "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp16"
 	"github.com/thoughtworks/maeve-csms/manager/store"
-	"log"
+	"golang.org/x/exp/slog"
 )
 
 type AuthorizeHandler struct {
@@ -16,7 +17,8 @@ type AuthorizeHandler struct {
 
 func (a AuthorizeHandler) HandleCall(ctx context.Context, chargeStationId string, request ocpp.Request) (ocpp.Response, error) {
 	req := request.(*types.AuthorizeJson)
-	log.Printf("Charge station %s authorize token %s", chargeStationId, req.IdTag)
+	slog.Info("checking", slog.String("chargeStationId", chargeStationId),
+		slog.String("idTag", req.IdTag))
 
 	status := types.AuthorizeResponseJsonIdTagInfoStatusInvalid
 	tok, err := a.TokenStore.LookupToken(ctx, req.IdTag)

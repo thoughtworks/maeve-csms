@@ -3,14 +3,15 @@
 package api
 
 import (
+	"net/http"
+	"time"
+
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/go-chi/render"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
 	"github.com/thoughtworks/maeve-csms/manager/store"
+	"golang.org/x/exp/slog"
 	"k8s.io/utils/clock"
-	"log"
-	"net/http"
-	"time"
 )
 
 type Server struct {
@@ -171,7 +172,7 @@ func (s *Server) DeleteCertificate(w http.ResponseWriter, r *http.Request, certi
 }
 
 func (s *Server) LookupCertificate(w http.ResponseWriter, r *http.Request, certificateHash string) {
-	log.Printf("LookupCertificate: %s", certificateHash)
+	slog.Info("LookupCertificate", slog.String("certificateHash", certificateHash))
 
 	cert, err := s.store.LookupCertificate(r.Context(), certificateHash)
 	if err != nil {

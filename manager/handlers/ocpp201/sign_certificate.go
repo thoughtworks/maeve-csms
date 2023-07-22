@@ -4,11 +4,12 @@ package ocpp201
 
 import (
 	"context"
+
 	"github.com/thoughtworks/maeve-csms/manager/handlers"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
 	types "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
 	"github.com/thoughtworks/maeve-csms/manager/services"
-	"log"
+	"golang.org/x/exp/slog"
 )
 
 type SignCertificateHandler struct {
@@ -24,7 +25,7 @@ func (s SignCertificateHandler) HandleCall(ctx context.Context, chargeStationId 
 		certificateType = *req.CertificateType
 	}
 
-	log.Printf("Sign certificate: %s", certificateType)
+	slog.Info("sign certificate", slog.String("certificateType", string(certificateType)))
 
 	status := types.GenericStatusEnumTypeRejected
 
@@ -41,7 +42,7 @@ func (s SignCertificateHandler) HandleCall(ctx context.Context, chargeStationId 
 
 			pemChain, err := s.CertificateSignerService.SignCertificate(certType, req.Csr)
 			if err != nil {
-				log.Printf("failed to sign certificate: %v", err)
+				slog.Error("failed to sign certificate", err)
 			} else {
 				certSignedReq := &types.CertificateSignedRequestJson{
 					CertificateChain: pemChain,
@@ -50,7 +51,7 @@ func (s SignCertificateHandler) HandleCall(ctx context.Context, chargeStationId 
 
 				err = s.CallMaker.Send(ctx, chargeStationId, certSignedReq)
 				if err != nil {
-					log.Printf("failed to send certificate signed request: %v", err)
+					slog.Error("failed to send certificate signed request", err)
 				}
 			}
 		}()
