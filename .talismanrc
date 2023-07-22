@@ -3,6 +3,8 @@ fileignoreconfig:
     checksum: 66a920c9d4e428e6066e074d3375dc1149500f7e275041e939c92eddd751755c
   - filename: CONTRIBUTING.md
     checksum: 75534cf22b02aef4e54959044a33d16bd2532383fe4bafdcf8585aed58f10eaf
+  - filename: README.md
+    checksum: 31e36953a79714f038a16dc3c36365434aea5237bbb5b7b3fdc4276e92edc82e
   - filename: config/envoy/envoy.yaml
     checksum: 90b8cf1a728636d65356a9d0041cc853024f5847e903ad093a0e032279b29429
   - filename: docker-compose.yml
@@ -19,6 +21,8 @@ fileignoreconfig:
     checksum: 4a9379d10dc5a63bb6af399f77ef8598f6a6a289f60b4a634a9150c5cec03dcf
   - filename: manager/Dockerfile
     checksum: db69536d308b905d6214db1fb0e10442fe3e770ef3fed47809ca1f3ec099409d
+  - filename: manager/api/API.md
+    checksum: c111751da44c7310d6b77b76e1a5826c44cce62e47a32eaec564e86064bb1de2
   - filename: manager/api/api.gen.go
     checksum: 78218831bd13202e02d367253c69baee2b18c8e04f3992df29956e14827e70db
   - filename: manager/api/server.go

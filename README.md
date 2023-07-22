@@ -43,10 +43,30 @@ Charge stations can use either OCPP 1.6j or OCPP 2.0.1.
 For TLS, the charge station should use a certificate provisioned using the 
 [Hubject CPO EST service](https://hubject.stoplight.io/docs/open-plugncharge/486f0b8b3ded4-simple-enroll-iso-15118-2-and-iso-15118-20).
 
-_At present, the set of charge stations that are accepted and their credentials are hard-coded
-in [gateway/cmd/serve.go](gateway/cmd/serve.go)._
+A charge station must first be registered with the CSMS before it can be used. This can be done using the
+[manager API](./manager/api/API.md). e.g. for unsecured transport with basic auth use:
 
-_The set of tokens that are accepted are also currently hard-coded in [manager/cmd/serve.go](manager/cmd/serve.go)._
+```shell
+$ cd manager
+$ ENC_PASSWORD=$(go run main.go auth encode-password <password> | cur -d' ' -f2)
+$ curl http://localhost:9410/api/v0/cs/<cs-id> -H 'content-type: application/json' -d '{"securityProfile":0,"base64SHA256Password":"'$ENC_PASSWORD'"}'
+```
+
+Tokens must also be registered with the CSMS before they can be used. This can also be done using the
+[manager API](./manager/api/API.md). e.g.:
+
+```shell
+$ curl http://localhost:9410/api/v0/token -H 'content-type: application/json' -d '{
+  "countryCode": "GB",
+  "partyId": "TWK",
+  "type": "RFID",
+  "uid": "DEADBEEF",
+  "contractId": "GBTWK012345678V",
+  "issuer": "Thoughtworks",
+  "valid": true,
+  "cacheMode": "ALWAYS"
+}'
+```
 
 ## Configuration
 
