@@ -21,15 +21,14 @@ import (
 	"os"
 	"time"
 
-	"github.com/thoughtworks/maeve-csms/manager/store"
-	"github.com/thoughtworks/maeve-csms/manager/store/firestore"
-	"github.com/thoughtworks/maeve-csms/manager/store/inmemory"
-
 	"github.com/spf13/cobra"
 	"github.com/subnova/slog-exporter/slogtrace"
 	"github.com/thoughtworks/maeve-csms/manager/mqtt"
 	"github.com/thoughtworks/maeve-csms/manager/server"
 	"github.com/thoughtworks/maeve-csms/manager/services"
+	"github.com/thoughtworks/maeve-csms/manager/store"
+	"github.com/thoughtworks/maeve-csms/manager/store/firestore"
+	"github.com/thoughtworks/maeve-csms/manager/store/inmemory"
 	"go.opentelemetry.io/contrib/detectors/gcp"
 )
 
