@@ -4,9 +4,10 @@ package pipe
 
 import (
 	"container/ring"
-	"github.com/thoughtworks/maeve-csms/gateway/ocpp"
-	"log"
 	"time"
+
+	"github.com/thoughtworks/maeve-csms/gateway/ocpp"
+	"golang.org/x/exp/slog"
 )
 
 // Pipe provides a bidirectional RPC pipe between a ChargeStation and the CSMS
@@ -132,7 +133,7 @@ func (p Pipe) Start() {
 					if msg.MessageType == ocpp.MessageTypeCall {
 						// call from CS
 						if findMessageId(processedMessageIds, msg.MessageId) {
-							log.Printf("error: CS message id %s reused", msg.MessageId)
+							slog.Error("CS message id reused", slog.String("messageId", msg.MessageId))
 							continue
 						}
 						processedMessageIds = processedMessageIds.Next()
@@ -141,18 +142,18 @@ func (p Pipe) Start() {
 						p.CSMSTx <- msg
 					} else if currentMsg != nil && msg.MessageId == currentMsg.MessageId {
 						// call result / call error for current CSMS call from CS
-						log.Printf("warn: CS call response for message %s is late", msg.MessageId)
+						slog.Warn("CS call response is late", slog.String("messageId", msg.MessageId))
 						msg.Action = currentMsg.Action
 						msg.RequestPayload = currentMsg.RequestPayload
 						p.CSMSTx <- msg
 					} else if csmsCall := findCSMSCall(processedCSMSCalls, msg.MessageId); csmsCall != nil {
 						// call result / call error for previous CSMS call from CS
-						log.Printf("warn: CS call response for message %s is very late", msg.MessageId)
+						slog.Warn("CS call response is very late", slog.String("messageId", msg.MessageId))
 						msg.Action = csmsCall.Action
 						msg.RequestPayload = csmsCall.RequestPayload
 						p.CSMSTx <- msg
 					} else {
-						log.Printf("error: CS call response with message id %s has no corresponding CSMS call", msg.MessageId)
+						slog.Error("CS call response has no corresponding CSMS call", slog.String("messageId", msg.MessageId))
 						continue
 					}
 				case <-p.halt:
@@ -164,7 +165,7 @@ func (p Pipe) Start() {
 						if msg.MessageType == ocpp.MessageTypeCall {
 							// call from CS
 							if findMessageId(processedMessageIds, msg.MessageId) {
-								log.Printf("error: CS message id %s reused", msg.MessageId)
+								slog.Error("CS message id reused", slog.String("messageId", msg.MessageId))
 								continue
 							}
 							processedMessageIds = processedMessageIds.Next()
@@ -173,33 +174,33 @@ func (p Pipe) Start() {
 							p.CSMSTx <- msg
 						} else if currentMsg != nil && msg.MessageId == currentMsg.MessageId {
 							// call result / call error for current CSMS call from CS
-							log.Printf("warn: CS call response for message %s is late", msg.MessageId)
+							slog.Warn("CS call response is late", slog.String("messageId", msg.MessageId))
 							msg.Action = currentMsg.Action
 							msg.RequestPayload = currentMsg.RequestPayload
 							p.CSMSTx <- msg
 						} else if csmsCall := findCSMSCall(processedCSMSCalls, msg.MessageId); csmsCall != nil {
 							// call result / call error for previous CSMS call from CS
-							log.Printf("warn: CS call response for message %s is very late", msg.MessageId)
+							slog.Warn("CS call response is very late", slog.String("messageId", msg.MessageId))
 							msg.Action = csmsCall.Action
 							msg.RequestPayload = csmsCall.RequestPayload
 							p.CSMSTx <- msg
 						} else {
 							// call result / call error for unknown CSMS call from CS
-							log.Printf("error: CS call response with message id %s has no corresponding CSMS call", msg.MessageId)
+							slog.Error("CS call response has no corresponding CSMS call", slog.String("messageId", msg.MessageId))
 						}
 					case msg := <-p.CSMSRx:
 						if msg.MessageType != ocpp.MessageTypeCall {
 							// call result / call error from CSMS
 							if processedMessageIds.Value == msg.MessageId {
-								log.Printf("warn: CSMS call response with message id %s is late", msg.MessageId)
+								slog.Warn("CS call response is late", slog.String("messageId", msg.MessageId))
 								p.ChargeStationTx <- msg
 							} else {
-								log.Printf("error: CSMS message id %s is not a call", msg.MessageId)
+								slog.Error("CSMS message is not a call", slog.String("messageId", msg.MessageId))
 							}
 						} else {
 							// call from CSMS
 							if csmsCall := findCSMSCall(processedCSMSCalls, msg.MessageId); csmsCall != nil {
-								log.Printf("warn: CSMS call with duplicate message id %s", msg.MessageId)
+								slog.Warn("CSMS call with duplicate message", slog.String("messageId", msg.MessageId))
 							}
 							processedCSMSCalls = processedCSMSCalls.Next()
 							processedCSMSCalls.Value = msg
@@ -209,7 +210,7 @@ func (p Pipe) Start() {
 					case msg := <-p.csmsRxCallBuf:
 						// buffered call from CSMS
 						if csmsCall := findCSMSCall(processedCSMSCalls, msg.MessageId); csmsCall != nil {
-							log.Printf("warn: CSMS call with duplicate message id %s", msg.MessageId)
+							slog.Warn("CSMS call with duplicate message", slog.String("messageId", msg.MessageId))
 						}
 						processedCSMSCalls = processedCSMSCalls.Next()
 						processedCSMSCalls.Value = msg
@@ -226,10 +227,10 @@ func (p Pipe) Start() {
 						// call from CSMS
 						select {
 						case p.csmsRxCallBuf <- msg:
-							log.Printf("warn: buffering CSMS call message: %s", msg.MessageId)
+							slog.Warn("buffering CSMS call message", slog.String("messageId", msg.MessageId))
 							continue
 						default:
-							log.Printf("warn: CSMS call buffer full - dropping message %s", msg.MessageId)
+							slog.Warn("CSMS call buffer full - dropping message", slog.String("messageId", msg.MessageId))
 							continue
 						}
 					} else {
@@ -238,12 +239,12 @@ func (p Pipe) Start() {
 							status = StatusWaiting
 							p.ChargeStationTx <- msg
 						} else {
-							log.Printf("warn: CSMS call response not for current call: %s", msg.MessageId)
+							slog.Warn("CSMS call response not for current call", slog.String("messageId", msg.MessageId))
 							continue
 						}
 					}
 				case <-time.After(p.responseTimeout):
-					log.Printf("warn: CSMS did not respond before timeout to message %s", processedMessageIds.Value)
+					slog.Warn("CSMS did not respond before timeout", slog.String("messageId", processedMessageIds.Value.(string)))
 					status = StatusWaiting
 				case <-p.halt:
 					return
@@ -253,9 +254,9 @@ func (p Pipe) Start() {
 				case msg := <-p.ChargeStationRx:
 					if msg.MessageType == ocpp.MessageTypeCall {
 						// call from CS
-						log.Printf("warn: CS made call %s when expecting CS call response to %s", msg.MessageId, currentMsg.MessageId)
+						slog.Warn("CS made call when expecting CS call response", slog.String("messageId", msg.MessageId), slog.String("currentMessageid", currentMsg.MessageId))
 						if findMessageId(processedMessageIds, msg.MessageId) {
-							log.Printf("error: CS message id %s reused", msg.MessageId)
+							slog.Error("CS message id reused", slog.String("messageId", msg.MessageId))
 							continue
 						}
 						processedMessageIds = processedMessageIds.Next()
@@ -270,16 +271,16 @@ func (p Pipe) Start() {
 						p.CSMSTx <- msg
 					} else if csmsCall := findCSMSCall(processedCSMSCalls, msg.MessageId); csmsCall != nil {
 						// call result / call error for previous CSMS call from CS
-						log.Printf("warn: CS call response to call %s when expecting response to %s", msg.MessageId, currentMsg.MessageId)
+						slog.Warn("CS made call when expecting CS call response", slog.String("messageId", msg.MessageId), slog.String("currentMessageid", currentMsg.MessageId))
 						msg.Action = csmsCall.Action
 						msg.RequestPayload = csmsCall.RequestPayload
 						p.CSMSTx <- msg
 					} else {
 						// call result / call error for unknown CSMS call from CS
-						log.Printf("error: CS call response with message id %s has no corresponding CSMS call", msg.MessageId)
+						slog.Error("CS call response has no corresponding CSMS call", slog.String("messageId", msg.MessageId))
 					}
 				case <-time.After(p.responseTimeout):
-					log.Printf("warn: CS did not respond before timeout to message %s", currentMsg.MessageId)
+					slog.Warn("CS did not respond before timeout", slog.String("messageId", currentMsg.MessageId))
 					status = StatusWaiting
 				case <-p.halt:
 					return

@@ -3,10 +3,11 @@ package server
 import (
 	"crypto/tls"
 	"crypto/x509"
-	"github.com/thoughtworks/maeve-csms/gateway/registry"
-	"log"
 	"net/http"
 	"strconv"
+
+	"github.com/thoughtworks/maeve-csms/gateway/registry"
+	"golang.org/x/exp/slog"
 )
 
 func TLSOffload(registry registry.DeviceRegistry) func(http.Handler) http.Handler {
@@ -29,9 +30,9 @@ func TLSOffload(registry registry.DeviceRegistry) func(http.Handler) http.Handle
 						if err == nil && certificate != nil {
 							r.TLS.PeerCertificates = []*x509.Certificate{certificate}
 						} else if err != nil {
-							log.Printf("lookup certificate %s: %v", clientCertHashHeader, err)
+							slog.Error("lookup certificate", "clientCertHashHeader", clientCertHashHeader, "err", err)
 						} else {
-							log.Printf("certificate for %s not found", clientCertHashHeader)
+							slog.Warn("certificate not found", "clientCertHashHeader", clientCertHashHeader)
 						}
 					}
 				}
