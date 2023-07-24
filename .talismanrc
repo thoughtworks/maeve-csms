@@ -31,6 +31,8 @@ fileignoreconfig:
     checksum: 297c27a0f612af86cfdce543d5e4a21e60e70f4eb48b57d3c833257bb1b05647
   - filename: manager/cmd/serve.go
     checksum: c1c6c8b87af1c48f2cb72b450169ffbf4b5d4e4cdc4ae893193805a8b1a01664
+  - filename: manager/cmd/serve_test.go
+    checksum: 983e04341cb8b9dd272915996d662db2c22d653fcf8f4dea32a051c1ea125e24
   - filename: manager/handlers/ocpp16/data_transfer_test.go
     checksum: ff19ad1feeb979a62c6a53e256ab3fe879bd540242153792b8b1148ae7010c4b
   - filename: manager/handlers/ocpp16/stop_transaction.go

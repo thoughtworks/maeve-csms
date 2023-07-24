@@ -6,9 +6,18 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/base64"
 	"encoding/pem"
 	"fmt"
+	"github.com/spf13/cobra"
 	"github.com/subnova/slog-exporter/slogtrace"
+	"github.com/thoughtworks/maeve-csms/manager/mqtt"
+	"github.com/thoughtworks/maeve-csms/manager/server"
+	"github.com/thoughtworks/maeve-csms/manager/services"
+	"github.com/thoughtworks/maeve-csms/manager/store"
+	"github.com/thoughtworks/maeve-csms/manager/store/firestore"
+	"github.com/thoughtworks/maeve-csms/manager/store/inmemory"
+	"go.mozilla.org/pkcs7"
 	"go.opentelemetry.io/contrib/detectors/gcp"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
@@ -20,19 +29,11 @@ import (
 	"golang.org/x/exp/slog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
 	"time"
-
-	"github.com/thoughtworks/maeve-csms/manager/store"
-	"github.com/thoughtworks/maeve-csms/manager/store/firestore"
-	"github.com/thoughtworks/maeve-csms/manager/store/inmemory"
-
-	"github.com/spf13/cobra"
-	"github.com/thoughtworks/maeve-csms/manager/mqtt"
-	"github.com/thoughtworks/maeve-csms/manager/server"
-	"github.com/thoughtworks/maeve-csms/manager/services"
 )
 
 var (
@@ -45,6 +46,7 @@ var (
 	csoOPCPUrl                string
 	moOPCPToken               string
 	moOPCPUrl                 string
+	moRootCertPool            string
 	storageEngine             string
 	gcloudProject             string
 	keyLogFile                string
@@ -162,14 +164,9 @@ the gateway and send appropriate responses.`,
 		}
 
 		apiServer := server.New("api", apiAddr, nil, server.NewApiHandler(engine))
-
-		var v2gCertificates []*x509.Certificate
-		for _, pemFile := range moTrustAnchorCertPEMFiles {
-			parsedCerts, err := readCertificatesFromPEMFile(pemFile)
-			if err != nil {
-				return fmt.Errorf("reading certificates from PEM file: %s: %v", pemFile, err)
-			}
-			v2gCertificates = append(v2gCertificates, parsedCerts...)
+		v2gCertificates, err := pullMoTrustAnchors(moRootCertPool)
+		if err != nil {
+			return fmt.Errorf("pulling certificates from mo root cert pool: %v", err)
 		}
 
 		tariffService := services.BasicKwhTariffService{}
@@ -242,6 +239,55 @@ the gateway and send appropriate responses.`,
 	},
 }
 
+func pullMoTrustAnchors(url string) ([]*x509.Certificate, error) {
+	var certs []*x509.Certificate
+	body, err := retrieveCertificates(url)
+	if err != nil {
+		return nil, err
+	}
+	decodedBody, err := base64.StdEncoding.DecodeString(string(body))
+	if err != nil {
+		return nil, err
+	}
+
+	crtChain, err := pkcs7.Parse(decodedBody)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, cert := range crtChain.Certificates {
+		if cert.Issuer.String() == cert.Subject.String() {
+			certs = append(certs, cert)
+		}
+	}
+	return certs, nil
+}
+
+func retrieveCertificates(url string) ([]byte, error) {
+	client := http.DefaultClient
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Accept", "application/pkcs10, application/pkcs7")
+	req.Header.Add("Content-Transfer-Encoding", "application/pkcs10")
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", moOPCPToken))
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	} else if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("received code %v in response", resp.StatusCode)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	return body, nil
+}
+
 func readCertificatesFromPEMFile(pemFile string) ([]*x509.Certificate, error) {
 	//#nosec G304 - only files specified by the person running the application will be loaded
 	pemData, err := os.ReadFile(pemFile)
@@ -294,8 +340,6 @@ func init() {
 		"The MQTT group to use for the shared subscription, e.g. manager")
 	serveCmd.Flags().StringVarP(&apiAddr, "api-addr", "a", "127.0.0.1:9410",
 		"The address that the API server will listen on for connections, e.g. 127.0.0.1:9410")
-	serveCmd.Flags().StringSliceVar(&moTrustAnchorCertPEMFiles, "mo-trust-anchor-pem-file", []string{},
-		"The set of PEM files containing trusted MO certificates")
 	serveCmd.Flags().StringVar(&csoOPCPToken, "cso-opcp-token", "",
 		"The token to use when integrating with the CSO OPCP (e.g. Hubject's token)")
 	serveCmd.Flags().StringVar(&csoOPCPUrl, "cso-opcp-url", "https://open.plugncharge-test.hubject.com",
@@ -314,4 +358,6 @@ func init() {
 		"The address of the open telemetry collector that will receive traces, e.g. localhost:4317")
 	serveCmd.Flags().StringVar(&logFormat, "log-format", "text",
 		"The format of the logs, one of [text, json]")
+	serveCmd.Flags().StringVar(&moRootCertPool, "mo-root-certificate-pool", "https://open.plugncharge-test.hubject.com/mo/cacerts/ISO15118-2",
+		"The address to retrieve the certificate pool containing the trust anchor for MO")
 }

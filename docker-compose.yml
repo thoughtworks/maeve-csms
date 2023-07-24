@@ -95,14 +95,14 @@ services:
       - ":9410"
       - "--mqtt-addr"
       - "mqtt://mqtt:1883"
-      - "--mo-trust-anchor-pem-file"
-      - "/certificates/root-V2G-cert.pem"
       - "--cso-opcp-token"
       - "${CSO_OPCP_TOKEN}"
       - "--mo-opcp-token"
       - "${MO_OPCP_TOKEN}"
       - "--storage-engine"
       - "${STORAGE_ENGINE:-firestore}"
+      - "--mo-root-certificate-pool"
+      - "https://open.plugncharge-test.hubject.com/mo/cacerts/ISO15118-2"
     volumes:
       - type: bind
         source: ./config/certificates
