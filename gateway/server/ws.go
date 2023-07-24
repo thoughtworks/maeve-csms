@@ -9,6 +9,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
+	"net/url"
+	"time"
+
 	"github.com/eclipse/paho.golang/autopaho"
 	"github.com/eclipse/paho.golang/paho"
 	"github.com/go-chi/chi/v5"
@@ -17,12 +22,8 @@ import (
 	"github.com/thoughtworks/maeve-csms/gateway/pipe"
 	"github.com/thoughtworks/maeve-csms/gateway/registry"
 	"golang.org/x/exp/slices"
-	"io"
-	"log"
-	"net/http"
-	"net/url"
+	"golang.org/x/exp/slog"
 	"nhooyr.io/websocket"
-	"time"
 )
 
 type WebsocketHandler struct {
@@ -219,7 +220,7 @@ func (s *WebsocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		//Debug:             LogLogger{},
 		//PahoDebug:         LogLogger{},
 		OnConnectionUp: func(manager *autopaho.ConnectionManager, connack *paho.Connack) {
-			log.Printf("connection up....")
+			slog.Info("connection up....", "clientId", clientId)
 			topicName := fmt.Sprintf("%s/out/%s/%s", s.mqttTopicPrefix, protocol, clientId)
 			_, err = manager.Subscribe(ctx, &paho.Subscribe{
 				Subscriptions: map[string]paho.SubscribeOptions{
@@ -227,7 +228,7 @@ func (s *WebsocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				},
 			})
 			if err != nil {
-				log.Printf("subscribing to mqtt topic %s: %v", topicName, err)
+				slog.Error("subscribing to mqtt topic", "topicName", topicName, "err", err)
 				_ = wsConn.Close(websocket.StatusProtocolError, http.StatusText(http.StatusInternalServerError))
 				return
 			}
@@ -239,30 +240,30 @@ func (s *WebsocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				var msg pipe.GatewayMessage
 				err := json.Unmarshal(mqttMsg.Payload, &msg)
 				if err != nil {
-					log.Printf("unmarshalling CSMS message: %v", err)
+					slog.Error("unmarshalling CSMS message", "err", err)
 					return
 				}
 				p.CSMSRx <- &msg
 			}),
 			OnServerDisconnect: func(disconnect *paho.Disconnect) {
-				log.Printf("server disconnect...")
+				slog.Info("server disconnect...")
 			},
 		},
 	})
 	if err != nil {
-		log.Printf("connecting to mqtt on %s: %v", s.mqttBrokerURLs, err)
+		slog.Error("connecting to mqtt", "mqttBrokerURLs", s.mqttBrokerURLs, "err", err)
 		_ = wsConn.Close(websocket.StatusProtocolError, http.StatusText(http.StatusInternalServerError))
 		return
 	}
 	defer func() {
 		err := mqttConn.Disconnect(context.Background())
 		if err != nil {
-			log.Printf("disconnecting from mqtt: %v", err)
+			slog.Error("disconnecting from mqtt", "err", err)
 		}
 	}()
 	err = mqttConn.AwaitConnection(ctx)
 	if err != nil {
-		log.Printf("waiting for mqtt on %s: %v", s.mqttBrokerURLs, err)
+		slog.Error("waiting for mqtt", "mqttBrokerURLs", s.mqttBrokerURLs, "err", err)
 		return
 	}
 
@@ -275,7 +276,7 @@ func (s *WebsocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// read from the websocket and send to the CS Rx channel (CS Tx used for error)
 	readFromChargeStation(ctx, wsConn, p.ChargeStationRx, p.ChargeStationTx)
 
-	log.Printf("websocket handler complete")
+	slog.Info("websocket handler complete")
 }
 
 func checkAuthorization(r *http.Request, cs *registry.ChargeStation) bool {
@@ -300,7 +301,8 @@ func checkCertificate(r *http.Request, orgNames []string, cs *registry.ChargeSta
 
 	foundOrg := false
 	for _, org := range leafCertificate.Subject.Organization {
-		log.Printf("Org Name: %s; Allowed Org Names: %s", org, orgNames)
+
+		slog.Info("checking", "org", org, "allowedOrgs", orgNames)
 
 		if slices.Contains(orgNames, org) {
 			foundOrg = true
@@ -311,7 +313,7 @@ func checkCertificate(r *http.Request, orgNames []string, cs *registry.ChargeSta
 		return false
 	}
 
-	log.Printf("Client Id: %s", leafCertificate.Subject.CommonName)
+	slog.Info("found", "clientId", leafCertificate.Subject.CommonName)
 
 	return cs.ClientId == leafCertificate.Subject.CommonName
 }
@@ -322,10 +324,10 @@ func goPublishToCSMS(ctx context.Context, csmsTx chan *pipe.GatewayMessage, mqtt
 			select {
 			case msg := <-csmsTx:
 				topic := fmt.Sprintf("%s/in/%s/%s", topicPrefix, protocol, clientId)
-				//log.Printf("publishing message on %s: %v", topic, msg)
+				//slog.Info("publishing message on", "topic", topic, "msg", msg)
 				data, err := json.Marshal(msg)
 				if err != nil {
-					log.Printf("marshaling message for publication: %v", err)
+					slog.Error("marshaling message for publication", "err", err)
 					continue
 				}
 				_, err = mqttConn.Publish(ctx, &paho.Publish{
@@ -337,7 +339,7 @@ func goPublishToCSMS(ctx context.Context, csmsTx chan *pipe.GatewayMessage, mqtt
 					},
 				})
 				if err != nil {
-					log.Printf("publishing message: %v\n", err)
+					slog.Error("publishing message", "err", err)
 				}
 			case <-ctx.Done():
 				return
@@ -353,12 +355,12 @@ func goWriteToChargeStation(ctx context.Context, chargeStationTx chan *pipe.Gate
 			case msg := <-chargeStationTx:
 				data, err := marshalGatewayMessageAsOcpp(msg)
 				if err != nil {
-					log.Printf("marshaling gateway message for charge station: %v", err)
+					slog.Error("marshaling gateway message for charge station", "err", err)
 					continue
 				}
 				err = wsConn.Write(ctx, websocket.MessageText, data)
 				if err != nil {
-					log.Printf("writing to charge station: %v", err)
+					slog.Error("writing to charge station", "err", err)
 				}
 			case <-ctx.Done():
 				return
@@ -378,13 +380,13 @@ func readFromChargeStation(ctx context.Context, wsConn *websocket.Conn, csRx cha
 				continue
 			}
 		} else if status := websocket.CloseStatus(err); status != -1 {
-			log.Printf("connection closed with status %d", status)
+			slog.Info("connection closed with status", "status", status)
 			return
 		} else if errors.Is(err, io.EOF) {
-			log.Printf("connection closed")
+			slog.Info("connection closed")
 			return
 		} else if err != nil {
-			log.Printf("reading from cs: %v", err)
+			slog.Error("reading from cs", "err", err)
 			return
 		}
 
@@ -410,7 +412,7 @@ func readFromChargeStation(ctx context.Context, wsConn *websocket.Conn, csRx cha
 			csTx <- &msg
 			continue
 		}
-		//log.Printf("received message: %v", msg)
+		//slog.Info("received message", "msg", msg)
 		csRx <- msg
 	}
 }
@@ -478,14 +480,4 @@ func unmarshalOcppAsGatewayMessage(b []byte) (*pipe.GatewayMessage, error) {
 		}
 	}
 	return &msg, nil
-}
-
-type LogLogger struct{}
-
-func (l LogLogger) Println(v ...interface{}) {
-	log.Println(v...)
-}
-
-func (l LogLogger) Printf(format string, v ...interface{}) {
-	log.Printf(format, v...)
 }

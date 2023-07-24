@@ -5,10 +5,11 @@ package server
 import (
 	"context"
 	"crypto/tls"
-	"log"
 	"net"
 	"net/http"
 	"time"
+
+	"golang.org/x/exp/slog"
 )
 
 type Server struct {
@@ -31,7 +32,7 @@ func (s *Server) Start(errCh chan error) {
 	}
 	s.addr = l.Addr().String()
 
-	log.Printf("%s listening on %s", s.name, l.Addr())
+	slog.Info("listening", "name", s.name, "addr", l.Addr())
 
 	go func() {
 		if s.srv.TLSConfig != nil {
