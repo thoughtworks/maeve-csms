@@ -233,12 +233,12 @@ func NewGatewayMessageHandler(ctx context.Context, router *Router, emitter Emitt
 			errMsg := NewErrorMessage("", "-1", ErrorInternalError, err)
 			err = emitter.Emit(ctx, chargeStationId, errMsg)
 			if err != nil {
-				slog.Error("unable to emit error message", err)
+				slog.Error("unable to emit error message", "err", err)
 			}
 		}
 		err = router.Route(ctx, chargeStationId, msg, emitter, schemaFS)
 		if err != nil {
-			slog.Error("unable to route message", slog.String("chargeStationId", chargeStationId), slog.String("action", msg.Action), err)
+			slog.Error("unable to route message", slog.String("chargeStationId", chargeStationId), slog.String("action", msg.Action), "err", err)
 			var mqttError *Error
 			var errMsg *Message
 			if errors.As(err, &mqttError) {
@@ -248,7 +248,7 @@ func NewGatewayMessageHandler(ctx context.Context, router *Router, emitter Emitt
 			}
 			err = emitter.Emit(ctx, chargeStationId, errMsg)
 			if err != nil {
-				slog.Error("unable to emit error message", err)
+				slog.Error("unable to emit error message", "err", err)
 			}
 		}
 	}

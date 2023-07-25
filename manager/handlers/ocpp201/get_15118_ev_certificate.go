@@ -26,7 +26,7 @@ func (g Get15118EvCertificateHandler) HandleCall(_ context.Context, _ string, re
 		res, err := g.EvCertificateProvider.ProvideCertificate(req.ExiRequest)
 
 		if err != nil {
-			slog.Error("failed to provide certificate", err)
+			slog.Error("failed to provide certificate", "err", err)
 		} else {
 			response = types.Get15118EVCertificateResponseJson{
 				Status:      res.Status,
