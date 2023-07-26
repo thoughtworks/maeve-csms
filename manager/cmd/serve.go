@@ -4,9 +4,12 @@ package cmd
 
 import (
 	"context"
+	"crypto/tls"
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
+	"golang.org/x/exp/slog"
+	"net/http"
 	"net/url"
 	"os"
 
@@ -32,6 +35,7 @@ var (
 	moOPCPUrl                 string
 	storageEngine             string
 	gcloudProject             string
+	keyLogFile                string
 )
 
 // serveCmd represents the serve command
@@ -76,6 +80,26 @@ the gateway and send appropriate responses.`,
 			MaxOCSPAttempts:  3,
 		}
 
+		httpClient := http.DefaultClient
+
+		if keyLogFile != "" {
+			slog.Warn("***** TLS key logging enabled *****")
+
+			//#nosec G304 - only files specified by the person running the application will be used
+			keyLog, err := os.OpenFile(keyLogFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+			if err != nil {
+				return fmt.Errorf("opening key log file: %v", err)
+			}
+
+			transport := &http.Transport{
+				TLSClientConfig: &tls.Config{
+					KeyLogWriter: keyLog,
+					MinVersion:   tls.VersionTLS12,
+				},
+			}
+			httpClient = &http.Client{Transport: transport}
+		}
+
 		var certSignerService services.CertificateSignerService
 		var certProviderService services.EvCertificateProvider
 		if csoOPCPToken != "" && csoOPCPUrl != "" {
@@ -83,10 +107,12 @@ the gateway and send appropriate responses.`,
 				BaseURL:     csoOPCPUrl,
 				BearerToken: csoOPCPToken,
 				ISOVersion:  services.ISO15118V2,
+				HttpClient:  httpClient,
 			}
 			certProviderService = services.OpcpMoEvCertificateProvider{
 				BaseURL:     moOPCPUrl,
 				BearerToken: moOPCPToken,
+				HttpClient:  httpClient,
 			}
 		}
 
@@ -176,4 +202,6 @@ func init() {
 		"The storage engine to use for persistence, one of [firestore, inmemory]")
 	serveCmd.Flags().StringVar(&gcloudProject, "gcloud-project", "*detect-project-id*",
 		"The google cloud project that hosts the firestore instance (if chosen storage-engine)")
+	serveCmd.Flags().StringVar(&keyLogFile, "key-log-file", "",
+		"File to write TLS key material to in NSS key log format (for debugging)")
 }
