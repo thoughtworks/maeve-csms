@@ -4,6 +4,8 @@ package ocpp16_test
 
 import (
 	"context"
+	"fmt"
+	"math/rand"
 	"testing"
 	"time"
 
@@ -17,6 +19,7 @@ import (
 )
 
 func TestStopTransactionHandler(t *testing.T) {
+	chargingStationId := fmt.Sprintf("cs%03d", rand.Intn(1000))
 	engine := inmemory.NewStore()
 
 	err := engine.SetToken(context.Background(), &store.Token{
@@ -40,7 +43,7 @@ func TestStopTransactionHandler(t *testing.T) {
 	startContext := "Transaction.Begin"
 	startMeasurand := "MeterValue"
 	startLocation := "Outlet"
-	err = transactionStore.CreateTransaction(context.TODO(), "cs001", handlers.ConvertToUUID(42), "MYRFIDTAG", "ISO14443",
+	err = transactionStore.CreateTransaction(context.TODO(), chargingStationId, handlers.ConvertToUUID(42), "MYRFIDTAG", "ISO14443",
 		[]store.MeterValue{
 			{
 				SampledValues: []store.SampledValue{
@@ -88,7 +91,7 @@ func TestStopTransactionHandler(t *testing.T) {
 		TransactionId: 42,
 	}
 
-	got, err := handler.HandleCall(context.Background(), "cs001", req)
+	got, err := handler.HandleCall(context.Background(), chargingStationId, req)
 	require.NoError(t, err)
 
 	want := &types.StopTransactionResponseJson{
@@ -99,7 +102,7 @@ func TestStopTransactionHandler(t *testing.T) {
 
 	assert.Equal(t, want, got)
 
-	found, err := transactionStore.FindTransaction(context.TODO(), "cs001", handlers.ConvertToUUID(42))
+	found, err := transactionStore.FindTransaction(context.TODO(), chargingStationId, handlers.ConvertToUUID(42))
 	require.NoError(t, err)
 
 	expectedTransactionEndContext := "Transaction.End"
@@ -107,7 +110,7 @@ func TestStopTransactionHandler(t *testing.T) {
 	expectedOutletLocation := "Outlet"
 	expectedMeasurand := "Energy.Active.Import.Register"
 	expected := &store.Transaction{
-		ChargeStationId: "cs001",
+		ChargeStationId: chargingStationId,
 		TransactionId:   handlers.ConvertToUUID(42),
 		IdToken:         "MYRFIDTAG",
 		TokenType:       "ISO14443",
