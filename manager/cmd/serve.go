@@ -6,14 +6,20 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"golang.org/x/exp/slog"
+	"net/http"
+	"net/url"
+	"os"
+
+	"github.com/thoughtworks/maeve-csms/manager/store"
+	"github.com/thoughtworks/maeve-csms/manager/store/firestore"
+	"github.com/thoughtworks/maeve-csms/manager/store/inmemory"
+
 	"github.com/spf13/cobra"
 	"github.com/subnova/slog-exporter/slogtrace"
 	"github.com/thoughtworks/maeve-csms/manager/mqtt"
 	"github.com/thoughtworks/maeve-csms/manager/server"
 	"github.com/thoughtworks/maeve-csms/manager/services"
-	"github.com/thoughtworks/maeve-csms/manager/store"
-	"github.com/thoughtworks/maeve-csms/manager/store/firestore"
-	"github.com/thoughtworks/maeve-csms/manager/store/inmemory"
 	"go.opentelemetry.io/contrib/detectors/gcp"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
@@ -22,12 +28,8 @@ import (
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
-	"golang.org/x/exp/slog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"net/http"
-	"net/url"
-	"os"
 	"time"
 )
 
@@ -36,17 +38,17 @@ var (
 	mqttPrefix                string
 	mqttGroup                 string
 	apiAddr                   string
-	moTrustAnchorCertPEMFiles []string
 	csoOPCPToken              string
 	csoOPCPUrl                string
 	moOPCPToken               string
 	moOPCPUrl                 string
-	moRootCertPool            string
 	storageEngine             string
 	gcloudProject             string
 	keyLogFile                string
 	otelCollectorAddr         string
 	logFormat                 string
+	moRootCertPool            string
+	moTrustAnchorCertPEMFiles []string
 )
 
 // Initializes an OTLP exporter, and configures the corresponding trace and
@@ -186,6 +188,7 @@ the gateway and send appropriate responses.`,
 		}
 
 		var transport http.RoundTripper
+		httpClient := http.DefaultClient
 
 		if keyLogFile != "" {
 			slog.Warn("***** TLS key logging enabled *****")
@@ -207,7 +210,7 @@ the gateway and send appropriate responses.`,
 			transport = otelhttp.NewTransport(http.DefaultTransport)
 		}
 
-		httpClient := &http.Client{Transport: transport}
+		httpClient = &http.Client{Transport: transport}
 
 		var certSignerService services.CertificateSignerService
 		var certProviderService services.EvCertificateProvider
@@ -282,4 +285,6 @@ func init() {
 		"The address to retrieve the certificate pool containing the trust anchor for MO")
 	serveCmd.Flags().StringSliceVar(&moTrustAnchorCertPEMFiles, "mo-trust-anchor-pem-file", []string{},
 		"The set of PEM files containing trusted MO certificates")
+	serveCmd.Flags().StringVar(&keyLogFile, "key-log-file", "",
+		"File to write TLS key material to in NSS key log format (for debugging)")
 }
