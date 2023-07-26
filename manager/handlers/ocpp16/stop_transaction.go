@@ -46,7 +46,7 @@ func (s StopTransactionHandler) HandleCall(ctx context.Context, chargeStationId 
 		}
 	}
 
-	transaction, err := s.TransactionStore.FindTransaction(ctx, "cs001", transactionId)
+	transaction, err := s.TransactionStore.FindTransaction(ctx, chargeStationId, transactionId)
 	if err != nil {
 		return nil, err
 	}
