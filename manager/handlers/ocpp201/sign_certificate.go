@@ -42,7 +42,7 @@ func (s SignCertificateHandler) HandleCall(ctx context.Context, chargeStationId 
 
 			pemChain, err := s.CertificateSignerService.SignCertificate(certType, req.Csr)
 			if err != nil {
-				slog.Error("failed to sign certificate", err)
+				slog.Error("failed to sign certificate", "err", err)
 			} else {
 				certSignedReq := &types.CertificateSignedRequestJson{
 					CertificateChain: pemChain,
@@ -51,7 +51,7 @@ func (s SignCertificateHandler) HandleCall(ctx context.Context, chargeStationId 
 
 				err = s.CallMaker.Send(ctx, chargeStationId, certSignedReq)
 				if err != nil {
-					slog.Error("failed to send certificate signed request", err)
+					slog.Error("failed to send certificate signed request", "err", err)
 				}
 			}
 		}()

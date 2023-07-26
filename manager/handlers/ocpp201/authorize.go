@@ -90,7 +90,7 @@ func handleCertificateValidationError(err error) (types.AuthorizationStatusEnumT
 			certStatus = types.AuthorizeCertificateStatusEnumTypeCertChainError
 		}
 	} else if err != nil {
-		slog.Error("general validation error", err)
+		slog.Error("general validation error", "err", err)
 		status = types.AuthorizationStatusEnumTypeBlocked
 		certStatus = types.AuthorizeCertificateStatusEnumTypeSignatureError
 	}

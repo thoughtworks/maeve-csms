@@ -72,7 +72,7 @@ func (t TransactionEventHandler) HandleCall(ctx context.Context, chargeStationId
 		}
 		cost, err := t.TariffService.CalculateCost(transaction)
 		if err != nil {
-			slog.Error("error calculating tariff", err)
+			slog.Error("error calculating tariff", "err", err)
 		} else {
 			slog.Info("total cost", slog.Float64("cost", cost))
 			response.TotalCost = &cost

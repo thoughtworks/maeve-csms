@@ -23,7 +23,7 @@ func (g GetCertificateStatusHandler) HandleCall(ctx context.Context, chargeStati
 	status := types.GetCertificateStatusEnumTypeAccepted
 	ocspResp, err := g.CertificateValidationService.ValidateHashedCertificateChain([]types.OCSPRequestDataType{req.OcspRequestData})
 	if err != nil {
-		slog.Error("validating hashed certificate chain", err)
+		slog.Error("validating hashed certificate chain", "err", err)
 	}
 	if ocspResp == nil {
 		status = types.GetCertificateStatusEnumTypeFailed
