@@ -36,6 +36,11 @@ func (d DataTransferHandler) HandleCall(ctx context.Context, chargeStationId str
 		span.SetAttributes(attribute.String("datatransfer.message_id", messageId))
 	}
 
+	span.SetAttributes(attribute.String("datatransfer.vendor_id", req.VendorId))
+	if messageId != "" {
+		span.SetAttributes(attribute.String("datatransfer.message_id", messageId))
+	}
+
 	vendorMap, ok := d.CallRoutes[req.VendorId]
 	if !ok {
 		span.SetAttributes(attribute.String("datatransfer.status", string(types.DataTransferResponseJsonStatusUnknownVendorId)))

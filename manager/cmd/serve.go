@@ -6,10 +6,20 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/sdk/resource"
+	"go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
 	"golang.org/x/exp/slog"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"net/http"
 	"net/url"
 	"os"
+	"time"
 
 	"github.com/thoughtworks/maeve-csms/manager/store"
 	"github.com/thoughtworks/maeve-csms/manager/store/firestore"
@@ -21,16 +31,6 @@ import (
 	"github.com/thoughtworks/maeve-csms/manager/server"
 	"github.com/thoughtworks/maeve-csms/manager/services"
 	"go.opentelemetry.io/contrib/detectors/gcp"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
-	"go.opentelemetry.io/otel/propagation"
-	"go.opentelemetry.io/otel/sdk/resource"
-	"go.opentelemetry.io/otel/sdk/trace"
-	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-	"time"
 )
 
 var (
@@ -287,4 +287,6 @@ func init() {
 		"The set of PEM files containing trusted MO certificates")
 	serveCmd.Flags().StringVar(&keyLogFile, "key-log-file", "",
 		"File to write TLS key material to in NSS key log format (for debugging)")
+	serveCmd.Flags().StringVar(&otelCollectorAddr, "otel-collector-addr", "",
+		"The address of the open telemetry collector that will receive traces, e.g. localhost:4317")
 }
