@@ -89,6 +89,7 @@ func requestCertificate(client *http.Client, url, bearerToken string, csr []byte
 	if err != nil {
 		return nil, err
 	}
+	req.Header.Add("x-api-key", bearerToken)
 	req.Header.Add("authorization", fmt.Sprintf("Bearer %s", bearerToken))
 	req.Header.Add("content-type", "application/pkcs10")
 

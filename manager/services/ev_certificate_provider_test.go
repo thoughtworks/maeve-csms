@@ -3,8 +3,10 @@
 package services_test
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"go.opentelemetry.io/otel/trace"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -86,6 +88,8 @@ func certificateInstallationResponse(request, exiResponse string) string {
 }
 
 func TestEvCertificateProvider(t *testing.T) {
+	tracer := trace.NewNoopTracerProvider().Tracer("test")
+
 	hubject := newOtherHubjectHttpHandler()
 
 	server := httptest.NewServer(&hubject)
@@ -94,9 +98,10 @@ func TestEvCertificateProvider(t *testing.T) {
 	provider := services.OpcpMoEvCertificateProvider{
 		BaseURL:     server.URL,
 		BearerToken: "TestToken",
+		Tracer:      tracer,
 	}
 
-	response, err := provider.ProvideCertificate("valid")
+	response, err := provider.ProvideCertificate(context.Background(), "valid")
 
 	assert.NoError(t, err)
 	assert.Equal(t, ocpp201.Iso15118EVCertificateStatusEnumTypeAccepted, response.Status)
@@ -104,6 +109,8 @@ func TestEvCertificateProvider(t *testing.T) {
 }
 
 func TestEvCertificateProviderWithFlakyResponses(t *testing.T) {
+	tracer := trace.NewNoopTracerProvider().Tracer("test")
+
 	hubject := newOtherHubjectHttpHandler()
 
 	server := httptest.NewServer(&hubject)
@@ -112,9 +119,10 @@ func TestEvCertificateProviderWithFlakyResponses(t *testing.T) {
 	provider := services.OpcpMoEvCertificateProvider{
 		BaseURL:     server.URL,
 		BearerToken: "TestToken",
+		Tracer:      tracer,
 	}
 
-	response, err := provider.ProvideCertificate("flaky")
+	response, err := provider.ProvideCertificate(context.Background(), "flaky")
 
 	assert.NoError(t, err)
 	assert.Equal(t, ocpp201.Iso15118EVCertificateStatusEnumTypeAccepted, response.Status)
@@ -122,6 +130,8 @@ func TestEvCertificateProviderWithFlakyResponses(t *testing.T) {
 }
 
 func TestEvCertificateProviderFailureCases(t *testing.T) {
+	tracer := trace.NewNoopTracerProvider().Tracer("test")
+
 	tests := map[string]struct {
 		token      string
 		exiRequest string
@@ -141,9 +151,10 @@ func TestEvCertificateProviderFailureCases(t *testing.T) {
 			provider := services.OpcpMoEvCertificateProvider{
 				BaseURL:     server.URL,
 				BearerToken: tc.token,
+				Tracer:      tracer,
 			}
 
-			response, err := provider.ProvideCertificate(tc.exiRequest)
+			response, err := provider.ProvideCertificate(context.Background(), tc.exiRequest)
 
 			assert.Error(t, err)
 			assert.Equal(t, ocpp201.Iso15118EVCertificateStatusEnumTypeFailed, response.Status)

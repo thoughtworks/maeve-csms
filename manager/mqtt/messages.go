@@ -8,6 +8,19 @@ import (
 
 type MessageType int
 
+func (m MessageType) String() string {
+	switch m {
+	case MessageTypeCall:
+		return "call"
+	case MessageTypeCallResult:
+		return "call_result"
+	case MessageTypeCallError:
+		return "call_error"
+	default:
+		return "unknown"
+	}
+}
+
 const (
 	MessageTypeCall MessageType = iota + 2
 	MessageTypeCallResult

@@ -6,6 +6,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 	"io/fs"
 
 	"github.com/thoughtworks/maeve-csms/manager/handlers"
@@ -21,6 +23,8 @@ type DataTransferHandler struct {
 }
 
 func (d DataTransferHandler) HandleCall(ctx context.Context, chargeStationId string, request ocpp.Request) (ocpp.Response, error) {
+	span := trace.SpanFromContext(ctx)
+
 	req := request.(*types.DataTransferJson)
 
 	messageId := ""
@@ -29,6 +33,11 @@ func (d DataTransferHandler) HandleCall(ctx context.Context, chargeStationId str
 	}
 	slog.Info("data transfer",
 		slog.String("vendorId", req.VendorId), slog.String("messageId", messageId))
+
+	span.SetAttributes(attribute.String("datatransfer.vendor_id", req.VendorId))
+	if messageId != "" {
+		span.SetAttributes(attribute.String("datatransfer.message_id", messageId))
+	}
 
 	vendorMap, ok := d.CallRoutes[req.VendorId]
 	if !ok {

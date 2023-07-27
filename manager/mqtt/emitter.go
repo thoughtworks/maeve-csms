@@ -8,6 +8,11 @@ import (
 	"fmt"
 	"github.com/eclipse/paho.golang/autopaho"
 	"github.com/eclipse/paho.golang/paho"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/propagation"
+	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type Emitter interface {
@@ -25,6 +30,9 @@ type ProxyEmitter struct {
 }
 
 func (p *ProxyEmitter) Emit(ctx context.Context, chargeStationId string, message *Message) error {
+	if p.emitter == nil {
+		return fmt.Errorf("no emitter configured")
+	}
 	return p.emitter.Emit(ctx, chargeStationId, message)
 }
 
@@ -32,6 +40,7 @@ type MqttEmitter struct {
 	conn        *autopaho.ConnectionManager
 	mqttPrefix  string
 	ocppVersion string
+	tracer      trace.Tracer
 }
 
 func (m *MqttEmitter) Emit(ctx context.Context, chargeStationId string, message *Message) error {
@@ -40,9 +49,33 @@ func (m *MqttEmitter) Emit(ctx context.Context, chargeStationId string, message 
 	if err != nil {
 		return fmt.Errorf("marshalling response of type %s: %v", message.Action, err)
 	}
-	_, err = m.conn.Publish(ctx, &paho.Publish{
+
+	newCtx, span := m.tracer.Start(ctx,
+		fmt.Sprintf("%s/out/%s/# publish", m.mqttPrefix, m.ocppVersion),
+		trace.WithSpanKind(trace.SpanKindProducer),
+		trace.WithAttributes(
+			semconv.MessagingSystem("mqtt"),
+			semconv.MessagingMessagePayloadSizeBytes(len(payload)),
+			semconv.MessagingOperationKey.String("publish"),
+			semconv.MessagingMessageConversationID(message.MessageId),
+			attribute.String("csId", chargeStationId),
+		))
+	defer span.End()
+
+	correlationMap := make(map[string]string)
+	otel.GetTextMapPropagator().Inject(newCtx, propagation.MapCarrier(correlationMap))
+
+	correlationData, err := json.Marshal(correlationMap)
+	if err != nil {
+		return fmt.Errorf("marshalling correlation map: %v", err)
+	}
+
+	_, err = m.conn.Publish(newCtx, &paho.Publish{
 		Topic:   topic,
 		Payload: payload,
+		Properties: &paho.PublishProperties{
+			CorrelationData: correlationData,
+		},
 	})
 	if err != nil {
 		return fmt.Errorf("publishing to %s: %v", topic, err)
@@ -50,10 +83,11 @@ func (m *MqttEmitter) Emit(ctx context.Context, chargeStationId string, message 
 	return nil
 }
 
-func NewMqttEmitter(conn *autopaho.ConnectionManager, mqttPrefix, ocppVersion string) Emitter {
+func NewMqttEmitter(conn *autopaho.ConnectionManager, mqttPrefix, ocppVersion string, tracer trace.Tracer) Emitter {
 	return &MqttEmitter{
 		conn:        conn,
 		mqttPrefix:  mqttPrefix,
 		ocppVersion: ocppVersion,
+		tracer:      tracer,
 	}
 }

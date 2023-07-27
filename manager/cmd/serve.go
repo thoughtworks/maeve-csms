@@ -8,10 +8,20 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/sdk/resource"
+	"go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
 	"golang.org/x/exp/slog"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"net/http"
 	"net/url"
 	"os"
+	"time"
 
 	"github.com/thoughtworks/maeve-csms/manager/store"
 	"github.com/thoughtworks/maeve-csms/manager/store/firestore"
@@ -36,7 +46,57 @@ var (
 	storageEngine             string
 	gcloudProject             string
 	keyLogFile                string
+	otelCollectorAddr         string
 )
+
+// Initializes an OTLP exporter, and configures the corresponding trace and
+// metric providers.
+func initProvider(collectorAddr string) (func(context.Context) error, error) {
+	ctx := context.Background()
+
+	res, err := resource.New(ctx,
+		resource.WithAttributes(
+			// the service name used to display traces in backends
+			semconv.ServiceName("maeve-csms-manager"),
+		),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create resource: %w", err)
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, time.Second)
+	defer cancel()
+	conn, err := grpc.DialContext(ctx, collectorAddr,
+		// Note the use of insecure transport here. TLS is recommended in production.
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithBlock(),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create gRPC connection to collector: %w", err)
+	}
+
+	// Set up a trace exporter
+	traceExporter, err := otlptracegrpc.New(ctx, otlptracegrpc.WithGRPCConn(conn))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create trace exporter: %w", err)
+	}
+
+	// Register the trace exporter with a TracerProvider, using a batch
+	// span processor to aggregate spans before export.
+	bsp := trace.NewBatchSpanProcessor(traceExporter)
+	tracerProvider := trace.NewTracerProvider(
+		trace.WithSampler(trace.AlwaysSample()),
+		trace.WithResource(res),
+		trace.WithSpanProcessor(bsp),
+	)
+	otel.SetTracerProvider(tracerProvider)
+
+	// set global propagator to tracecontext (the default is no-op).
+	otel.SetTextMapPropagator(propagation.TraceContext{})
+
+	// Shutdown will flush any remaining spans and shut down the exporter.
+	return tracerProvider.Shutdown, nil
+}
 
 // serveCmd represents the serve command
 var serveCmd = &cobra.Command{
@@ -45,6 +105,21 @@ var serveCmd = &cobra.Command{
 	Long: `Starts the server which will subscribe to messages from
 the gateway and send appropriate responses.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if otelCollectorAddr != "" {
+			shutdown, err := initProvider(otelCollectorAddr)
+			if err != nil {
+				return err
+			}
+			defer func() {
+				err := shutdown(context.Background())
+				if err != nil {
+					slog.Error("shutting down OTLP exporter", "error", err)
+				}
+			}()
+		}
+
+		tracer := otel.Tracer("manager")
+
 		brokerUrl, err := url.Parse(mqttAddr)
 		if err != nil {
 			return fmt.Errorf("parsing mqtt broker url: %v", err)
@@ -80,7 +155,7 @@ the gateway and send appropriate responses.`,
 			MaxOCSPAttempts:  3,
 		}
 
-		httpClient := http.DefaultClient
+		var transport http.RoundTripper
 
 		if keyLogFile != "" {
 			slog.Warn("***** TLS key logging enabled *****")
@@ -91,14 +166,18 @@ the gateway and send appropriate responses.`,
 				return fmt.Errorf("opening key log file: %v", err)
 			}
 
-			transport := &http.Transport{
-				TLSClientConfig: &tls.Config{
-					KeyLogWriter: keyLog,
-					MinVersion:   tls.VersionTLS12,
-				},
+			baseTransport := http.DefaultTransport.(*http.Transport).Clone()
+			baseTransport.TLSClientConfig = &tls.Config{
+				KeyLogWriter: keyLog,
+				MinVersion:   tls.VersionTLS12,
 			}
-			httpClient = &http.Client{Transport: transport}
+
+			transport = otelhttp.NewTransport(baseTransport)
+		} else {
+			transport = otelhttp.NewTransport(http.DefaultTransport)
 		}
+
+		httpClient := &http.Client{Transport: transport}
 
 		var certSignerService services.CertificateSignerService
 		var certProviderService services.EvCertificateProvider
@@ -109,10 +188,13 @@ the gateway and send appropriate responses.`,
 				ISOVersion:  services.ISO15118V2,
 				HttpClient:  httpClient,
 			}
+		}
+		if moOPCPToken != "" && moOPCPUrl != "" {
 			certProviderService = services.OpcpMoEvCertificateProvider{
 				BaseURL:     moOPCPUrl,
 				BearerToken: moOPCPToken,
 				HttpClient:  httpClient,
+				Tracer:      tracer,
 			}
 		}
 
@@ -125,6 +207,7 @@ the gateway and send appropriate responses.`,
 			mqtt.WithCertSignerService(certSignerService),
 			mqtt.WithCertificateProviderService(certProviderService),
 			mqtt.WithStorageEngine(engine),
+			mqtt.WithOtelTracer(tracer),
 		)
 
 		errCh := make(chan error, 1)
@@ -204,4 +287,6 @@ func init() {
 		"The google cloud project that hosts the firestore instance (if chosen storage-engine)")
 	serveCmd.Flags().StringVar(&keyLogFile, "key-log-file", "",
 		"File to write TLS key material to in NSS key log format (for debugging)")
+	serveCmd.Flags().StringVar(&otelCollectorAddr, "otel-collector-addr", "",
+		"The address of the open telemetry collector that will receive traces, e.g. localhost:4317")
 }

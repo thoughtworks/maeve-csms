@@ -7,6 +7,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/propagation"
+	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
+	"go.opentelemetry.io/otel/trace"
 	"io/fs"
 	"math/rand"
 	"net/url"
@@ -37,6 +43,7 @@ type Handler struct {
 	heartbeatInterval     time.Duration
 	schemaFS              fs.FS
 	storageEngine         store.Engine
+	tracer                trace.Tracer
 }
 
 type HandlerOpt func(h *Handler)
@@ -115,6 +122,12 @@ func WithStorageEngine(store store.Engine) HandlerOpt {
 	}
 }
 
+func WithOtelTracer(tracer trace.Tracer) HandlerOpt {
+	return func(h *Handler) {
+		h.tracer = tracer
+	}
+}
+
 func NewHandler(opts ...HandlerOpt) *Handler {
 	h := new(Handler)
 	for _, opt := range opts {
@@ -159,6 +172,9 @@ func ensureDefaults(h *Handler) {
 	if h.schemaFS == nil {
 		h.schemaFS = schemas.OcppSchemas
 	}
+	if h.tracer == nil {
+		h.tracer = trace.NewNoopTracerProvider().Tracer("")
+	}
 }
 
 func (h *Handler) Connect(errCh chan error) {
@@ -177,9 +193,11 @@ func (h *Handler) Connect(errCh chan error) {
 
 	readyCh := make(chan struct{})
 
+	clientId := fmt.Sprintf("%s-%s", h.mqttGroup, randSeq(5))
+
 	mqttRouter := paho.NewStandardRouter()
-	mqttRouter.RegisterHandler(mqttV16Topic, NewGatewayMessageHandler(context.Background(), v16Router, v16Emitter, h.schemaFS))
-	mqttRouter.RegisterHandler(mqttV201Topic, NewGatewayMessageHandler(context.Background(), v201Router, v201Emitter, h.schemaFS))
+	mqttRouter.RegisterHandler(mqttV16Topic, NewGatewayMessageHandler(context.Background(), clientId, h.tracer, v16Router, v16Emitter, h.schemaFS))
+	mqttRouter.RegisterHandler(mqttV201Topic, NewGatewayMessageHandler(context.Background(), clientId, h.tracer, v201Router, v201Emitter, h.schemaFS))
 
 	var mqttConn *autopaho.ConnectionManager
 	mqttConn, err := autopaho.NewConnection(context.Background(), autopaho.ClientConfig{
@@ -187,8 +205,8 @@ func (h *Handler) Connect(errCh chan error) {
 		KeepAlive:         h.mqttKeepAliveInterval,
 		ConnectRetryDelay: h.mqttConnectRetryDelay,
 		OnConnectionUp: func(manager *autopaho.ConnectionManager, connack *paho.Connack) {
-			v16Emitter.emitter = NewMqttEmitter(mqttConn, h.mqttPrefix, "ocpp1.6")
-			v201Emitter.emitter = NewMqttEmitter(mqttConn, h.mqttPrefix, "ocpp2.0.1")
+			v16Emitter.emitter = NewMqttEmitter(mqttConn, h.mqttPrefix, "ocpp1.6", h.tracer)
+			v201Emitter.emitter = NewMqttEmitter(mqttConn, h.mqttPrefix, "ocpp2.0.1", h.tracer)
 
 			_, err := mqttConn.Subscribe(context.Background(), &paho.Subscribe{
 				Subscriptions: map[string]paho.SubscribeOptions{
@@ -206,7 +224,7 @@ func (h *Handler) Connect(errCh chan error) {
 			readyCh <- struct{}{}
 		},
 		ClientConfig: paho.ClientConfig{
-			ClientID: fmt.Sprintf("%s-%s", h.mqttGroup, randSeq(5)),
+			ClientID: clientId,
 			Router:   mqttRouter,
 		},
 	})
@@ -223,22 +241,73 @@ func (h *Handler) Connect(errCh chan error) {
 	}
 }
 
-func NewGatewayMessageHandler(ctx context.Context, router *Router, emitter Emitter, schemaFS fs.FS) func(mqttMsg *paho.Publish) {
+func getTopicPattern(topic string) string {
+	parts := strings.Split(topic, "/")
+	parts[len(parts)-1] = "#"
+	return strings.Join(parts, "/")
+}
+
+func NewGatewayMessageHandler(
+	ctx context.Context,
+	clientId string,
+	tracer trace.Tracer,
+	router *Router,
+	emitter Emitter,
+	schemaFS fs.FS) func(mqttMsg *paho.Publish) {
 	return func(mqttMsg *paho.Publish) {
+		baseCtx := context.Background()
+
+		if mqttMsg.Properties != nil && mqttMsg.Properties.CorrelationData != nil {
+			correlationMap := make(map[string]string)
+			err := json.Unmarshal(mqttMsg.Properties.CorrelationData, &correlationMap)
+			if err != nil {
+				slog.Warn("failed to unmarshal correlation data", "error", err)
+			} else {
+				baseCtx = otel.GetTextMapPropagator().Extract(baseCtx, propagation.MapCarrier(correlationMap))
+			}
+		}
+
+		newCtx, span := tracer.Start(baseCtx,
+			fmt.Sprintf("%s receive", getTopicPattern(mqttMsg.Topic)),
+			trace.WithSpanKind(trace.SpanKindConsumer),
+			trace.WithAttributes(
+				semconv.MessagingSystem("mqtt"),
+				semconv.MessagingConsumerID(clientId),
+				semconv.MessagingMessagePayloadSizeBytes(len(mqttMsg.Payload)),
+				semconv.MessagingOperationKey.String("receive"),
+			))
+		defer span.End()
+
 		topicParts := strings.Split(mqttMsg.Topic, "/")
 		chargeStationId := topicParts[len(topicParts)-1]
+
 		var msg Message
 		err := json.Unmarshal(mqttMsg.Payload, &msg)
 		if err != nil {
 			errMsg := NewErrorMessage("", "-1", ErrorInternalError, err)
-			err = emitter.Emit(ctx, chargeStationId, errMsg)
+			err = emitter.Emit(newCtx, chargeStationId, errMsg)
 			if err != nil {
 				slog.Error("unable to emit error message", "err", err)
 			}
 		}
-		err = router.Route(ctx, chargeStationId, msg, emitter, schemaFS)
+
+		span.SetAttributes(
+			attribute.String("csId", chargeStationId),
+			attribute.String(fmt.Sprintf("%s.action", msg.MessageType), msg.Action),
+			semconv.MessagingMessageConversationID(msg.MessageId),
+		)
+
+		if msg.MessageType == MessageTypeCallError {
+			span.SetAttributes(
+				attribute.String(fmt.Sprintf("%s.code", msg.MessageType), string(msg.ErrorCode)),
+				attribute.String(fmt.Sprintf("%s.description", msg.MessageType), msg.ErrorDescription))
+		}
+
+		err = router.Route(newCtx, chargeStationId, msg, emitter, schemaFS)
 		if err != nil {
 			slog.Error("unable to route message", slog.String("chargeStationId", chargeStationId), slog.String("action", msg.Action), "err", err)
+			span.SetStatus(codes.Error, "routing request failed")
+			span.RecordError(err)
 			var mqttError *Error
 			var errMsg *Message
 			if errors.As(err, &mqttError) {
@@ -250,6 +319,8 @@ func NewGatewayMessageHandler(ctx context.Context, router *Router, emitter Emitt
 			if err != nil {
 				slog.Error("unable to emit error message", "err", err)
 			}
+		} else {
+			span.SetStatus(codes.Ok, "ok")
 		}
 	}
 }

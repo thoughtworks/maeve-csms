@@ -16,7 +16,7 @@ var calledTimes int
 
 type dummyEvCertificateProvider struct{}
 
-func (d dummyEvCertificateProvider) ProvideCertificate(exiRequest string) (services.EvCertificate15118Response, error) {
+func (d dummyEvCertificateProvider) ProvideCertificate(_ context.Context, exiRequest string) (services.EvCertificate15118Response, error) {
 	calledTimes++
 	if exiRequest == "success" {
 		return services.EvCertificate15118Response{

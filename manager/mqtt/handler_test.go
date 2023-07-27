@@ -15,6 +15,7 @@ import (
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
 	"github.com/thoughtworks/maeve-csms/manager/schemas"
+	"go.opentelemetry.io/otel/trace"
 	"k8s.io/utils/clock"
 	clockTest "k8s.io/utils/clock/testing"
 	"net/url"
@@ -107,6 +108,8 @@ func TestMqttConnection(t *testing.T) {
 }
 
 func TestGatewayMessageHandler(t *testing.T) {
+	tracer := trace.NewNoopTracerProvider().Tracer("test")
+
 	now, err := time.Parse(time.RFC3339, "2023-06-15T15:05:00+01:00")
 	require.NoError(t, err)
 
@@ -132,7 +135,7 @@ func TestGatewayMessageHandler(t *testing.T) {
 		return nil
 	}
 
-	handler := mqtt.NewGatewayMessageHandler(ctx, router, mqtt.EmitterFunc(emitter), schemas.OcppSchemas)
+	handler := mqtt.NewGatewayMessageHandler(ctx, "test-client", tracer, router, mqtt.EmitterFunc(emitter), schemas.OcppSchemas)
 
 	mqttMsg := mqtt.Message{
 		MessageType:    mqtt.MessageTypeCall,
@@ -159,6 +162,8 @@ func TestGatewayMessageHandler(t *testing.T) {
 }
 
 func TestGatewayMessageHandlerEmitsErrorWhenFailingToUnmarshallIncomingMessage(t *testing.T) {
+	tracer := trace.NewNoopTracerProvider().Tracer("test")
+
 	ctx := context.Background()
 	router := &mqtt.Router{
 		CallRoutes:       map[string]handlers.CallRoute{},
@@ -172,7 +177,7 @@ func TestGatewayMessageHandlerEmitsErrorWhenFailingToUnmarshallIncomingMessage(t
 		return nil
 	}
 
-	handler := mqtt.NewGatewayMessageHandler(ctx, router, mqtt.EmitterFunc(emitter), schemas.OcppSchemas)
+	handler := mqtt.NewGatewayMessageHandler(ctx, "test-client", tracer, router, mqtt.EmitterFunc(emitter), schemas.OcppSchemas)
 
 	msg := &paho.Publish{
 		Topic:   "cs/ocpp2.0.1/cs001",
@@ -190,6 +195,8 @@ func TestGatewayMessageHandlerEmitsErrorWhenFailingToUnmarshallIncomingMessage(t
 }
 
 func TestGatewayMessageHandlerEmitsErrorWithCodeFromRouter(t *testing.T) {
+	tracer := trace.NewNoopTracerProvider().Tracer("test")
+
 	ctx := context.Background()
 	router := &mqtt.Router{
 		CallRoutes:       map[string]handlers.CallRoute{},
@@ -203,7 +210,7 @@ func TestGatewayMessageHandlerEmitsErrorWithCodeFromRouter(t *testing.T) {
 		return nil
 	}
 
-	handler := mqtt.NewGatewayMessageHandler(ctx, router, mqtt.EmitterFunc(emitter), schemas.OcppSchemas)
+	handler := mqtt.NewGatewayMessageHandler(ctx, "test-client", tracer, router, mqtt.EmitterFunc(emitter), schemas.OcppSchemas)
 
 	mqttMsg := mqtt.Message{
 		MessageType:    mqtt.MessageTypeCall,
@@ -231,6 +238,8 @@ func TestGatewayMessageHandlerEmitsErrorWithCodeFromRouter(t *testing.T) {
 }
 
 func TestGatewayMessageHandlerEmitsErrorFromRouter(t *testing.T) {
+	tracer := trace.NewNoopTracerProvider().Tracer("test")
+
 	ctx := context.Background()
 	router := &mqtt.Router{
 		CallRoutes: map[string]handlers.CallRoute{
@@ -251,7 +260,7 @@ func TestGatewayMessageHandlerEmitsErrorFromRouter(t *testing.T) {
 		return nil
 	}
 
-	handler := mqtt.NewGatewayMessageHandler(ctx, router, mqtt.EmitterFunc(emitter), schemas.OcppSchemas)
+	handler := mqtt.NewGatewayMessageHandler(ctx, "test-client", tracer, router, mqtt.EmitterFunc(emitter), schemas.OcppSchemas)
 
 	mqttMsg := mqtt.Message{
 		MessageType:    mqtt.MessageTypeCall,

@@ -3,11 +3,13 @@
 package pipe
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/thoughtworks/maeve-csms/gateway/ocpp"
 )
 
 type GatewayMessage struct {
+	Context          context.Context  `json:"-"`
 	MessageType      ocpp.MessageType `json:"type"`
 	Action           string           `json:"action"`
 	MessageId        string           `json:"id"`

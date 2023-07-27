@@ -9,6 +9,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/propagation"
+	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
+	"go.opentelemetry.io/otel/trace"
 	"io"
 	"net/http"
 	"net/url"
@@ -36,6 +42,7 @@ type WebsocketHandler struct {
 	orgNames              []string
 	pipeOptions           []pipe.Opt
 	trustProxyHeaders     bool
+	tracer                trace.Tracer
 }
 
 type WebsocketOpt func(handler *WebsocketHandler)
@@ -112,6 +119,12 @@ func WithPipeOptions(pipeOption []pipe.Opt) WebsocketOpt {
 	}
 }
 
+func WithOtelTracer(tracer trace.Tracer) WebsocketOpt {
+	return func(handler *WebsocketHandler) {
+		handler.tracer = tracer
+	}
+}
+
 func NewWebsocketHandler(opts ...WebsocketOpt) http.Handler {
 	s := new(WebsocketHandler)
 
@@ -153,6 +166,10 @@ func ensureDefaults(handler *WebsocketHandler) {
 
 	if handler.deviceRegistry == nil {
 		panic("must provide device registry implementation")
+	}
+
+	if handler.tracer == nil {
+		handler.tracer = trace.NewNoopTracerProvider().Tracer("")
 	}
 }
 
@@ -243,6 +260,27 @@ func (s *WebsocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					slog.Error("unmarshalling CSMS message", "err", err)
 					return
 				}
+
+				correlationMap := make(map[string]string)
+				err = json.Unmarshal(mqttMsg.Properties.CorrelationData, &correlationMap)
+				if err != nil {
+					slog.Warn("unmarshalling correlation map", "err", err)
+				}
+				requestContext := otel.GetTextMapPropagator().Extract(context.Background(), propagation.MapCarrier(correlationMap))
+
+				newCtx, span := s.tracer.Start(requestContext, fmt.Sprintf("%s/out/%s/# receive", s.mqttTopicPrefix, protocol),
+					trace.WithSpanKind(trace.SpanKindConsumer),
+					trace.WithAttributes(
+						semconv.MessagingSystem("mqtt"),
+						semconv.MessagingMessagePayloadSizeBytes(len(mqttMsg.Payload)),
+						semconv.MessagingMessageConversationID(msg.MessageId),
+						semconv.MessagingOperationKey.String("receive"),
+						attribute.String("csId", clientId),
+					))
+				defer span.End()
+
+				msg.Context = newCtx
+
 				p.CSMSRx <- &msg
 			}),
 			OnServerDisconnect: func(disconnect *paho.Disconnect) {
@@ -268,13 +306,13 @@ func (s *WebsocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// listen on the CSMS Tx channel and publish those messages on the inbound topic
-	goPublishToCSMS(ctx, p.CSMSTx, mqttConn, s.mqttTopicPrefix, protocol, clientId)
+	goPublishToCSMS(ctx, s.tracer, p.CSMSTx, mqttConn, s.mqttTopicPrefix, protocol, clientId)
 
 	// listen the CS Tx channel and write those messages to the websocket
-	goWriteToChargeStation(ctx, p.ChargeStationTx, wsConn)
+	goWriteToChargeStation(ctx, s.tracer, p.ChargeStationTx, wsConn, protocol, clientId)
 
 	// read from the websocket and send to the CS Rx channel (CS Tx used for error)
-	readFromChargeStation(ctx, wsConn, p.ChargeStationRx, p.ChargeStationTx)
+	readFromChargeStation(s.tracer, wsConn, p.ChargeStationRx, p.ChargeStationTx, protocol, clientId)
 
 	slog.Info("websocket handler complete")
 }
@@ -318,26 +356,17 @@ func checkCertificate(r *http.Request, orgNames []string, cs *registry.ChargeSta
 	return cs.ClientId == leafCertificate.Subject.CommonName
 }
 
-func goPublishToCSMS(ctx context.Context, csmsTx chan *pipe.GatewayMessage, mqttConn *autopaho.ConnectionManager, topicPrefix, protocol, clientId string) {
+func goPublishToCSMS(ctx context.Context, tracer trace.Tracer, csmsTx chan *pipe.GatewayMessage, mqttConn *autopaho.ConnectionManager, topicPrefix, protocol, clientId string) {
 	go func() {
 		for {
 			select {
 			case msg := <-csmsTx:
-				topic := fmt.Sprintf("%s/in/%s/%s", topicPrefix, protocol, clientId)
-				//slog.Info("publishing message on", "topic", topic, "msg", msg)
 				data, err := json.Marshal(msg)
 				if err != nil {
 					slog.Error("marshaling message for publication", "err", err)
 					continue
 				}
-				_, err = mqttConn.Publish(ctx, &paho.Publish{
-					Topic:   topic,
-					Payload: data,
-					Properties: &paho.PublishProperties{
-						ContentType:   "application/json",
-						ResponseTopic: fmt.Sprintf("%s/out/%s/%s", topicPrefix, protocol, clientId),
-					},
-				})
+				err = publish(msg.Context, tracer, mqttConn, topicPrefix, protocol, clientId, msg.MessageId, data)
 				if err != nil {
 					slog.Error("publishing message", "err", err)
 				}
@@ -348,7 +377,43 @@ func goPublishToCSMS(ctx context.Context, csmsTx chan *pipe.GatewayMessage, mqtt
 	}()
 }
 
-func goWriteToChargeStation(ctx context.Context, chargeStationTx chan *pipe.GatewayMessage, wsConn *websocket.Conn) {
+func publish(ctx context.Context, tracer trace.Tracer, mqttConn *autopaho.ConnectionManager, topicPrefix, protocol, clientId, messageId string, data []byte) error {
+	topic := fmt.Sprintf("%s/in/%s/%s", topicPrefix, protocol, clientId)
+
+	newCtx, span := tracer.Start(ctx,
+		fmt.Sprintf("%s/in/%s/# publish", topicPrefix, protocol),
+		trace.WithSpanKind(trace.SpanKindProducer),
+		trace.WithAttributes(
+			semconv.MessagingSystem("mqtt"),
+			semconv.MessagingMessagePayloadSizeBytes(len(data)),
+			semconv.MessagingOperationKey.String("publish"),
+			semconv.MessagingMessageConversationID(messageId),
+			attribute.String("csId", clientId),
+		))
+	defer span.End()
+
+	correlationMap := make(map[string]string)
+	otel.GetTextMapPropagator().Inject(newCtx, propagation.MapCarrier(correlationMap))
+
+	correlationData, err := json.Marshal(correlationMap)
+	if err != nil {
+		slog.Warn("marshalling correlation map: %v", err)
+	}
+
+	_, err = mqttConn.Publish(newCtx, &paho.Publish{
+		Topic:   topic,
+		Payload: data,
+		Properties: &paho.PublishProperties{
+			ContentType:     "application/json",
+			ResponseTopic:   fmt.Sprintf("%s/out/%s/%s", topicPrefix, protocol, clientId),
+			CorrelationData: correlationData,
+		},
+	})
+
+	return err
+}
+
+func goWriteToChargeStation(ctx context.Context, tracer trace.Tracer, chargeStationTx chan *pipe.GatewayMessage, wsConn *websocket.Conn, protocol, clientId string) {
 	go func() {
 		for {
 			select {
@@ -358,7 +423,7 @@ func goWriteToChargeStation(ctx context.Context, chargeStationTx chan *pipe.Gate
 					slog.Error("marshaling gateway message for charge station", "err", err)
 					continue
 				}
-				err = wsConn.Write(ctx, websocket.MessageText, data)
+				err = write(msg.Context, tracer, wsConn, protocol, clientId, msg.MessageId, data)
 				if err != nil {
 					slog.Error("writing to charge station", "err", err)
 				}
@@ -369,52 +434,100 @@ func goWriteToChargeStation(ctx context.Context, chargeStationTx chan *pipe.Gate
 	}()
 }
 
-func readFromChargeStation(ctx context.Context, wsConn *websocket.Conn, csRx chan *pipe.GatewayMessage, csTx chan *pipe.GatewayMessage) {
+func write(ctx context.Context, tracer trace.Tracer, wsConn *websocket.Conn, protocol, clientId, messageId string, data []byte) error {
+	newCtx, span := tracer.Start(ctx, fmt.Sprintf("%s publish", protocol), trace.WithSpanKind(trace.SpanKindProducer),
+		trace.WithAttributes(
+			semconv.MessagingSystem("websocket"),
+			semconv.MessagingMessagePayloadSizeBytes(len(data)),
+			semconv.MessagingOperationKey.String("publish"),
+			semconv.MessagingMessageConversationID(messageId),
+			attribute.String("csId", clientId),
+		))
+	defer span.End()
+
+	return wsConn.Write(newCtx, websocket.MessageText, data)
+}
+
+func readFromChargeStation(tracer trace.Tracer, wsConn *websocket.Conn, csRx, csTx chan *pipe.GatewayMessage, protocol, clientId string) {
 	for {
-		typ, b, err := wsConn.Read(ctx)
-		if errors.Is(err, context.DeadlineExceeded) {
-			select {
-			case <-ctx.Done():
-				return
-			default:
+		msg, err := read(tracer, wsConn, protocol, clientId)
+		if err != nil {
+			if msg != nil {
+				slog.Warn("sending error message to client", "err", err)
+				csTx <- msg
 				continue
 			}
-		} else if status := websocket.CloseStatus(err); status != -1 {
-			slog.Info("connection closed with status", "status", status)
-			return
-		} else if errors.Is(err, io.EOF) {
-			slog.Info("connection closed")
-			return
-		} else if err != nil {
-			slog.Error("reading from cs", "err", err)
-			return
+			// connection closed
+			break
+		} else if msg != nil {
+			csRx <- msg
+		} else {
+			// deadline exceeded
+			break
 		}
-
-		if typ != websocket.MessageText {
-			msg := pipe.GatewayMessage{
-				MessageType:      ocpp.MessageTypeCallError,
-				MessageId:        "-1",
-				ErrorCode:        ocpp.ErrorRpcFrameworkError,
-				ErrorDescription: "websocket message type is not text",
-			}
-			csTx <- &msg
-			continue
-		}
-
-		msg, err := unmarshalOcppAsGatewayMessage(b)
-		if err != nil {
-			msg := pipe.GatewayMessage{
-				MessageType:      ocpp.MessageTypeCallError,
-				MessageId:        "-1",
-				ErrorCode:        ocpp.ErrorRpcFrameworkError,
-				ErrorDescription: err.Error(),
-			}
-			csTx <- &msg
-			continue
-		}
-		//slog.Info("received message", "msg", msg)
-		csRx <- msg
 	}
+}
+
+var errClient = errors.New("client error")
+
+func read(tracer trace.Tracer, wsConn *websocket.Conn, protocol, clientId string) (*pipe.GatewayMessage, error) {
+	typ, b, err := wsConn.Read(context.Background())
+	if errors.Is(err, context.DeadlineExceeded) {
+		return nil, nil
+	} else if status := websocket.CloseStatus(err); status != -1 {
+		slog.Info("connection closed with status", "status", status)
+		return nil, err
+	} else if errors.Is(err, io.EOF) {
+		slog.Info("connection closed")
+		return nil, err
+	} else if err != nil {
+		return nil, err
+	}
+
+	newCtx, span := tracer.Start(context.Background(), fmt.Sprintf("%s receive", protocol), trace.WithSpanKind(trace.SpanKindConsumer),
+		trace.WithAttributes(
+			semconv.MessagingSystem("websocket"),
+			semconv.MessagingOperationKey.String("receive"),
+			semconv.MessagingMessagePayloadSizeBytes(len(b)),
+			attribute.String("csId", clientId),
+		))
+	defer span.End()
+
+	if typ != websocket.MessageText {
+		msg := pipe.GatewayMessage{
+			Context:          newCtx,
+			MessageType:      ocpp.MessageTypeCallError,
+			MessageId:        "-1",
+			ErrorCode:        ocpp.ErrorRpcFrameworkError,
+			ErrorDescription: "websocket message type is not text",
+		}
+		span.SetAttributes(semconv.MessagingMessageConversationID("-1"))
+		span.SetStatus(codes.Error, "unmarshal ocpp message error")
+		span.RecordError(err)
+
+		return &msg, errClient
+	}
+
+	msg, err := unmarshalOcppAsGatewayMessage(b)
+	if err != nil {
+		msg := pipe.GatewayMessage{
+			Context:          newCtx,
+			MessageType:      ocpp.MessageTypeCallError,
+			MessageId:        "-1",
+			ErrorCode:        ocpp.ErrorRpcFrameworkError,
+			ErrorDescription: err.Error(),
+		}
+		span.SetAttributes(semconv.MessagingMessageConversationID("-1"))
+		span.SetStatus(codes.Error, "unmarshal ocpp message error")
+		span.RecordError(err)
+		return &msg, errClient
+	}
+
+	msg.Context = newCtx
+
+	span.SetAttributes(semconv.MessagingMessageConversationID(msg.MessageId))
+
+	return msg, nil
 }
 
 func marshalGatewayMessageAsOcpp(msg *pipe.GatewayMessage) ([]byte, error) {

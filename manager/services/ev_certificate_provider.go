@@ -4,25 +4,29 @@ package services
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
+	"go.opentelemetry.io/otel/codes"
+	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
+	"go.opentelemetry.io/otel/trace"
 	"io"
 	"net/http"
-
-	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
 )
 
 const XsdMsgDefinition = "urn:iso:15118:2:2013:MsgDef"
 
 type EvCertificateProvider interface {
-	ProvideCertificate(exiRequest string) (EvCertificate15118Response, error)
+	ProvideCertificate(ctx context.Context, exiRequest string) (EvCertificate15118Response, error)
 }
 
 type OpcpMoEvCertificateProvider struct {
 	BaseURL     string
 	BearerToken string
 	HttpClient  *http.Client
+	Tracer      trace.Tracer
 }
 
 type EvCertificate15118Response struct {
@@ -35,19 +39,21 @@ type SignedContractDataRequest struct {
 	XsdMsgDefNamespace         string `json:"xsdMsgDefNamespace"`
 }
 
-type SignedContractDataResponse struct {
-	CcpResponse struct {
-		EmaidContent []struct {
-			MessageDef struct {
-				CertificateInstallationRes string `json:"certificateInstallationRes"`
-				Emaid                      string `json:"emaid"`
-			} `json:"messageDef"`
-		} `json:"emaidContent"`
-	} `json:"CCPResponse"`
-	XsdMsgDefNamespace string `json:"xsdMsgDefNamespace"`
+type CcpResponse struct {
+	EmaidContent []struct {
+		MessageDef struct {
+			CertificateInstallationRes string `json:"certificateInstallationRes"`
+			Emaid                      string `json:"emaid"`
+		} `json:"messageDef"`
+	} `json:"emaidContent"`
 }
 
-func (h OpcpMoEvCertificateProvider) ProvideCertificate(exiRequest string) (EvCertificate15118Response, error) {
+type SignedContractDataResponse struct {
+	CcpResponse        CcpResponse `json:"CCPResponse"`
+	XsdMsgDefNamespace string      `json:"xsdMsgDefNamespace"`
+}
+
+func (h OpcpMoEvCertificateProvider) ProvideCertificate(ctx context.Context, exiRequest string) (EvCertificate15118Response, error) {
 	client := h.HttpClient
 	if client == nil {
 		client = http.DefaultClient
@@ -63,13 +69,16 @@ func (h OpcpMoEvCertificateProvider) ProvideCertificate(exiRequest string) (EvCe
 		return EvCertificate15118Response{}, fmt.Errorf("marshalling body: %w", err)
 	}
 
-	resp, err := withRetries(func() (*http.Response, error) {
-		req, err := h.moRequest(requestUrl, marshalledBody)
+	resp, err := withRetries(ctx, h.Tracer, func(fnCtx context.Context) (*http.Response, error) {
+		req, err := h.moRequest(fnCtx, requestUrl, marshalledBody)
 		if err != nil {
 			return &http.Response{}, fmt.Errorf("requesting certificate: %w", err)
 		}
-		return client.Do(req)
-	}, 5)
+
+		resp, err := client.Do(req)
+
+		return resp, err
+	}, 3)
 
 	if err != nil {
 		return EvCertificate15118Response{
@@ -120,33 +129,45 @@ func (h OpcpMoEvCertificateProvider) ProvideCertificate(exiRequest string) (EvCe
 	return response, nil
 }
 
-func (h OpcpMoEvCertificateProvider) moRequest(requestUrl string, marshalledBody []byte) (*http.Request, error) {
-	req, err := http.NewRequest("POST", requestUrl, bytes.NewReader(marshalledBody))
+func (h OpcpMoEvCertificateProvider) moRequest(ctx context.Context, requestUrl string, marshalledBody []byte) (*http.Request, error) {
+	req, err := http.NewRequestWithContext(ctx, "POST", requestUrl, bytes.NewReader(marshalledBody))
 	if err != nil {
 		return nil, err
 	}
+	req.Header.Add("x-api-key", h.BearerToken)
 	req.Header.Add("authorization", fmt.Sprintf("Bearer %s", h.BearerToken))
 	req.Header.Add("content-type", "application/json")
+
 	return req, nil
 }
 
-type retryFunc func() (*http.Response, error)
+type retryFunc func(context.Context) (*http.Response, error)
 
-func withRetries(action retryFunc, attempts int) (*http.Response, error) {
+func withRetries(ctx context.Context, tracer trace.Tracer, action retryFunc, attempts int) (*http.Response, error) {
+	newCtx, span := tracer.Start(ctx, "get_signed_contract_data")
+	defer span.End()
+
 	var lastErr error
 
 	for attempt := 1; attempt <= attempts; attempt++ {
-		resp, err := action()
+		resp, err := action(newCtx)
 		if err == nil && resp.StatusCode == http.StatusOK {
+			if attempt > 1 {
+				span.SetAttributes(semconv.HTTPResendCount(attempt - 1))
+			}
 			// Successful operation, return the response
 			return resp, nil
 		} else {
+			_ = resp.Body.Close()
 			if err == nil {
 				err = HttpError(resp.StatusCode)
 			}
 		}
 		if attempt == attempts {
 			lastErr = err
+			span.SetAttributes(semconv.HTTPResendCount(attempts - 1))
+			span.SetStatus(codes.Error, "retries exhausted")
+			span.RecordError(err)
 			break
 		}
 	}
