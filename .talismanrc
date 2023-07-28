@@ -87,6 +87,8 @@ fileignoreconfig:
     checksum: 100d8f7a7fe642abae94812a2e9f6938f5045bbd22c358b2e0adc684a45698ce
   - filename: manager/services/certificate_validation_test.go
     checksum: 893e918e122b2dd321bad4a02ee0523f25df1a3b501538e5541f9bbbbc4bd794
+  - filename: manager/services/mo-root-certificate-retrieval.go
+    checksum: d829dbe5358afabbeacf973feae190784b461f4d572fa2dca2d68dd080c85364
   - filename: manager/services/ev_certificate_provider.go
     checksum: 42480a4243292eb9f5c2324cfaf6760df7b35e7a716591c11a1ecb40574f213f
   - filename: manager/services/mo-root-certificate-retrieval.go

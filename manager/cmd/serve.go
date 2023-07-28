@@ -6,6 +6,10 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"github.com/spf13/cobra"
+	"github.com/thoughtworks/maeve-csms/manager/mqtt"
+	"github.com/thoughtworks/maeve-csms/manager/server"
+	"github.com/thoughtworks/maeve-csms/manager/services"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
@@ -21,11 +25,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/spf13/cobra"
 	"github.com/subnova/slog-exporter/slogtrace"
-	"github.com/thoughtworks/maeve-csms/manager/mqtt"
-	"github.com/thoughtworks/maeve-csms/manager/server"
-	"github.com/thoughtworks/maeve-csms/manager/services"
 	"github.com/thoughtworks/maeve-csms/manager/store"
 	"github.com/thoughtworks/maeve-csms/manager/store/firestore"
 	"github.com/thoughtworks/maeve-csms/manager/store/inmemory"
@@ -284,8 +284,4 @@ func init() {
 		"The address to retrieve the certificate pool containing the trust anchor for MO")
 	serveCmd.Flags().StringSliceVar(&moTrustAnchorCertPEMFiles, "mo-trust-anchor-pem-file", []string{},
 		"The set of PEM files containing trusted MO certificates")
-	serveCmd.Flags().StringVar(&keyLogFile, "key-log-file", "",
-		"File to write TLS key material to in NSS key log format (for debugging)")
-	serveCmd.Flags().StringVar(&otelCollectorAddr, "otel-collector-addr", "",
-		"The address of the open telemetry collector that will receive traces, e.g. localhost:4317")
 }
