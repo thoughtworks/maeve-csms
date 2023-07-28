@@ -5,9 +5,6 @@ package cmd
 import (
 	"context"
 	"crypto/tls"
-	"crypto/x509"
-	"encoding/base64"
-	"encoding/pem"
 	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/subnova/slog-exporter/slogtrace"
@@ -17,7 +14,6 @@ import (
 	"github.com/thoughtworks/maeve-csms/manager/store"
 	"github.com/thoughtworks/maeve-csms/manager/store/firestore"
 	"github.com/thoughtworks/maeve-csms/manager/store/inmemory"
-	"go.mozilla.org/pkcs7"
 	"go.opentelemetry.io/contrib/detectors/gcp"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
@@ -29,7 +25,6 @@ import (
 	"golang.org/x/exp/slog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -164,14 +159,29 @@ the gateway and send appropriate responses.`,
 		}
 
 		apiServer := server.New("api", apiAddr, nil, server.NewApiHandler(engine))
-		v2gCertificates, err := pullMoTrustAnchors(moRootCertPool)
+
+		var moRootCertRetrievalService services.MoRootCertificateRetrievalService
+		if moRootCertPool != "" {
+			moRootCertRetrievalService = services.OpcpMoRootCertificateRetrievalService{
+				MoRootCertPool: moRootCertPool,
+				MoOPCPToken:    moOPCPToken,
+			}
+		} else {
+			fileReader := services.RealFileReader{}
+			moRootCertRetrievalService = services.FileMoRootCertificateRetrievalService{
+				FilePaths:  moTrustAnchorCertPEMFiles,
+				FileReader: fileReader,
+			}
+		}
+
+		certs, err := moRootCertRetrievalService.RetrieveCertificates()
 		if err != nil {
 			return fmt.Errorf("pulling certificates from mo root cert pool: %v", err)
 		}
 
 		tariffService := services.BasicKwhTariffService{}
 		certValidationService := services.OnlineCertificateValidationService{
-			RootCertificates: v2gCertificates,
+			RootCertificates: certs,
 			MaxOCSPAttempts:  3,
 		}
 
@@ -239,96 +249,6 @@ the gateway and send appropriate responses.`,
 	},
 }
 
-func pullMoTrustAnchors(url string) ([]*x509.Certificate, error) {
-	var certs []*x509.Certificate
-	body, err := retrieveCertificates(url)
-	if err != nil {
-		return nil, err
-	}
-	decodedBody, err := base64.StdEncoding.DecodeString(string(body))
-	if err != nil {
-		return nil, err
-	}
-
-	crtChain, err := pkcs7.Parse(decodedBody)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, cert := range crtChain.Certificates {
-		if cert.Issuer.String() == cert.Subject.String() {
-			certs = append(certs, cert)
-		}
-	}
-	return certs, nil
-}
-
-func retrieveCertificates(url string) ([]byte, error) {
-	client := http.DefaultClient
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Add("Accept", "application/pkcs10, application/pkcs7")
-	req.Header.Add("Content-Transfer-Encoding", "application/pkcs10")
-	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", moOPCPToken))
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	} else if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("received code %v in response", resp.StatusCode)
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	return body, nil
-}
-
-func readCertificatesFromPEMFile(pemFile string) ([]*x509.Certificate, error) {
-	//#nosec G304 - only files specified by the person running the application will be loaded
-	pemData, err := os.ReadFile(pemFile)
-	if err != nil {
-		return nil, err
-	}
-	return parseCertificates(pemData)
-}
-
-func parseCertificates(pemData []byte) ([]*x509.Certificate, error) {
-	var certs []*x509.Certificate
-	for {
-		cert, rest, err := parseCertificate(pemData)
-		if err != nil {
-			return nil, err
-		}
-		if cert == nil {
-			break
-		}
-		certs = append(certs, cert)
-		pemData = rest
-	}
-	return certs, nil
-}
-
-func parseCertificate(pemData []byte) (cert *x509.Certificate, rest []byte, err error) {
-	block, rest := pem.Decode(pemData)
-	if block == nil {
-		return
-	}
-	if block.Type != "CERTIFICATE" {
-		return
-	}
-	cert, err = x509.ParseCertificate(block.Bytes)
-	if err != nil {
-		cert = nil
-		return
-	}
-	return
-}
-
 func init() {
 	rootCmd.AddCommand(serveCmd)
 
@@ -358,6 +278,8 @@ func init() {
 		"The address of the open telemetry collector that will receive traces, e.g. localhost:4317")
 	serveCmd.Flags().StringVar(&logFormat, "log-format", "text",
 		"The format of the logs, one of [text, json]")
-	serveCmd.Flags().StringVar(&moRootCertPool, "mo-root-certificate-pool", "https://open.plugncharge-test.hubject.com/mo/cacerts/ISO15118-2",
+	serveCmd.Flags().StringVar(&moRootCertPool, "mo-root-certificate-pool", "",
 		"The address to retrieve the certificate pool containing the trust anchor for MO")
+	serveCmd.Flags().StringSliceVar(&moTrustAnchorCertPEMFiles, "mo-trust-anchor-pem-file", []string{},
+		"The set of PEM files containing trusted MO certificates")
 }

@@ -1,4 +1,4 @@
-package cmd
+package services
 
 import (
 	"crypto/ecdsa"
@@ -7,6 +7,7 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/base64"
+	"encoding/pem"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mozilla.org/pkcs7"
@@ -19,12 +20,22 @@ import (
 
 const baseUrl = "/mo/cacerts/ISO15118-2"
 
+type DummyFileReader struct{}
+
+func (reader DummyFileReader) ReadFile(_ string) (content []byte, e error) {
+	derBytes := createRootCACertificate("Thoughtworks")
+	pemData := pem.EncodeToMemory(&pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: derBytes,
+	})
+	return pemData, nil
+}
+
 type moRootCertificatePoolHandler struct {
 	baseUrl string
 }
 
 func newHandler() moRootCertificatePoolHandler {
-
 	return moRootCertificatePoolHandler{
 		baseUrl: baseUrl,
 	}
@@ -47,23 +58,42 @@ func (h moRootCertificatePoolHandler) ServeHTTP(w http.ResponseWriter, r *http.R
 	}
 }
 
-func TestPullMoTrustAnchorsNotAuthorised(t *testing.T) {
+func TestFileMoRootCertificateRetrievalServiceRetrieveCertificates(t *testing.T) {
+	fileRetrievalService := FileMoRootCertificateRetrievalService{
+		FilePaths:  []string{"test"},
+		FileReader: DummyFileReader{},
+	}
+
+	certs, e := fileRetrievalService.RetrieveCertificates()
+	assert.NoError(t, e)
+	assert.Equal(t, "Thoughtworks", certs[0].Issuer.CommonName)
+}
+
+func TestOpcpMoRootCertificateRetrievalServiceRetrieveCertificatesNotAuthorised(t *testing.T) {
 	handler := moRootCertificatePoolHandler{baseUrl: baseUrl}
 	server := httptest.NewServer(handler)
+	service := OpcpMoRootCertificateRetrievalService{
+		MoOPCPToken:    "",
+		MoRootCertPool: server.URL + baseUrl,
+	}
+
 	defer server.Close()
 
-	_, err := pullMoTrustAnchors(server.URL + baseUrl)
+	_, err := service.RetrieveCertificates()
 
 	assert.Equal(t, "received code 401 in response", err.Error())
 }
 
-func TestPullMoTrustAnchors(t *testing.T) {
+func TestOpcpMoRootCertificateRetrievalServiceRetrieveCertificates(t *testing.T) {
 	handler := newHandler()
-	moOPCPToken = "Token"
 	server := httptest.NewServer(handler)
+	service := OpcpMoRootCertificateRetrievalService{
+		MoOPCPToken:    "Token",
+		MoRootCertPool: server.URL + baseUrl,
+	}
 	defer server.Close()
 
-	result, err := pullMoTrustAnchors(server.URL + baseUrl)
+	result, err := service.RetrieveCertificates()
 
 	require.NoError(t, err)
 
@@ -80,6 +110,6 @@ func createRootCACertificate(commonName string) []byte {
 		},
 	}
 
-	caCertBytes, _ := x509.CreateCertificate(rand.Reader, &caCertTemplate, &caCertTemplate, &caKeyPair.PublicKey, caKeyPair)
-	return caCertBytes
+	crt, _ := x509.CreateCertificate(rand.Reader, &caCertTemplate, &caCertTemplate, &caKeyPair.PublicKey, caKeyPair)
+	return crt
 }

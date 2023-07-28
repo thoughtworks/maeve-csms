@@ -9,7 +9,6 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/hex"
-	"encoding/pem"
 	"errors"
 	"fmt"
 	"io"
@@ -294,22 +293,6 @@ func ParseCertificates(pemData []byte) ([]*x509.Certificate, error) {
 		pemData = rest
 	}
 	return certs, nil
-}
-
-func parseCertificate(pemData []byte) (cert *x509.Certificate, rest []byte, err error) {
-	block, rest := pem.Decode(pemData)
-	if block == nil {
-		return
-	}
-	if block.Type != "CERTIFICATE" {
-		return
-	}
-	cert, err = x509.ParseCertificate(block.Bytes)
-	if err != nil {
-		cert = nil
-		return
-	}
-	return
 }
 
 func hashAlgorithm(hash string) crypto.Hash {
