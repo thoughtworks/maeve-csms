@@ -8,6 +8,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
+	"go.opentelemetry.io/contrib/detectors/gcp"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
@@ -55,6 +56,8 @@ func initProvider(collectorAddr string) (func(context.Context) error, error) {
 	ctx := context.Background()
 
 	res, err := resource.New(ctx,
+		resource.WithDetectors(gcp.NewDetector()),
+		resource.WithTelemetrySDK(),
 		resource.WithAttributes(
 			// the service name used to display traces in backends
 			semconv.ServiceName("maeve-csms-manager"),

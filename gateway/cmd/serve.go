@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/thoughtworks/maeve-csms/gateway/registry"
 	"github.com/thoughtworks/maeve-csms/gateway/server"
+	"go.opentelemetry.io/contrib/detectors/gcp"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/propagation"
@@ -44,6 +45,8 @@ func initProvider(collectorAddr string) (func(context.Context) error, error) {
 	ctx := context.Background()
 
 	res, err := resource.New(ctx,
+		resource.WithDetectors(gcp.NewDetector()),
+		resource.WithTelemetrySDK(),
 		resource.WithAttributes(
 			// the service name used to display traces in backends
 			semconv.ServiceName("maeve-csms-gateway"),
