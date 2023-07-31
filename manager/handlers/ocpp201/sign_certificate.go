@@ -4,6 +4,8 @@ package ocpp201
 
 import (
 	"context"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/thoughtworks/maeve-csms/manager/handlers"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
@@ -18,6 +20,8 @@ type SignCertificateHandler struct {
 }
 
 func (s SignCertificateHandler) HandleCall(ctx context.Context, chargeStationId string, request ocpp.Request) (ocpp.Response, error) {
+	span := trace.SpanFromContext(ctx)
+
 	req := request.(*types.SignCertificateRequestJson)
 
 	certificateType := types.CertificateSigningUseEnumTypeV2GCertificate
@@ -56,6 +60,8 @@ func (s SignCertificateHandler) HandleCall(ctx context.Context, chargeStationId 
 			}
 		}()
 	}
+
+	span.SetAttributes(attribute.String("request.status", string(status)))
 
 	return &types.SignCertificateResponseJson{
 		Status: status,

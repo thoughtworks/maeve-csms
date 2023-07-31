@@ -4,6 +4,7 @@ package services
 
 import (
 	"bytes"
+	"context"
 	"crypto"
 	"crypto/x509"
 	"encoding/base64"
@@ -52,8 +53,8 @@ func (v ValidationError) Error() string {
 }
 
 type CertificateValidationService interface {
-	ValidatePEMCertificateChain(pemChain []byte, eMAID string) (*string, error)
-	ValidateHashedCertificateChain(ocspRequestData []ocpp201.OCSPRequestDataType) (*string, error)
+	ValidatePEMCertificateChain(ctx context.Context, pemChain []byte, eMAID string) (*string, error)
+	ValidateHashedCertificateChain(ctx context.Context, ocspRequestData []ocpp201.OCSPRequestDataType) (*string, error)
 }
 
 type OnlineCertificateValidationService struct {
@@ -61,7 +62,7 @@ type OnlineCertificateValidationService struct {
 	MaxOCSPAttempts  int
 }
 
-func (o OnlineCertificateValidationService) ValidatePEMCertificateChain(pemChain []byte, eMAID string) (*string, error) {
+func (o OnlineCertificateValidationService) ValidatePEMCertificateChain(ctx context.Context, pemChain []byte, eMAID string) (*string, error) {
 	certificateChain, err := ParseCertificates(pemChain)
 	if err != nil {
 		return nil, err
@@ -89,7 +90,7 @@ func (o OnlineCertificateValidationService) ValidatePEMCertificateChain(pemChain
 	return ocspResponse, nil
 }
 
-func (o OnlineCertificateValidationService) ValidateHashedCertificateChain(ocspRequestData []ocpp201.OCSPRequestDataType) (*string, error) {
+func (o OnlineCertificateValidationService) ValidateHashedCertificateChain(ctx context.Context, ocspRequestData []ocpp201.OCSPRequestDataType) (*string, error) {
 	var ocspResponse *string
 	var err error
 	for _, requestData := range ocspRequestData {

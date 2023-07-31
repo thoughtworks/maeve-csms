@@ -4,6 +4,8 @@ package ocpp16
 
 import (
 	"context"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 	"time"
 
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
@@ -18,6 +20,8 @@ type BootNotificationHandler struct {
 }
 
 func (b BootNotificationHandler) HandleCall(ctx context.Context, chargeStationId string, request ocpp.Request) (ocpp.Response, error) {
+	span := trace.SpanFromContext(ctx)
+
 	req := request.(*types.BootNotificationJson)
 
 	var serialNumber string
@@ -26,6 +30,19 @@ func (b BootNotificationHandler) HandleCall(ctx context.Context, chargeStationId
 	} else {
 		serialNumber = "*unknown*"
 	}
+
+	span.SetAttributes(
+		attribute.String("request.status", string(types.BootNotificationResponseJsonStatusAccepted)),
+		attribute.String("boot.vendor", req.ChargePointVendor),
+		attribute.String("boot.model", req.ChargePointModel))
+
+	if req.ChargeBoxSerialNumber != nil {
+		span.SetAttributes(attribute.String("boot.serial", *req.ChargePointSerialNumber))
+	}
+	if req.FirmwareVersion != nil {
+		span.SetAttributes(attribute.String("boot.firmware", *req.FirmwareVersion))
+	}
+
 	slog.Info("booting", slog.String("chargeStationId", chargeStationId),
 		slog.String("serialNumber", serialNumber))
 	return &types.BootNotificationResponseJson{

@@ -41,12 +41,14 @@ func (d DataTransferHandler) HandleCall(ctx context.Context, chargeStationId str
 
 	vendorMap, ok := d.CallRoutes[req.VendorId]
 	if !ok {
+		span.SetAttributes(attribute.String("datatransfer.status", string(types.DataTransferResponseJsonStatusUnknownVendorId)))
 		return &types.DataTransferResponseJson{
 			Status: types.DataTransferResponseJsonStatusUnknownVendorId,
 		}, nil
 	}
 	route, ok := vendorMap[messageId]
 	if !ok {
+		span.SetAttributes(attribute.String("datatransfer.status", string(types.DataTransferResponseJsonStatusUnknownMessageId)))
 		return &types.DataTransferResponseJson{
 			Status: types.DataTransferResponseJsonStatusUnknownMessageId,
 		}, nil
@@ -83,6 +85,8 @@ func (d DataTransferHandler) HandleCall(ctx context.Context, chargeStationId str
 		dataTransferResponseString := string(b)
 		dataTransferResponseData = &dataTransferResponseString
 	}
+
+	span.SetAttributes(attribute.String("datatransfer.status", string(types.DataTransferResponseJsonStatusAccepted)))
 
 	return &types.DataTransferResponseJson{
 		Status: types.DataTransferResponseJsonStatusAccepted,

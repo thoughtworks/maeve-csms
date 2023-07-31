@@ -3,6 +3,7 @@
 package cmd
 
 import (
+	"context"
 	"crypto/x509"
 	"fmt"
 	"github.com/spf13/cobra"
@@ -45,7 +46,7 @@ var validateCmd = &cobra.Command{
 			if err != nil {
 				return fmt.Errorf("reading certificates from PEM file: %s: %v", pemFile, err)
 			}
-			_, err = validator.ValidatePEMCertificateChain(pemData, emaid)
+			_, err = validator.ValidatePEMCertificateChain(context.Background(), pemData, emaid)
 			if err == nil {
 				fmt.Printf("%s: VALID\n", emaid)
 			} else {

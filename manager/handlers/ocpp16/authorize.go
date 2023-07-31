@@ -4,6 +4,8 @@ package ocpp16
 
 import (
 	"context"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
 	types "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp16"
@@ -16,6 +18,8 @@ type AuthorizeHandler struct {
 }
 
 func (a AuthorizeHandler) HandleCall(ctx context.Context, chargeStationId string, request ocpp.Request) (ocpp.Response, error) {
+	span := trace.SpanFromContext(ctx)
+
 	req := request.(*types.AuthorizeJson)
 	slog.Info("checking", slog.String("chargeStationId", chargeStationId),
 		slog.String("idTag", req.IdTag))
@@ -28,6 +32,10 @@ func (a AuthorizeHandler) HandleCall(ctx context.Context, chargeStationId string
 	if tok != nil {
 		status = types.AuthorizeResponseJsonIdTagInfoStatusAccepted
 	}
+
+	span.SetAttributes(
+		attribute.String("request.status", string(status)),
+		attribute.String("authorize.token", req.IdTag))
 
 	return &types.AuthorizeResponseJson{
 		IdTagInfo: types.AuthorizeResponseJsonIdTagInfo{

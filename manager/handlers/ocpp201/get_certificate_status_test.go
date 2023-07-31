@@ -16,12 +16,12 @@ type dummyCertificateValidationService struct {
 	T *testing.T
 }
 
-func (d dummyCertificateValidationService) ValidatePEMCertificateChain(certificate []byte, eMAID string) (*string, error) {
+func (d dummyCertificateValidationService) ValidatePEMCertificateChain(ctx context.Context, pemChain []byte, eMAID string) (*string, error) {
 	d.T.Fatal("not implemented")
 	return nil, nil
 }
 
-func (d dummyCertificateValidationService) ValidateHashedCertificateChain(ocspRequestData []types.OCSPRequestDataType) (*string, error) {
+func (d dummyCertificateValidationService) ValidateHashedCertificateChain(ctx context.Context, ocspRequestData []types.OCSPRequestDataType) (*string, error) {
 	switch ocspRequestData[0].SerialNumber {
 	case "invalid-chain":
 		return nil, services.ValidationErrorCertChain

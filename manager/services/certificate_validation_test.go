@@ -3,6 +3,7 @@
 package services_test
 
 import (
+	"context"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
@@ -146,7 +147,7 @@ func TestValidatingPEMCertificateChain(t *testing.T) {
 		Bytes: intCACert.Raw,
 	})...)
 
-	ocspResp, err := validationService.ValidatePEMCertificateChain(pemChain, "MYEMAID")
+	ocspResp, err := validationService.ValidatePEMCertificateChain(context.TODO(), pemChain, "MYEMAID")
 	require.NoError(t, err)
 
 	validateOCSPResponse(t, ocspResp)
@@ -185,7 +186,7 @@ func TestValidatingPEMCertificateChainWithRevokedCertificate(t *testing.T) {
 		Bytes: intCACert.Raw,
 	})...)
 
-	ocspResp, err := validationService.ValidatePEMCertificateChain(pemChain, "MYEMAID")
+	ocspResp, err := validationService.ValidatePEMCertificateChain(context.TODO(), pemChain, "MYEMAID")
 	require.Error(t, err)
 	assert.Nil(t, ocspResp)
 }
@@ -214,7 +215,7 @@ func TestValidatingPEMCertificateChainWithWrongEmaid(t *testing.T) {
 		Bytes: intCACert.Raw,
 	})...)
 
-	ocspResp, err := validationService.ValidatePEMCertificateChain(pemChain, "MYWRONGEMAID")
+	ocspResp, err := validationService.ValidatePEMCertificateChain(context.TODO(), pemChain, "MYWRONGEMAID")
 	require.Error(t, err)
 	assert.Nil(t, ocspResp)
 }
@@ -239,7 +240,7 @@ func TestValidatingPEMCertificateChainInvalidChain(t *testing.T) {
 		Bytes: leafCert.Raw,
 	})
 
-	ocspResp, err := validationService.ValidatePEMCertificateChain(pemChain, "MYEMAID")
+	ocspResp, err := validationService.ValidatePEMCertificateChain(context.TODO(), pemChain, "MYEMAID")
 	require.Error(t, err)
 	assert.Nil(t, ocspResp)
 }
@@ -272,7 +273,7 @@ func TestValidatingPEMCertificateChainIncludingRootCertificate(t *testing.T) {
 		Bytes: rootCACerts[1].Raw,
 	})...)
 
-	ocspResp, err := validationService.ValidatePEMCertificateChain(pemChain, "MYEMAID")
+	ocspResp, err := validationService.ValidatePEMCertificateChain(context.TODO(), pemChain, "MYEMAID")
 	require.NoError(t, err)
 
 	validateOCSPResponse(t, ocspResp)
@@ -306,7 +307,7 @@ func TestValidatingPEMCertificateChainIncludingUntrustedRootCertificate(t *testi
 		Bytes: rootCACerts[1].Raw,
 	})...)
 
-	ocspResp, err := validationService.ValidatePEMCertificateChain(pemChain, "MYEMAID")
+	ocspResp, err := validationService.ValidatePEMCertificateChain(context.TODO(), pemChain, "MYEMAID")
 	var valErr services.ValidationError
 	assert.Nil(t, ocspResp)
 	require.ErrorAs(t, err, &valErr)
@@ -337,7 +338,7 @@ func TestValidatingPEMCertificateChainWithNoOCSPOnLeafCertificate(t *testing.T) 
 		Bytes: intCACert.Raw,
 	})...)
 
-	ocspResp, err := validationService.ValidatePEMCertificateChain(pemChain, "MYEMAID")
+	ocspResp, err := validationService.ValidatePEMCertificateChain(context.TODO(), pemChain, "MYEMAID")
 	var valErr services.ValidationError
 	assert.Nil(t, ocspResp)
 	t.Log(err)
@@ -365,7 +366,7 @@ func TestValidatingHashedCertificateChain(t *testing.T) {
 	ca2PublicKeyBytes, err := getPublicKeyBytes(rootCACerts[1].RawSubjectPublicKeyInfo)
 	require.NoError(t, err)
 
-	ocspResp, err := validationService.ValidateHashedCertificateChain([]ocpp201.OCSPRequestDataType{
+	ocspResp, err := validationService.ValidateHashedCertificateChain(context.TODO(), []ocpp201.OCSPRequestDataType{
 		{
 			HashAlgorithm:  "SHA256",
 			IssuerNameHash: hashBytes(leafCert.RawIssuer),
@@ -407,7 +408,7 @@ func TestValidatingHashedCertificateChainWithRevokedCertificate(t *testing.T) {
 	ca2PublicKeyBytes, err := getPublicKeyBytes(rootCACerts[1].RawSubjectPublicKeyInfo)
 	require.NoError(t, err)
 
-	ocspResp, err := validationService.ValidateHashedCertificateChain([]ocpp201.OCSPRequestDataType{
+	ocspResp, err := validationService.ValidateHashedCertificateChain(context.TODO(), []ocpp201.OCSPRequestDataType{
 		{
 			HashAlgorithm:  "SHA256",
 			IssuerNameHash: hashBytes(leafCert.RawIssuer),

@@ -59,7 +59,7 @@ func TestCertificateValidationServiceWithHubjectCertificate(t *testing.T) {
 		MaxOCSPAttempts:  3,
 	}
 
-	ocspData, err := certificateValidationService.ValidatePEMCertificateChain([]byte(chain), "cs001")
+	ocspData, err := certificateValidationService.ValidatePEMCertificateChain(nil, []byte(chain), "cs001")
 	assert.NoError(t, err)
 	assert.NotNil(t, ocspData)
 }
@@ -104,7 +104,7 @@ func TestCertificateValidationServiceWithHubjectCertificateHashes(t *testing.T) 
 	issuerNameHash := hashBytes(issuer.RawSubject)
 	serialNumber := leaf.SerialNumber.Text(16)
 
-	ocspResp, err := certificateValidationService.ValidateHashedCertificateChain([]types.OCSPRequestDataType{
+	ocspResp, err := certificateValidationService.ValidateHashedCertificateChain(nil, []types.OCSPRequestDataType{
 		{
 			HashAlgorithm:  "SHA256",
 			IssuerKeyHash:  issuerKeyHash,

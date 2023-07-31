@@ -6,6 +6,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
 	types "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
@@ -20,10 +22,24 @@ type AuthorizeHandler struct {
 }
 
 func (a AuthorizeHandler) HandleCall(ctx context.Context, chargeStationId string, request ocpp.Request) (ocpp.Response, error) {
+	span := trace.SpanFromContext(ctx)
+
 	req := request.(*types.AuthorizeRequestJson)
 	slog.Info("checking", slog.String("chargeStationId", chargeStationId),
 		slog.String("idToken", req.IdToken.IdToken),
 		slog.String("idTokenType", string(req.IdToken.Type)))
+
+	span.SetAttributes(
+		attribute.String("authorize.token", req.IdToken.IdToken),
+		attribute.String("authorize.token_type", string(req.IdToken.Type)))
+	if req.Certificate != nil {
+		span.SetAttributes(attribute.String("authorize.certificate", "chain"))
+	} else if req.Iso15118CertificateHashData != nil {
+		span.SetAttributes(attribute.String("authorize.certificate", "hash"))
+	} else {
+		span.SetAttributes(attribute.String("authorize.certificate", "none"))
+	}
+
 	status := types.AuthorizationStatusEnumTypeUnknown
 	tok, err := a.TokenStore.LookupToken(ctx, req.IdToken.IdToken)
 	if err != nil {
@@ -39,12 +55,12 @@ func (a AuthorizeHandler) HandleCall(ctx context.Context, chargeStationId string
 			if err != nil {
 				return nil, fmt.Errorf("removing root certificate if present: %w", err)
 			}
-			_, err = a.CertificateValidationService.ValidatePEMCertificateChain([]byte(*req.Certificate), req.IdToken.IdToken)
+			_, err = a.CertificateValidationService.ValidatePEMCertificateChain(ctx, []byte(*req.Certificate), req.IdToken.IdToken)
 			status, certificateStatus = handleCertificateValidationError(err)
 		}
 
 		if req.Iso15118CertificateHashData != nil {
-			_, err := a.CertificateValidationService.ValidateHashedCertificateChain(*req.Iso15118CertificateHashData)
+			_, err := a.CertificateValidationService.ValidateHashedCertificateChain(ctx, *req.Iso15118CertificateHashData)
 			status, certificateStatus = handleCertificateValidationError(err)
 		}
 	}
@@ -65,7 +81,11 @@ func (a AuthorizeHandler) HandleCall(ctx context.Context, chargeStationId string
 			slog.String("idToken", req.IdToken.IdToken),
 			slog.String("type", string(req.IdToken.Type)),
 			slog.String("certStatus", string(certStatus)))
+
+		span.SetAttributes(attribute.String("authorize.cert_status", string(certStatus)))
 	}
+
+	span.SetAttributes(attribute.String("request.status", string(status)))
 
 	return &types.AuthorizeResponseJson{
 		IdTokenInfo: types.IdTokenInfoType{

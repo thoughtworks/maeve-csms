@@ -19,7 +19,7 @@ import (
 type mockCertValidationService struct {
 }
 
-func (m mockCertValidationService) ValidatePEMCertificateChain(certificate []byte, eMAID string) (*string, error) {
+func (m mockCertValidationService) ValidatePEMCertificateChain(ctx context.Context, certificate []byte, eMAID string) (*string, error) {
 	switch string(certificate) {
 	case "invalidCertChain":
 		return nil, services.ValidationErrorCertChain
@@ -33,7 +33,7 @@ func (m mockCertValidationService) ValidatePEMCertificateChain(certificate []byt
 	return nil, nil
 }
 
-func (m mockCertValidationService) ValidateHashedCertificateChain(ocspRequestData []types.OCSPRequestDataType) (*string, error) {
+func (m mockCertValidationService) ValidateHashedCertificateChain(ctx context.Context, ocspRequestData []types.OCSPRequestDataType) (*string, error) {
 	if len(ocspRequestData) > 0 {
 		switch ocspRequestData[0].SerialNumber {
 		case "invalidCertChain":
