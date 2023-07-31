@@ -174,35 +174,68 @@ func ensureDefaults(handler *WebsocketHandler) {
 }
 
 func (s *WebsocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	newCtx, span := s.tracer.Start(r.Context(), "GET /ws/{id}", trace.WithSpanKind(trace.SpanKindServer),
+		trace.WithAttributes(
+			semconv.HTTPScheme(getScheme(r)),
+			semconv.HTTPMethod("GET"),
+			semconv.HTTPURL(r.URL.String()),
+			semconv.HTTPRoute("/ws/{id}")))
+	defer span.End()
+
 	clientId := chi.URLParam(r, "id")
 	if clientId == "" {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
 
+	span.SetAttributes(attribute.String("csId", clientId))
+
 	cs, err := s.deviceRegistry.LookupChargeStation(clientId)
 	if err != nil {
+		span.SetStatus(codes.Error, "lookup charge station failed")
+		span.RecordError(err)
+		span.SetAttributes(semconv.HTTPStatusCode(http.StatusInternalServerError))
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 	if cs == nil {
+		span.SetStatus(codes.Error, "unknown charge station")
+		span.RecordError(err)
+		span.SetAttributes(semconv.HTTPStatusCode(http.StatusNotFound))
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 		return
 	}
 
+	span.SetAttributes(attribute.Int("ocpp.security_profile", int(cs.SecurityProfile)))
+
 	switch cs.SecurityProfile {
 	case registry.UnsecuredTransportWithBasicAuth:
-		if r.TLS != nil || !checkAuthorization(r, cs) {
+		if r.TLS != nil || !checkAuthorization(newCtx, r, cs) {
+			if r.TLS != nil {
+				span.SetAttributes(attribute.String("auth.failure_reason", "tls for unsecured transport"))
+			}
+			span.SetStatus(codes.Error, "unauthorized")
+			span.SetAttributes(semconv.HTTPStatusCode(http.StatusUnauthorized))
 			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 			return
 		}
 	case registry.TLSWithBasicAuth:
-		if r.TLS == nil || !checkAuthorization(r, cs) {
+		if r.TLS == nil || !checkAuthorization(newCtx, r, cs) {
+			if r.TLS == nil {
+				span.SetAttributes(attribute.String("auth.failure_reason", "no tls for secured transport"))
+			}
+			span.SetStatus(codes.Error, "unauthorized")
+			span.SetAttributes(semconv.HTTPStatusCode(http.StatusUnauthorized))
 			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 			return
 		}
 	case registry.TLSWithClientSideCertificates:
-		if r.TLS == nil || !checkCertificate(r, s.orgNames, cs) {
+		if r.TLS == nil || !checkCertificate(newCtx, r, s.orgNames, cs) {
+			if r.TLS == nil {
+				span.SetAttributes(attribute.String("auth.failure_reason", "no tls for secured transport"))
+			}
+			span.SetStatus(codes.Error, "unauthorized")
+			span.SetAttributes(semconv.HTTPStatusCode(http.StatusUnauthorized))
 			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 			return
 		}
@@ -222,12 +255,20 @@ func (s *WebsocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		protocol = "ocpp2.0.1"
 	}
 
+	span.SetAttributes(attribute.String("ocpp.protocol", protocol))
+
 	p := pipe.NewPipe(s.pipeOptions...)
 	p.Start()
 	defer p.Close()
 
-	ctx, cancel := context.WithCancel(r.Context())
+	ctx, cancel := context.WithCancel(newCtx)
 	defer cancel()
+
+	mqttBrokerURLStrings := make([]string, len(s.mqttBrokerURLs))
+	for i, u := range s.mqttBrokerURLs {
+		mqttBrokerURLStrings[i] = u.String()
+	}
+	span.SetAttributes(attribute.StringSlice("mqtt.broker_urls", mqttBrokerURLStrings))
 
 	var mqttConn *autopaho.ConnectionManager
 	mqttConn, err = autopaho.NewConnection(ctx, autopaho.ClientConfig{
@@ -245,6 +286,10 @@ func (s *WebsocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				},
 			})
 			if err != nil {
+				span.SetStatus(codes.Error, "subscribing to mqtt topic failed")
+				span.RecordError(err)
+				span.SetAttributes(semconv.HTTPStatusCode(http.StatusInternalServerError))
+
 				slog.Error("subscribing to mqtt topic", "topicName", topicName, "err", err)
 				_ = wsConn.Close(websocket.StatusProtocolError, http.StatusText(http.StatusInternalServerError))
 				return
@@ -284,11 +329,15 @@ func (s *WebsocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				p.CSMSRx <- &msg
 			}),
 			OnServerDisconnect: func(disconnect *paho.Disconnect) {
+				span.SetAttributes(attribute.String("mqtt.disconnect_reason", disconnect.Properties.ReasonString))
 				slog.Info("server disconnect...")
 			},
 		},
 	})
 	if err != nil {
+		span.SetStatus(codes.Error, "connecting to mqtt")
+		span.RecordError(err)
+		span.SetAttributes(semconv.HTTPStatusCode(http.StatusInternalServerError))
 		slog.Error("connecting to mqtt", "mqttBrokerURLs", s.mqttBrokerURLs, "err", err)
 		_ = wsConn.Close(websocket.StatusProtocolError, http.StatusText(http.StatusInternalServerError))
 		return
@@ -305,6 +354,9 @@ func (s *WebsocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// we've finished connecting... complete this span so we get to see the details in the trace
+	span.End()
+
 	// listen on the CSMS Tx channel and publish those messages on the inbound topic
 	goPublishToCSMS(ctx, s.tracer, p.CSMSTx, mqttConn, s.mqttTopicPrefix, protocol, clientId)
 
@@ -312,32 +364,57 @@ func (s *WebsocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	goWriteToChargeStation(ctx, s.tracer, p.ChargeStationTx, wsConn, protocol, clientId)
 
 	// read from the websocket and send to the CS Rx channel (CS Tx used for error)
-	readFromChargeStation(s.tracer, wsConn, p.ChargeStationRx, p.ChargeStationTx, protocol, clientId)
+	readFromChargeStation(ctx, s.tracer, wsConn, p.ChargeStationRx, p.ChargeStationTx, protocol, clientId)
 
 	slog.Info("websocket handler complete")
 }
 
-func checkAuthorization(r *http.Request, cs *registry.ChargeStation) bool {
+func getScheme(r *http.Request) string {
+	if r.TLS != nil {
+		return "wss"
+	}
+	return "ws"
+}
+
+func checkAuthorization(ctx context.Context, r *http.Request, cs *registry.ChargeStation) bool {
+	span := trace.SpanFromContext(ctx)
+
 	username, password, ok := r.BasicAuth()
 	if !ok {
+		span.SetAttributes(attribute.String("auth.failure_reason", "no basic auth"))
 		return false
 	}
 	if username != cs.ClientId {
+		span.SetAttributes(attribute.String("auth.failure_reason", "invalid username"))
 		return false
 	}
 	sha256pw := sha256.Sum256([]byte(password))
 	b64sha256 := base64.StdEncoding.EncodeToString(sha256pw[:])
-	return b64sha256 == cs.Base64SHA256Password
+	result := b64sha256 == cs.Base64SHA256Password
+
+	if !result {
+		span.SetAttributes(attribute.String("auth.failure_reason", "invalid password"))
+	}
+
+	return result
 }
 
-func checkCertificate(r *http.Request, orgNames []string, cs *registry.ChargeStation) bool {
+func checkCertificate(ctx context.Context, r *http.Request, orgNames []string, cs *registry.ChargeStation) bool {
+	span := trace.SpanFromContext(ctx)
+
 	if len(r.TLS.PeerCertificates) == 0 {
+		span.SetAttributes(attribute.String("auth.failure_reason", "no client certificate"))
 		return false
 	}
 
 	leafCertificate := r.TLS.PeerCertificates[0]
 
 	foundOrg := false
+
+	span.SetAttributes(
+		attribute.StringSlice("auth.organization", leafCertificate.Subject.Organization),
+		attribute.String("auth.common_name", leafCertificate.Subject.CommonName))
+
 	for _, org := range leafCertificate.Subject.Organization {
 
 		slog.Info("checking", "org", org, "allowedOrgs", orgNames)
@@ -348,12 +425,19 @@ func checkCertificate(r *http.Request, orgNames []string, cs *registry.ChargeSta
 		}
 	}
 	if !foundOrg {
+		span.SetAttributes(attribute.String("auth.failure_reason", "bad organization"))
 		return false
 	}
 
 	slog.Info("found", "clientId", leafCertificate.Subject.CommonName)
 
-	return cs.ClientId == leafCertificate.Subject.CommonName
+	result := cs.ClientId == leafCertificate.Subject.CommonName
+
+	if !result {
+		span.SetAttributes(attribute.String("auth.failure_reason", "bad common name"))
+	}
+
+	return result
 }
 
 func goPublishToCSMS(ctx context.Context, tracer trace.Tracer, csmsTx chan *pipe.GatewayMessage, mqttConn *autopaho.ConnectionManager, topicPrefix, protocol, clientId string) {
@@ -448,9 +532,9 @@ func write(ctx context.Context, tracer trace.Tracer, wsConn *websocket.Conn, pro
 	return wsConn.Write(newCtx, websocket.MessageText, data)
 }
 
-func readFromChargeStation(tracer trace.Tracer, wsConn *websocket.Conn, csRx, csTx chan *pipe.GatewayMessage, protocol, clientId string) {
+func readFromChargeStation(ctx context.Context, tracer trace.Tracer, wsConn *websocket.Conn, csRx, csTx chan *pipe.GatewayMessage, protocol, clientId string) {
 	for {
-		msg, err := read(tracer, wsConn, protocol, clientId)
+		msg, err := read(ctx, tracer, wsConn, protocol, clientId)
 		if err != nil {
 			if msg != nil {
 				slog.Warn("sending error message to client", "err", err)
@@ -470,7 +554,7 @@ func readFromChargeStation(tracer trace.Tracer, wsConn *websocket.Conn, csRx, cs
 
 var errClient = errors.New("client error")
 
-func read(tracer trace.Tracer, wsConn *websocket.Conn, protocol, clientId string) (*pipe.GatewayMessage, error) {
+func read(ctx context.Context, tracer trace.Tracer, wsConn *websocket.Conn, protocol, clientId string) (*pipe.GatewayMessage, error) {
 	typ, b, err := wsConn.Read(context.Background())
 	if errors.Is(err, context.DeadlineExceeded) {
 		return nil, nil
@@ -490,7 +574,10 @@ func read(tracer trace.Tracer, wsConn *websocket.Conn, protocol, clientId string
 			semconv.MessagingOperationKey.String("receive"),
 			semconv.MessagingMessagePayloadSizeBytes(len(b)),
 			attribute.String("csId", clientId),
-		))
+		),
+		trace.WithLinks(trace.Link{
+			SpanContext: trace.SpanContextFromContext(ctx),
+		}))
 	defer span.End()
 
 	if typ != websocket.MessageText {
