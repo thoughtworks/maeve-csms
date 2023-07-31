@@ -33,7 +33,7 @@ var hashCertificateCmd = &cobra.Command{
 				continue
 			}
 			hash := sha256.Sum256(block.Bytes)
-			b64Hash := base64.URLEncoding.EncodeToString(hash[:])
+			b64Hash := base64.RawURLEncoding.EncodeToString(hash[:])
 
 			fmt.Printf("%s: %s\n", pemFile, b64Hash)
 		}

@@ -315,6 +315,6 @@ func generateCertificate(t *testing.T) *x509.Certificate {
 
 func getCertificateHash(cert *x509.Certificate) string {
 	hash := sha256.Sum256(cert.Raw)
-	b64Hash := base64.URLEncoding.EncodeToString(hash[:])
+	b64Hash := base64.RawURLEncoding.EncodeToString(hash[:])
 	return b64Hash
 }

@@ -31,7 +31,7 @@ func TestSetAndLookupAndDeleteCertificate(t *testing.T) {
 	require.NoError(t, err)
 
 	hash := sha256.Sum256(cert.Raw)
-	b64Hash := base64.URLEncoding.EncodeToString(hash[:])
+	b64Hash := base64.RawURLEncoding.EncodeToString(hash[:])
 
 	got, err := store.LookupCertificate(context.Background(), b64Hash)
 	require.NoError(t, err)
