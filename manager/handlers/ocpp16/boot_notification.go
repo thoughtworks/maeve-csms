@@ -36,7 +36,7 @@ func (b BootNotificationHandler) HandleCall(ctx context.Context, chargeStationId
 		attribute.String("boot.vendor", req.ChargePointVendor),
 		attribute.String("boot.model", req.ChargePointModel))
 
-	if req.ChargeBoxSerialNumber != nil {
+	if req.ChargePointSerialNumber != nil {
 		span.SetAttributes(attribute.String("boot.serial", *req.ChargePointSerialNumber))
 	}
 	if req.FirmwareVersion != nil {
