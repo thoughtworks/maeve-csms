@@ -11,7 +11,7 @@ import (
 
 func NewStatusHandler() http.Handler {
 	r := chi.NewRouter()
-	r.Use(middleware.Logger, middleware.Recoverer)
+	r.Use(middleware.Recoverer)
 	r.Get("/health", health)
 	r.Handle("/metrics", promhttp.Handler())
 	return r

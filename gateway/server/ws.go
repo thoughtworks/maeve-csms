@@ -135,7 +135,7 @@ func NewWebsocketHandler(opts ...WebsocketOpt) http.Handler {
 	ensureDefaults(s)
 
 	r := chi.NewRouter()
-	r.Use(middleware.Logger, middleware.Recoverer)
+	r.Use(middleware.Recoverer)
 	if s.trustProxyHeaders {
 		r.Use(TLSOffload(s.deviceRegistry))
 	}
@@ -275,11 +275,9 @@ func (s *WebsocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		BrokerUrls:        s.mqttBrokerURLs,
 		KeepAlive:         s.mqttKeepAliveInterval,
 		ConnectRetryDelay: s.mqttConnectRetryDelay,
-		//Debug:             LogLogger{},
-		//PahoDebug:         LogLogger{},
 		OnConnectionUp: func(manager *autopaho.ConnectionManager, connack *paho.Connack) {
-			slog.Info("connection up....", "clientId", clientId)
 			topicName := fmt.Sprintf("%s/out/%s/%s", s.mqttTopicPrefix, protocol, clientId)
+			span.SetAttributes(attribute.String("mqtt.topic", topicName))
 			_, err = manager.Subscribe(ctx, &paho.Subscribe{
 				Subscriptions: map[string]paho.SubscribeOptions{
 					topicName: {},
@@ -290,7 +288,6 @@ func (s *WebsocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				span.RecordError(err)
 				span.SetAttributes(semconv.HTTPStatusCode(http.StatusInternalServerError))
 
-				slog.Error("subscribing to mqtt topic", "topicName", topicName, "err", err)
 				_ = wsConn.Close(websocket.StatusProtocolError, http.StatusText(http.StatusInternalServerError))
 				return
 			}
@@ -330,7 +327,6 @@ func (s *WebsocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}),
 			OnServerDisconnect: func(disconnect *paho.Disconnect) {
 				span.SetAttributes(attribute.String("mqtt.disconnect_reason", disconnect.Properties.ReasonString))
-				slog.Info("server disconnect...")
 			},
 		},
 	})
@@ -365,8 +361,6 @@ func (s *WebsocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// read from the websocket and send to the CS Rx channel (CS Tx used for error)
 	readFromChargeStation(ctx, s.tracer, wsConn, p.ChargeStationRx, p.ChargeStationTx, protocol, clientId)
-
-	slog.Info("websocket handler complete")
 }
 
 func getScheme(r *http.Request) string {
@@ -417,8 +411,6 @@ func checkCertificate(ctx context.Context, r *http.Request, orgNames []string, c
 
 	for _, org := range leafCertificate.Subject.Organization {
 
-		slog.Info("checking", "org", org, "allowedOrgs", orgNames)
-
 		if slices.Contains(orgNames, org) {
 			foundOrg = true
 			break
@@ -428,8 +420,6 @@ func checkCertificate(ctx context.Context, r *http.Request, orgNames []string, c
 		span.SetAttributes(attribute.String("auth.failure_reason", "bad organization"))
 		return false
 	}
-
-	slog.Info("found", "clientId", leafCertificate.Subject.CommonName)
 
 	result := cs.ClientId == leafCertificate.Subject.CommonName
 
