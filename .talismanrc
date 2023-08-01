@@ -80,7 +80,7 @@ fileignoreconfig:
   - filename: manager/services/certificate_signer_test.go
     checksum: 487797450a17f27cf8190d00a85d13096ec4e9e9ee1ab1c7c685f3c8a387280d
   - filename: manager/services/certificate_validation.go
-    checksum: d9e2d7302820b0811e9bf2364ab232a89dfac050fb650d93df8c1fb05cb5e6d1
+    checksum: d54492d1c7105ca8dbc3273eeac29b522205498c4eec67880f019d04b551df1f
   - filename: manager/services/certificate_validation_hubject_test.go
     checksum: 100d8f7a7fe642abae94812a2e9f6938f5045bbd22c358b2e0adc684a45698ce
   - filename: manager/services/certificate_validation_test.go

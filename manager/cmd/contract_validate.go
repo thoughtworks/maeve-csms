@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/thoughtworks/maeve-csms/manager/services"
+	"net/http"
 	"os"
 	"strings"
 )
@@ -33,6 +34,7 @@ var validateCmd = &cobra.Command{
 		validator := services.OnlineCertificateValidationService{
 			RootCertificates: trustRoots,
 			MaxOCSPAttempts:  3,
+			HttpClient:       http.DefaultClient,
 		}
 
 		for _, emaidAndPemFile := range args {

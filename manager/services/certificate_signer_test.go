@@ -3,6 +3,7 @@
 package services_test
 
 import (
+	"context"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
@@ -23,18 +24,18 @@ import (
 	"time"
 )
 
-type hubjectHttpHandler struct {
+type opcpHttpHandler struct {
 	caCert  *x509.Certificate
 	caKey   *ecdsa.PrivateKey
 	intCert *x509.Certificate
 	intKey  *ecdsa.PrivateKey
 }
 
-func newHubjectHttpHandler(t *testing.T) hubjectHttpHandler {
+func newOPCPHttpHandler(t *testing.T) opcpHttpHandler {
 	caCert, caKey := createRootCACertificate(t, "test")
 	intCert, intKey := createIntermediateCACertificate(t, "int", "", caCert, caKey)
 
-	return hubjectHttpHandler{
+	return opcpHttpHandler{
 		caCert:  caCert,
 		caKey:   caKey,
 		intCert: intCert,
@@ -42,7 +43,7 @@ func newHubjectHttpHandler(t *testing.T) hubjectHttpHandler {
 	}
 }
 
-func (h hubjectHttpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h opcpHttpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.URL.String() == "/cpo/simpleenroll/ISO15118-2" {
 		if r.Header.Get("authorization") != "Bearer TestToken" {
 			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
@@ -88,7 +89,7 @@ func (h hubjectHttpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		enc = make([]byte, base64.StdEncoding.EncodedLen(len(p7)))
 		base64.StdEncoding.Encode(enc, p7)
 
-		w.Write(enc)
+		_, _ = w.Write(enc)
 
 		return
 	} else if r.URL.String() == "/cpo/cacerts/ISO15118-2" {
@@ -112,7 +113,7 @@ func (h hubjectHttpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		enc := make([]byte, base64.StdEncoding.EncodedLen(len(p7)))
 		base64.StdEncoding.Encode(enc, p7)
 
-		w.Write(enc)
+		_, _ = w.Write(enc)
 
 		return
 	}
@@ -120,13 +121,13 @@ func (h hubjectHttpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 }
 
-func TestHubjectCertificateSignerService(t *testing.T) {
-	hubject := newHubjectHttpHandler(t)
+func TestOPCPCertificateSignerService(t *testing.T) {
+	opcp := newOPCPHttpHandler(t)
 
-	server := httptest.NewServer(hubject)
+	server := httptest.NewServer(opcp)
 	defer server.Close()
 
-	hubjectSigner := services.OpcpCpoCertificateSignerService{
+	opcpSigner := services.OpcpCpoCertificateSignerService{
 		BaseURL:     server.URL,
 		BearerToken: "TestToken",
 		ISOVersion:  services.ISO15118V2,
@@ -134,7 +135,7 @@ func TestHubjectCertificateSignerService(t *testing.T) {
 
 	csr := createCertificateSigningRequest(t)
 
-	pemChain, err := hubjectSigner.SignCertificate(services.CertificateTypeV2G, string(csr))
+	pemChain, err := opcpSigner.SignCertificate(context.TODO(), services.CertificateTypeV2G, string(csr))
 	require.NoError(t, err)
 
 	pemBytes := []byte(pemChain)

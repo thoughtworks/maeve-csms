@@ -22,7 +22,7 @@ type EvCertificateProvider interface {
 	ProvideCertificate(ctx context.Context, exiRequest string) (EvCertificate15118Response, error)
 }
 
-type OpcpMoEvCertificateProvider struct {
+type OpcpEvCertificateProvider struct {
 	BaseURL     string
 	BearerToken string
 	HttpClient  *http.Client
@@ -53,7 +53,7 @@ type SignedContractDataResponse struct {
 	XsdMsgDefNamespace string      `json:"xsdMsgDefNamespace"`
 }
 
-func (h OpcpMoEvCertificateProvider) ProvideCertificate(ctx context.Context, exiRequest string) (EvCertificate15118Response, error) {
+func (h OpcpEvCertificateProvider) ProvideCertificate(ctx context.Context, exiRequest string) (EvCertificate15118Response, error) {
 	client := h.HttpClient
 	if client == nil {
 		client = http.DefaultClient
@@ -129,7 +129,7 @@ func (h OpcpMoEvCertificateProvider) ProvideCertificate(ctx context.Context, exi
 	return response, nil
 }
 
-func (h OpcpMoEvCertificateProvider) moRequest(ctx context.Context, requestUrl string, marshalledBody []byte) (*http.Request, error) {
+func (h OpcpEvCertificateProvider) moRequest(ctx context.Context, requestUrl string, marshalledBody []byte) (*http.Request, error) {
 	req, err := http.NewRequestWithContext(ctx, "POST", requestUrl, bytes.NewReader(marshalledBody))
 	if err != nil {
 		return nil, err

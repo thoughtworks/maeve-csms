@@ -136,6 +136,7 @@ func TestValidatingPEMCertificateChain(t *testing.T) {
 	validationService := services.OnlineCertificateValidationService{
 		RootCertificates: rootCACerts,
 		MaxOCSPAttempts:  3,
+		HttpClient:       http.DefaultClient,
 	}
 
 	pemChain := pem.EncodeToMemory(&pem.Block{
@@ -175,6 +176,7 @@ func TestValidatingPEMCertificateChainWithRevokedCertificate(t *testing.T) {
 	validationService := services.OnlineCertificateValidationService{
 		RootCertificates: rootCACerts,
 		MaxOCSPAttempts:  3,
+		HttpClient:       http.DefaultClient,
 	}
 
 	pemChain := pem.EncodeToMemory(&pem.Block{
@@ -204,6 +206,7 @@ func TestValidatingPEMCertificateChainWithWrongEmaid(t *testing.T) {
 	validationService := services.OnlineCertificateValidationService{
 		RootCertificates: rootCACerts,
 		MaxOCSPAttempts:  3,
+		HttpClient:       http.DefaultClient,
 	}
 
 	pemChain := pem.EncodeToMemory(&pem.Block{
@@ -233,6 +236,7 @@ func TestValidatingPEMCertificateChainInvalidChain(t *testing.T) {
 	validationService := services.OnlineCertificateValidationService{
 		RootCertificates: rootCACerts,
 		MaxOCSPAttempts:  3,
+		HttpClient:       http.DefaultClient,
 	}
 
 	pemChain := pem.EncodeToMemory(&pem.Block{
@@ -258,6 +262,7 @@ func TestValidatingPEMCertificateChainIncludingRootCertificate(t *testing.T) {
 	validationService := services.OnlineCertificateValidationService{
 		RootCertificates: rootCACerts,
 		MaxOCSPAttempts:  3,
+		HttpClient:       http.DefaultClient,
 	}
 
 	pemChain := pem.EncodeToMemory(&pem.Block{
@@ -292,6 +297,7 @@ func TestValidatingPEMCertificateChainIncludingUntrustedRootCertificate(t *testi
 	validationService := services.OnlineCertificateValidationService{
 		RootCertificates: []*x509.Certificate{rootCACerts[0]},
 		MaxOCSPAttempts:  3,
+		HttpClient:       http.DefaultClient,
 	}
 
 	pemChain := pem.EncodeToMemory(&pem.Block{
@@ -327,6 +333,7 @@ func TestValidatingPEMCertificateChainWithNoOCSPOnLeafCertificate(t *testing.T) 
 	validationService := services.OnlineCertificateValidationService{
 		RootCertificates: rootCACerts,
 		MaxOCSPAttempts:  3,
+		HttpClient:       http.DefaultClient,
 	}
 
 	pemChain := pem.EncodeToMemory(&pem.Block{
@@ -359,6 +366,7 @@ func TestValidatingHashedCertificateChain(t *testing.T) {
 	validationService := services.OnlineCertificateValidationService{
 		RootCertificates: rootCACerts,
 		MaxOCSPAttempts:  3,
+		HttpClient:       http.DefaultClient,
 	}
 
 	intCAPublicKeyBytes, err := getPublicKeyBytes(intCACert.RawSubjectPublicKeyInfo)
@@ -401,6 +409,7 @@ func TestValidatingHashedCertificateChainWithRevokedCertificate(t *testing.T) {
 	validationService := services.OnlineCertificateValidationService{
 		RootCertificates: rootCACerts,
 		MaxOCSPAttempts:  3,
+		HttpClient:       http.DefaultClient,
 	}
 
 	intCAPublicKeyBytes, err := getPublicKeyBytes(intCACert.RawSubjectPublicKeyInfo)

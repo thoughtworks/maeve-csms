@@ -44,7 +44,7 @@ func (s SignCertificateHandler) HandleCall(ctx context.Context, chargeStationId 
 				certType = services.CertificateTypeV2G
 			}
 
-			pemChain, err := s.CertificateSignerService.SignCertificate(certType, req.Csr)
+			pemChain, err := s.CertificateSignerService.SignCertificate(ctx, certType, req.Csr)
 			if err != nil {
 				slog.Error("failed to sign certificate", "err", err)
 			} else {

@@ -182,6 +182,7 @@ the gateway and send appropriate responses.`,
 		certValidationService := services.OnlineCertificateValidationService{
 			RootCertificates: certs,
 			MaxOCSPAttempts:  3,
+			HttpClient:       httpClient,
 		}
 
 		var certSignerService services.CertificateSignerService
@@ -195,7 +196,7 @@ the gateway and send appropriate responses.`,
 			}
 		}
 		if moOPCPToken != "" && moOPCPUrl != "" {
-			certProviderService = services.OpcpMoEvCertificateProvider{
+			certProviderService = services.OpcpEvCertificateProvider{
 				BaseURL:     moOPCPUrl,
 				BearerToken: moOPCPToken,
 				HttpClient:  httpClient,

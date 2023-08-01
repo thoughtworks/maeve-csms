@@ -5,12 +5,14 @@
 package services_test
 
 import (
+	"context"
 	"crypto/x509"
 	"encoding/pem"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	types "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
 	"github.com/thoughtworks/maeve-csms/manager/services"
+	"net/http"
 	"os"
 	"testing"
 )
@@ -44,10 +46,11 @@ func TestCertificateValidationServiceWithHubjectCertificate(t *testing.T) {
 		BearerToken: bearerToken,
 		BaseURL:     "https://open.plugncharge-test.hubject.com",
 		ISOVersion:  services.ISO15118V2,
+		HttpClient:  http.DefaultClient,
 	}
 
 	csr := createCertificateSigningRequest(t)
-	chain, err := certSignerService.SignCertificate(services.CertificateTypeV2G, string(csr))
+	chain, err := certSignerService.SignCertificate(context.Background(), services.CertificateTypeV2G, string(csr))
 	require.NoError(t, err)
 
 	block, _ := pem.Decode([]byte(v2gRootCertificate))
@@ -57,9 +60,10 @@ func TestCertificateValidationServiceWithHubjectCertificate(t *testing.T) {
 	certificateValidationService := services.OnlineCertificateValidationService{
 		RootCertificates: []*x509.Certificate{v2gRoot},
 		MaxOCSPAttempts:  3,
+		HttpClient:       http.DefaultClient,
 	}
 
-	ocspData, err := certificateValidationService.ValidatePEMCertificateChain(nil, []byte(chain), "cs001")
+	ocspData, err := certificateValidationService.ValidatePEMCertificateChain(context.TODO(), []byte(chain), "cs001")
 	assert.NoError(t, err)
 	assert.NotNil(t, ocspData)
 }
@@ -77,7 +81,7 @@ func TestCertificateValidationServiceWithHubjectCertificateHashes(t *testing.T) 
 	}
 
 	csr := createCertificateSigningRequest(t)
-	chain, err := certSignerService.SignCertificate(services.CertificateTypeV2G, string(csr))
+	chain, err := certSignerService.SignCertificate(context.Background(), services.CertificateTypeV2G, string(csr))
 	require.NoError(t, err)
 
 	block, _ := pem.Decode([]byte(v2gRootCertificate))
@@ -87,6 +91,7 @@ func TestCertificateValidationServiceWithHubjectCertificateHashes(t *testing.T) 
 	certificateValidationService := services.OnlineCertificateValidationService{
 		RootCertificates: []*x509.Certificate{v2gRoot},
 		MaxOCSPAttempts:  3,
+		HttpClient:       http.DefaultClient,
 	}
 
 	block, next := pem.Decode([]byte(chain))

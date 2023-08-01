@@ -15,6 +15,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"io/fs"
 	"math/rand"
+	"net/http"
 	"net/url"
 	"strings"
 	"time"
@@ -164,7 +165,9 @@ func ensureDefaults(h *Handler) {
 		h.clock = clock.RealClock{}
 	}
 	if h.certValidationService == nil {
-		h.certValidationService = services.OnlineCertificateValidationService{}
+		h.certValidationService = services.OnlineCertificateValidationService{
+			HttpClient: http.DefaultClient,
+		}
 	}
 	if h.heartbeatInterval == 0 {
 		h.heartbeatInterval = time.Minute

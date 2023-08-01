@@ -59,6 +59,7 @@ type CertificateValidationService interface {
 type OnlineCertificateValidationService struct {
 	RootCertificates []*x509.Certificate
 	MaxOCSPAttempts  int
+	HttpClient       *http.Client
 }
 
 func (o OnlineCertificateValidationService) ValidatePEMCertificateChain(ctx context.Context, pemChain []byte, eMAID string) (*string, error) {
@@ -71,17 +72,17 @@ func (o OnlineCertificateValidationService) ValidatePEMCertificateChain(ctx cont
 		return nil, fmt.Errorf("empty certificate chain")
 	}
 
-	err = validateEMAID(certificateChain[0], eMAID)
+	err = o.validateEMAID(certificateChain[0], eMAID)
 	if err != nil {
 		return nil, err
 	}
 
-	err = validatePEMCertificateChain(certificateChain, o.RootCertificates)
+	err = o.validatePEMCertificateChain(certificateChain, o.RootCertificates)
 	if err != nil {
 		return nil, err
 	}
 
-	ocspResponse, err := validatePEMCertificateChainOCSPStatus(certificateChain, o.RootCertificates, o.MaxOCSPAttempts)
+	ocspResponse, err := o.validatePEMCertificateChainOCSPStatus(ctx, certificateChain, o.RootCertificates, o.MaxOCSPAttempts)
 	if err != nil {
 		return ocspResponse, err
 	}
@@ -94,13 +95,13 @@ func (o OnlineCertificateValidationService) ValidateHashedCertificateChain(ctx c
 	var err error
 	for _, requestData := range ocspRequestData {
 		var ocspRequest []byte
-		ocspRequest, err = createOCSPRequestFromHashData(requestData.IssuerNameHash, requestData.IssuerKeyHash,
+		ocspRequest, err = o.createOCSPRequestFromHashData(requestData.IssuerNameHash, requestData.IssuerKeyHash,
 			requestData.SerialNumber, string(requestData.HashAlgorithm))
 		if err != nil {
 			return nil, err
 		}
 		var ocspResp *string
-		ocspResp, err = performOCSPCheck([]string{requestData.ResponderURL}, ocspRequest, nil, o.MaxOCSPAttempts)
+		ocspResp, err = o.performOCSPCheck(ctx, []string{requestData.ResponderURL}, ocspRequest, nil, o.MaxOCSPAttempts)
 		if err != nil {
 			return ocspResp, err
 		}
@@ -112,7 +113,7 @@ func (o OnlineCertificateValidationService) ValidateHashedCertificateChain(ctx c
 	return ocspResponse, err
 }
 
-func validatePEMCertificateChain(certificateChain, rootCertificates []*x509.Certificate) error {
+func (o OnlineCertificateValidationService) validatePEMCertificateChain(certificateChain, rootCertificates []*x509.Certificate) error {
 	if len(certificateChain) < 1 {
 		return errors.New("no certificates in chain")
 	}
@@ -146,7 +147,7 @@ func validatePEMCertificateChain(certificateChain, rootCertificates []*x509.Cert
 	return nil
 }
 
-func validateEMAID(certificate *x509.Certificate, eMAID string) error {
+func (o OnlineCertificateValidationService) validateEMAID(certificate *x509.Certificate, eMAID string) error {
 	if certificate.Subject.CommonName != eMAID {
 		return fmt.Errorf("leaf certificate CN: %s, not %s: %w", certificate.Subject.CommonName, eMAID, ValidationErrorWrongEmaid)
 	}
@@ -154,7 +155,7 @@ func validateEMAID(certificate *x509.Certificate, eMAID string) error {
 	return nil
 }
 
-func validatePEMCertificateChainOCSPStatus(certificateChain, rootCertificates []*x509.Certificate, maxRetries int) (ocspResponse *string, err error) {
+func (o OnlineCertificateValidationService) validatePEMCertificateChainOCSPStatus(ctx context.Context, certificateChain, rootCertificates []*x509.Certificate, maxRetries int) (ocspResponse *string, err error) {
 	if len(certificateChain) < 1 {
 		return nil, fmt.Errorf("no certificates in chain: %w", ValidationErrorCertChain)
 	}
@@ -163,11 +164,11 @@ func validatePEMCertificateChainOCSPStatus(certificateChain, rootCertificates []
 	for i := 1; i < len(certificateChain); i++ {
 		if len(certificateChain[i-1].OCSPServer) > 0 {
 			var ocspRequest []byte
-			ocspRequest, err = createOCSPRequestFromCertificate(certificateChain[i-1], certificateChain[i])
+			ocspRequest, err = o.createOCSPRequestFromCertificate(certificateChain[i-1], certificateChain[i])
 			if err != nil {
 				return
 			}
-			ocspResponse, err = performOCSPCheck(certificateChain[i-1].OCSPServer, ocspRequest, certificateChain[i], maxRetries)
+			ocspResponse, err = o.performOCSPCheck(ctx, certificateChain[i-1].OCSPServer, ocspRequest, certificateChain[i], maxRetries)
 			if err != nil {
 				return
 			}
@@ -180,11 +181,11 @@ func validatePEMCertificateChainOCSPStatus(certificateChain, rootCertificates []
 		for _, rootCert := range rootCertificates {
 			if bytes.Equal(subjectCert.AuthorityKeyId, rootCert.SubjectKeyId) {
 				var ocspRequest []byte
-				ocspRequest, err = createOCSPRequestFromCertificate(subjectCert, rootCert)
+				ocspRequest, err = o.createOCSPRequestFromCertificate(subjectCert, rootCert)
 				if err != nil {
 					return
 				}
-				return performOCSPCheck(subjectCert.OCSPServer, ocspRequest, rootCert, maxRetries)
+				return o.performOCSPCheck(ctx, subjectCert.OCSPServer, ocspRequest, rootCert, maxRetries)
 			}
 		}
 	}
@@ -196,7 +197,7 @@ func validatePEMCertificateChainOCSPStatus(certificateChain, rootCertificates []
 	return nil, fmt.Errorf("no OCSP response available: %w", ValidationErrorCertChain)
 }
 
-func performOCSPCheck(ocspResponderUrls []string, ocspRequest []byte, issuerCert *x509.Certificate, maxAttempts int) (*string, error) {
+func (o OnlineCertificateValidationService) performOCSPCheck(ctx context.Context, ocspResponderUrls []string, ocspRequest []byte, issuerCert *x509.Certificate, maxAttempts int) (*string, error) {
 	var ocspResponderUrlCount int
 	if ocspResponderUrls != nil {
 		ocspResponderUrlCount = len(ocspResponderUrls)
@@ -206,7 +207,7 @@ func performOCSPCheck(ocspResponderUrls []string, ocspRequest []byte, issuerCert
 
 	for attempt := 1; attempt <= maxAttempts; attempt++ {
 		responderUrl := ocspResponderUrls[attempt%ocspResponderUrlCount]
-		ocspResponse, err := attemptOCSPCheck(responderUrl, ocspRequest, issuerCert)
+		ocspResponse, err := o.attemptOCSPCheck(ctx, responderUrl, ocspRequest, issuerCert)
 		if err == nil {
 			return ocspResponse, nil
 		}
@@ -220,11 +221,11 @@ func performOCSPCheck(ocspResponderUrls []string, ocspRequest []byte, issuerCert
 	return nil, fmt.Errorf("failed to perform ocsp check after %d attempts", maxAttempts)
 }
 
-func createOCSPRequestFromCertificate(subjectCert, issuerCert *x509.Certificate) ([]byte, error) {
+func (o OnlineCertificateValidationService) createOCSPRequestFromCertificate(subjectCert, issuerCert *x509.Certificate) ([]byte, error) {
 	return ocsp.CreateRequest(subjectCert, issuerCert, nil)
 }
 
-func createOCSPRequestFromHashData(issuerNameHashHex, issuerKeyHashHex, serialNumber, hashAlg string) ([]byte, error) {
+func (o OnlineCertificateValidationService) createOCSPRequestFromHashData(issuerNameHashHex, issuerKeyHashHex, serialNumber, hashAlg string) ([]byte, error) {
 	n := new(big.Int)
 	serial, ok := n.SetString(serialNumber, 16)
 	if !ok {
@@ -251,9 +252,14 @@ func createOCSPRequestFromHashData(issuerNameHashHex, issuerKeyHashHex, serialNu
 	return req.Marshal()
 }
 
-func attemptOCSPCheck(ocspResponderUrl string, ocspRequest []byte, issuerCert *x509.Certificate) (*string, error) {
+func (o OnlineCertificateValidationService) attemptOCSPCheck(ctx context.Context, ocspResponderUrl string, ocspRequest []byte, issuerCert *x509.Certificate) (*string, error) {
 	//#nosec G107 - need to use OCSP URL specified in the certificate
-	resp, err := http.Post(ocspResponderUrl, "application/ocsp-request", bytes.NewReader(ocspRequest))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, ocspResponderUrl, bytes.NewReader(ocspRequest))
+	if err != nil {
+		return nil, fmt.Errorf("new request: %w", err)
+	}
+
+	resp, err := o.HttpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("post %s: %w", ocspResponderUrl, err)
 	}

@@ -4,6 +4,7 @@ package services
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"encoding/pem"
 	"fmt"
@@ -20,7 +21,7 @@ const (
 )
 
 type CertificateSignerService interface {
-	SignCertificate(typ CertificateType, pemEncodedCSR string) (pemEncodedCertificateChain string, err error)
+	SignCertificate(ctx context.Context, typ CertificateType, pemEncodedCSR string) (pemEncodedCertificateChain string, err error)
 }
 
 type ISOVersion string
@@ -44,7 +45,7 @@ func (h HttpError) Error() string {
 	return fmt.Sprintf("http status: %d", h)
 }
 
-func (h OpcpCpoCertificateSignerService) SignCertificate(typ CertificateType, pemEncodedCSR string) (string, error) {
+func (h OpcpCpoCertificateSignerService) SignCertificate(ctx context.Context, typ CertificateType, pemEncodedCSR string) (string, error) {
 	csr, err := convertCSR(pemEncodedCSR)
 	if err != nil {
 		return "", err
@@ -56,13 +57,13 @@ func (h OpcpCpoCertificateSignerService) SignCertificate(typ CertificateType, pe
 	}
 
 	enrollUrl := fmt.Sprintf("%s/cpo/simpleenroll/%s", h.BaseURL, h.ISOVersion)
-	cert, err := requestCertificate(client, enrollUrl, h.BearerToken, csr)
+	cert, err := requestCertificate(ctx, client, enrollUrl, h.BearerToken, csr)
 	if err != nil {
 		return "", fmt.Errorf("requesting certificate: %w", err)
 	}
 
 	caUrl := fmt.Sprintf("%s/cpo/cacerts/%s", h.BaseURL, h.ISOVersion)
-	chain, err := requestChain(client, caUrl, h.BearerToken)
+	chain, err := requestChain(ctx, client, caUrl, h.BearerToken)
 	if err != nil {
 		return "", fmt.Errorf("requesting ca certificates: %w", err)
 	}
@@ -84,8 +85,8 @@ func convertCSR(pemEncodedCSR string) ([]byte, error) {
 	return enc, nil
 }
 
-func requestCertificate(client *http.Client, url, bearerToken string, csr []byte) ([]byte, error) {
-	req, err := http.NewRequest("POST", url, bytes.NewReader(csr))
+func requestCertificate(ctx context.Context, client *http.Client, url, bearerToken string, csr []byte) ([]byte, error) {
+	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(csr))
 	if err != nil {
 		return nil, err
 	}
@@ -108,8 +109,8 @@ func requestCertificate(client *http.Client, url, bearerToken string, csr []byte
 	return nil, HttpError(resp.StatusCode)
 }
 
-func requestChain(client *http.Client, url, bearerToken string) ([]byte, error) {
-	req, err := http.NewRequest("GET", url, nil)
+func requestChain(ctx context.Context, client *http.Client, url, bearerToken string) ([]byte, error) {
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		return nil, err
 	}
