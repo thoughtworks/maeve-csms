@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/pem"
@@ -11,8 +12,8 @@ import (
 	"os"
 )
 
-type MoRootCertificateRetrievalService interface {
-	RetrieveCertificates() ([]*x509.Certificate, error)
+type RootCertificateRetrieverService interface {
+	RetrieveCertificates(ctx context.Context) ([]*x509.Certificate, error)
 }
 
 type FileReader interface {
@@ -26,12 +27,12 @@ func (reader RealFileReader) ReadFile(filename string) (content []byte, e error)
 	return os.ReadFile(filename)
 }
 
-type FileMoRootCertificateRetrievalService struct {
+type FileRootCertificateRetrieverService struct {
 	FilePaths  []string
 	FileReader FileReader
 }
 
-func (s FileMoRootCertificateRetrievalService) RetrieveCertificates() (certs []*x509.Certificate, e error) {
+func (s FileRootCertificateRetrieverService) RetrieveCertificates(ctx context.Context) (certs []*x509.Certificate, e error) {
 	for _, pemFile := range s.FilePaths {
 		bytes, e := s.FileReader.ReadFile(pemFile)
 		if e != nil {
@@ -48,13 +49,14 @@ func (s FileMoRootCertificateRetrievalService) RetrieveCertificates() (certs []*
 	return
 }
 
-type OpcpMoRootCertificateRetrievalService struct {
+type OpcpRootCertificateRetrieverService struct {
 	MoRootCertPool string
 	MoOPCPToken    string
+	HttpClient     *http.Client
 }
 
-func (s OpcpMoRootCertificateRetrievalService) RetrieveCertificates() (certs []*x509.Certificate, e error) {
-	body, err := s.retrieveCertificatesFromUrl()
+func (s OpcpRootCertificateRetrieverService) RetrieveCertificates(ctx context.Context) (certs []*x509.Certificate, e error) {
+	body, err := s.retrieveCertificatesFromUrl(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -76,9 +78,8 @@ func (s OpcpMoRootCertificateRetrievalService) RetrieveCertificates() (certs []*
 	return certs, nil
 }
 
-func (s OpcpMoRootCertificateRetrievalService) retrieveCertificatesFromUrl() ([]byte, error) {
-	client := http.DefaultClient
-	req, err := http.NewRequest("GET", s.MoRootCertPool, nil)
+func (s OpcpRootCertificateRetrieverService) retrieveCertificatesFromUrl(ctx context.Context) ([]byte, error) {
+	req, err := http.NewRequestWithContext(ctx, "GET", s.MoRootCertPool, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -86,13 +87,15 @@ func (s OpcpMoRootCertificateRetrievalService) retrieveCertificatesFromUrl() ([]
 	req.Header.Add("Content-Transfer-Encoding", "application/pkcs10")
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", s.MoOPCPToken))
 
-	resp, err := client.Do(req)
+	resp, err := s.HttpClient.Do(req)
 	if err != nil {
 		return nil, err
 	} else if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("received code %v in response", resp.StatusCode)
+		return nil, HttpError(resp.StatusCode)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {

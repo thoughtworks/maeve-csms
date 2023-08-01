@@ -21,14 +21,14 @@ var validateCmd = &cobra.Command{
 	Long:  "Takes a list of <emaid>:<pemFile> arguments and validates each using the OCSP validator",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var trustRoots []*x509.Certificate
-		var moRootCertRetrievalService services.MoRootCertificateRetrievalService
+		var moRootCertRetrievalService services.RootCertificateRetrieverService
 		fileReader := services.RealFileReader{}
-		moRootCertRetrievalService = services.FileMoRootCertificateRetrievalService{
+		moRootCertRetrievalService = services.FileRootCertificateRetrieverService{
 			FilePaths:  validationTrustRoots,
 			FileReader: fileReader,
 		}
 
-		trustRoots, _ = moRootCertRetrievalService.RetrieveCertificates()
+		trustRoots, _ = moRootCertRetrievalService.RetrieveCertificates(context.Background())
 
 		validator := services.OnlineCertificateValidationService{
 			RootCertificates: trustRoots,

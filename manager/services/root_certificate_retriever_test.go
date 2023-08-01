@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
@@ -59,12 +60,12 @@ func (h moRootCertificatePoolHandler) ServeHTTP(w http.ResponseWriter, r *http.R
 }
 
 func TestFileMoRootCertificateRetrievalServiceRetrieveCertificates(t *testing.T) {
-	fileRetrievalService := FileMoRootCertificateRetrievalService{
+	fileRetrievalService := FileRootCertificateRetrieverService{
 		FilePaths:  []string{"test"},
 		FileReader: DummyFileReader{},
 	}
 
-	certs, e := fileRetrievalService.RetrieveCertificates()
+	certs, e := fileRetrievalService.RetrieveCertificates(context.TODO())
 	assert.NoError(t, e)
 	assert.Equal(t, "Thoughtworks", certs[0].Issuer.CommonName)
 }
@@ -72,28 +73,32 @@ func TestFileMoRootCertificateRetrievalServiceRetrieveCertificates(t *testing.T)
 func TestOpcpMoRootCertificateRetrievalServiceRetrieveCertificatesNotAuthorised(t *testing.T) {
 	handler := moRootCertificatePoolHandler{baseUrl: baseUrl}
 	server := httptest.NewServer(handler)
-	service := OpcpMoRootCertificateRetrievalService{
+	service := OpcpRootCertificateRetrieverService{
 		MoOPCPToken:    "",
 		MoRootCertPool: server.URL + baseUrl,
+		HttpClient:     http.DefaultClient,
 	}
 
 	defer server.Close()
 
-	_, err := service.RetrieveCertificates()
+	_, err := service.RetrieveCertificates(context.TODO())
 
-	assert.Equal(t, "received code 401 in response", err.Error())
+	var httpError HttpError
+	assert.ErrorAs(t, err, &httpError)
+	assert.Equal(t, http.StatusUnauthorized, int(httpError))
 }
 
 func TestOpcpMoRootCertificateRetrievalServiceRetrieveCertificates(t *testing.T) {
 	handler := newHandler()
 	server := httptest.NewServer(handler)
-	service := OpcpMoRootCertificateRetrievalService{
+	service := OpcpRootCertificateRetrieverService{
 		MoOPCPToken:    "Token",
 		MoRootCertPool: server.URL + baseUrl,
+		HttpClient:     http.DefaultClient,
 	}
 	defer server.Close()
 
-	result, err := service.RetrieveCertificates()
+	result, err := service.RetrieveCertificates(context.TODO())
 
 	require.NoError(t, err)
 

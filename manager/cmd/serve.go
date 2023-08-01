@@ -146,36 +146,34 @@ the gateway and send appropriate responses.`,
 			return fmt.Errorf("parsing mqtt broker url: %v", err)
 		}
 
-		var engine store.Engine
-		switch storageEngine {
-		case "firestore":
-			engine, err = firestore.NewStore(context.Background(), gcloudProject)
-			if err != nil {
-				return err
-			}
-		case "inmemory":
-			engine = inmemory.NewStore()
-		default:
-			return fmt.Errorf("unsupported storage engine %s", storageEngine)
+		engine, err := getStorageEngine()
+		if err != nil {
+			return err
 		}
 
 		apiServer := server.New("api", apiAddr, nil, server.NewApiHandler(engine))
 
-		var moRootCertRetrievalService services.MoRootCertificateRetrievalService
+		httpClient, err := getHttpClient()
+		if err != nil {
+			return err
+		}
+
+		var moRootCertRetrievalService services.RootCertificateRetrieverService
 		if moRootCertPool != "" {
-			moRootCertRetrievalService = services.OpcpMoRootCertificateRetrievalService{
+			moRootCertRetrievalService = services.OpcpRootCertificateRetrieverService{
 				MoRootCertPool: moRootCertPool,
 				MoOPCPToken:    moOPCPToken,
+				HttpClient:     httpClient,
 			}
 		} else {
 			fileReader := services.RealFileReader{}
-			moRootCertRetrievalService = services.FileMoRootCertificateRetrievalService{
+			moRootCertRetrievalService = services.FileRootCertificateRetrieverService{
 				FilePaths:  moTrustAnchorCertPEMFiles,
 				FileReader: fileReader,
 			}
 		}
 
-		certs, err := moRootCertRetrievalService.RetrieveCertificates()
+		certs, err := moRootCertRetrievalService.RetrieveCertificates(context.Background())
 		if err != nil {
 			return fmt.Errorf("pulling certificates from mo root cert pool: %v", err)
 		}
@@ -185,31 +183,6 @@ the gateway and send appropriate responses.`,
 			RootCertificates: certs,
 			MaxOCSPAttempts:  3,
 		}
-
-		var transport http.RoundTripper
-		httpClient := http.DefaultClient
-
-		if keyLogFile != "" {
-			slog.Warn("***** TLS key logging enabled *****")
-
-			//#nosec G304 - only files specified by the person running the application will be used
-			keyLog, err := os.OpenFile(keyLogFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
-			if err != nil {
-				return fmt.Errorf("opening key log file: %v", err)
-			}
-
-			baseTransport := http.DefaultTransport.(*http.Transport).Clone()
-			baseTransport.TLSClientConfig = &tls.Config{
-				KeyLogWriter: keyLog,
-				MinVersion:   tls.VersionTLS12,
-			}
-
-			transport = otelhttp.NewTransport(baseTransport)
-		} else {
-			transport = otelhttp.NewTransport(http.DefaultTransport)
-		}
-
-		httpClient = &http.Client{Transport: transport}
 
 		var certSignerService services.CertificateSignerService
 		var certProviderService services.EvCertificateProvider
@@ -249,6 +222,49 @@ the gateway and send appropriate responses.`,
 		err = <-errCh
 		return err
 	},
+}
+
+func getStorageEngine() (store.Engine, error) {
+	var err error
+	var engine store.Engine
+	switch storageEngine {
+	case "firestore":
+		engine, err = firestore.NewStore(context.Background(), gcloudProject)
+		if err != nil {
+			return nil, err
+		}
+	case "inmemory":
+		engine = inmemory.NewStore()
+	default:
+		return nil, fmt.Errorf("unsupported storage engine %s", storageEngine)
+	}
+	return engine, nil
+}
+
+func getHttpClient() (*http.Client, error) {
+	var transport http.RoundTripper
+
+	if keyLogFile != "" {
+		slog.Warn("***** TLS key logging enabled *****")
+
+		//#nosec G304 - only files specified by the person running the application will be used
+		keyLog, err := os.OpenFile(keyLogFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+		if err != nil {
+			return nil, fmt.Errorf("opening key log file: %v", err)
+		}
+
+		baseTransport := http.DefaultTransport.(*http.Transport).Clone()
+		baseTransport.TLSClientConfig = &tls.Config{
+			KeyLogWriter: keyLog,
+			MinVersion:   tls.VersionTLS12,
+		}
+
+		transport = otelhttp.NewTransport(baseTransport)
+	} else {
+		transport = otelhttp.NewTransport(http.DefaultTransport)
+	}
+
+	return &http.Client{Transport: transport}, nil
 }
 
 func init() {

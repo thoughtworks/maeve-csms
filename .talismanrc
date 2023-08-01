@@ -30,9 +30,7 @@ fileignoreconfig:
   - filename: manager/api/server_test.go
     checksum: 297c27a0f612af86cfdce543d5e4a21e60e70f4eb48b57d3c833257bb1b05647
   - filename: manager/cmd/serve.go
-    checksum: c1c6c8b87af1c48f2cb72b450169ffbf4b5d4e4cdc4ae893193805a8b1a01664
-  - filename: manager/cmd/serve_test.go
-    checksum: 983e04341cb8b9dd272915996d662db2c22d653fcf8f4dea32a051c1ea125e24
+    checksum: 7b5688335f7ad1b5339fc7cc8deaf08e10f42e03cbe086810d2bd70567f923c5
   - filename: manager/handlers/ocpp16/data_transfer_test.go
     checksum: ff19ad1feeb979a62c6a53e256ab3fe879bd540242153792b8b1148ae7010c4b
   - filename: manager/handlers/ocpp16/stop_transaction.go
@@ -87,12 +85,8 @@ fileignoreconfig:
     checksum: 100d8f7a7fe642abae94812a2e9f6938f5045bbd22c358b2e0adc684a45698ce
   - filename: manager/services/certificate_validation_test.go
     checksum: 893e918e122b2dd321bad4a02ee0523f25df1a3b501538e5541f9bbbbc4bd794
-  - filename: manager/services/mo-root-certificate-retrieval.go
-    checksum: d829dbe5358afabbeacf973feae190784b461f4d572fa2dca2d68dd080c85364
   - filename: manager/services/ev_certificate_provider.go
     checksum: 42480a4243292eb9f5c2324cfaf6760df7b35e7a716591c11a1ecb40574f213f
-  - filename: manager/services/mo-root-certificate-retrieval.go
-    checksum: d829dbe5358afabbeacf973feae190784b461f4d572fa2dca2d68dd080c85364
   - filename: manager/store/firestore/cert_test.go
     checksum: 5882e08beca19cfcaab9abda418c87aa13251b49424817e9c3a54a4be4bb268c
   - filename: manager/store/firestore/cs.go
