@@ -8,6 +8,7 @@ import (
 	"crypto/x509"
 	"fmt"
 	"github.com/spf13/cobra"
+	"github.com/subnova/slog-exporter/slogtrace"
 	"github.com/thoughtworks/maeve-csms/gateway/registry"
 	"github.com/thoughtworks/maeve-csms/gateway/server"
 	"go.opentelemetry.io/contrib/detectors/gcp"
@@ -37,6 +38,7 @@ var (
 	managerApiAddr    string
 	trustProxyHeaders bool
 	otelCollectorAddr string
+	logFormat         string
 )
 
 // Initializes an OTLP exporter, and configures the corresponding trace and
@@ -44,33 +46,49 @@ var (
 func initProvider(collectorAddr string) (func(context.Context) error, error) {
 	ctx := context.Background()
 
-	res, err := resource.New(ctx,
-		resource.WithDetectors(gcp.NewDetector()),
-		resource.WithTelemetrySDK(),
-		resource.WithAttributes(
-			// the service name used to display traces in backends
-			semconv.ServiceName("maeve-csms-gateway"),
-		),
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create resource: %w", err)
-	}
+	var err error
+	var res *resource.Resource
+	var traceExporter trace.SpanExporter
 
-	ctx, cancel := context.WithTimeout(ctx, time.Second)
-	defer cancel()
-	conn, err := grpc.DialContext(ctx, collectorAddr,
-		// Note the use of insecure transport here. TLS is recommended in production.
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithBlock(),
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create gRPC connection to collector: %w", err)
-	}
+	if collectorAddr != "" {
+		res, err = resource.New(ctx,
+			resource.WithDetectors(gcp.NewDetector()),
+			resource.WithTelemetrySDK(),
+			resource.WithAttributes(
+				// the service name used to display traces in backends
+				semconv.ServiceName("maeve-csms-manager"),
+			),
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create resource: %w", err)
+		}
 
-	// Set up a trace exporter
-	traceExporter, err := otlptracegrpc.New(ctx, otlptracegrpc.WithGRPCConn(conn))
-	if err != nil {
-		return nil, fmt.Errorf("failed to create trace exporter: %w", err)
+		ctx, cancel := context.WithTimeout(ctx, time.Second)
+		defer cancel()
+		conn, err := grpc.DialContext(ctx, collectorAddr,
+			// Note the use of insecure transport here. TLS is recommended in production.
+			grpc.WithTransportCredentials(insecure.NewCredentials()),
+			grpc.WithBlock(),
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create gRPC connection to collector: %w", err)
+		}
+
+		// Set up a trace exporter
+		traceExporter, err = otlptracegrpc.New(ctx, otlptracegrpc.WithGRPCConn(conn))
+		if err != nil {
+			return nil, fmt.Errorf("failed to create trace exporter: %w", err)
+		}
+	} else {
+		res, err = resource.New(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create resource: %w", err)
+		}
+
+		traceExporter, err = slogtrace.New()
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Register the trace exporter with a TracerProvider, using a batch
@@ -95,18 +113,20 @@ var serveCmd = &cobra.Command{
 	Use:   "serve",
 	Short: "Start the gateway server",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if otelCollectorAddr != "" {
-			shutdown, err := initProvider(otelCollectorAddr)
-			if err != nil {
-				return err
-			}
-			defer func() {
-				err := shutdown(context.Background())
-				if err != nil {
-					slog.Error("shutting down OTLP exporter", "error", err)
-				}
-			}()
+		if logFormat == "json" {
+			slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))
 		}
+
+		shutdown, err := initProvider(otelCollectorAddr)
+		if err != nil {
+			return err
+		}
+		defer func() {
+			err := shutdown(context.Background())
+			if err != nil {
+				slog.Error("shutting down OTLP exporter", "error", err)
+			}
+		}()
 
 		tracer := otel.Tracer("gateway")
 
@@ -209,4 +229,6 @@ func init() {
 		"Trust proxy headers when determining the client's TLS status")
 	serveCmd.Flags().StringVar(&otelCollectorAddr, "otel-collector-addr", "",
 		"The address of the open telemetry collector that will receive traces, e.g. localhost:4317")
+	serveCmd.Flags().StringVar(&logFormat, "log-format", "text",
+		"The format of the logs, one of [text, json]")
 }

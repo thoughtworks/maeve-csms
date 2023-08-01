@@ -10,13 +10,14 @@ require (
 	github.com/prometheus/client_golang v1.15.1
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.3
+	github.com/subnova/slog-exporter v0.1.0
 	go.opentelemetry.io/contrib/detectors/gcp v1.17.0
 	go.opentelemetry.io/otel v1.16.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.16.0
 	go.opentelemetry.io/otel/sdk v1.16.0
 	go.opentelemetry.io/otel/trace v1.16.0
 	go.uber.org/goleak v1.2.1
-	golang.org/x/exp v0.0.0-20230713183714-613f0c0eb8a1
+	golang.org/x/exp v0.0.0-20230728194245-b0cb94b80691
 	google.golang.org/grpc v1.55.0
 	nhooyr.io/websocket v1.8.7
 )

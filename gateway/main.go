@@ -3,13 +3,9 @@
 package main
 
 import (
-	"os"
-
 	"github.com/thoughtworks/maeve-csms/gateway/cmd"
-	"golang.org/x/exp/slog"
 )
 
 func main() {
-	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))
 	cmd.Execute()
 }
