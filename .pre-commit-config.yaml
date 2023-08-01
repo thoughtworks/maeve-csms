@@ -1,35 +1,7 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
 repos:
-  - repo: https://github.com/thoughtworks/talisman
-    rev: 'v1.30.2'
-    hooks:
-      - id: talisman-commit
-        entry: cmd --githook pre-commit
-  - repo: local
-    hooks:
-      - id: sort-talismanrc
-        name: Sort .talismanrc
-        language: script
-        files: '.talismanrc'
-        entry: .hook/sort-talismanrc.sh
-      - id: check-talisman-files
-        name: Check files in .talismanrc
-        language: script
-        files: '.talismanrc'
-        entry: .hook/check-talisman-files.sh
-  - repo: https://github.com/compilerla/conventional-pre-commit
-    rev: 'v2.3.0'
-    hooks:
-      - id: conventional-pre-commit
-        stages: [commit-msg]
-        args: ['feat', 'fix', 'ci', 'chore', 'test', 'docs', 'refactor']
-  - repo: https://github.com/tekwizely/pre-commit-golang
-    rev: 'v1.0.0-rc.1'
-    hooks:
-      - id: go-mod-tidy
-      - id: go-vet-mod
-      - id: go-fmt
-      - id: go-staticcheck-mod
-      - id: go-sec-mod
-      - id: go-build-mod
-      - id: go-test-mod
-      - id: go-sec-mod
+    - repo: https://github.com/pre-commit/pre-commit-hooks
+      rev: v3.2.0
+      hooks:
+          - id: detect-private-key
