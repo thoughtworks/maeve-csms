@@ -28,7 +28,7 @@ MaEVe runs in a set of Docker containers. This means you need to have `docker`, 
 To get the system up and running:
 
 1. `(cd config/certificates && make)`
-1. Run the [./scripts/run.sh](./scripts/run.sh) script with the same token to run all the required components - again, don't forget the quotes around the token
+2. Run the [./scripts/run.sh](./scripts/run.sh) script with the same token to run all the required components - again, don't forget the quotes around the token
 
 Charge stations can connect to the CSMS using:
 * `ws://localhost/ws/<cs-id>`
