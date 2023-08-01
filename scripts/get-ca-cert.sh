@@ -1,15 +1,6 @@
 #!/usr/bin/env bash
 
-BEARER_TOKEN="$1"
-if [[ "$BEARER_TOKEN" == "" ]]; then
-  echo "You must provide a bearer token"
-  echo "Usage: get-ca-cert.sh <BEARER_TOKEN>"
-  echo "       BEARER_TOKEN can be obtained from the Hubject test environment: "
-  echo "       https://hubject.stoplight.io/docs/open-plugncharge/6bb8b3bc79c2e-authorization-token"
-  exit 1
-fi
-
-BEARER_TOKEN=${BEARER_TOKEN#"Bearer "}
+BEARER_TOKEN=$(curl -s https://hubject.stoplight.io/api/v1/projects/cHJqOjk0NTg5/nodes/6bb8b3bc79c2e-authorization-token | jq -r .data | sed -n '/Bearer/s/^.*Bearer //p')
 
 script_dir=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 

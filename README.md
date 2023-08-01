@@ -7,7 +7,7 @@ MaEVe is an EV charge station management system (CSMS). It began life as a simpl
 implementing ISO-15118-2 Plug and Charge (PnC) functionality and remains a work in progress. It is hoped that over
 time it will become more complete, but already provides a useful basis for experimentation.
 
-The system currently integrates with [Hubject](https://hubject.stoplight.io/) for PnC functionality. 
+The system currently integrates with [Hubject](https://hubject.stoplight.io/) for PnC functionality.
 
 ## Table of Contents
 - [Documentation](#documentation)
@@ -21,18 +21,16 @@ MaEVe is implemented in Go 1.20. Learn more about MaEVe and its existing compone
 
 ## Pre-requisites
 
-MaEVe runs in a set of Docker containers. This means you need to have `docker`, `docker-compose` and a docker daemon (e.g. docker desktop, `colima` or `rancher`) installed and running. 
+MaEVe runs in a set of Docker containers. This means you need to have `docker`, `docker-compose` and a docker daemon (e.g. docker desktop, `colima` or `rancher`) installed and running.
 
 ## Getting started
 
 To get the system up and running:
 
-1. Run the [./scripts/generate-tls-cert.sh](./scripts/generate-tls-cert.sh) script which will create a server
-certificate for the CSMS
-2. Run the [./scripts/get-ca-cert.sh](./scripts/get-ca-cert.sh) script with a token retrieved from 
-the [Hubject test environment](https://hubject.stoplight.io/docs/open-plugncharge/6bb8b3bc79c2e-authorization-token) 
+1. Run the [./scripts/get-ca-cert.sh](./scripts/get-ca-cert.sh) script with a token retrieved from
+the [Hubject test environment](https://hubject.stoplight.io/docs/open-plugncharge/6bb8b3bc79c2e-authorization-token)
 to retrieve the V2G root certificate and CPO Sub CA certificates - remember to put your token argument within quotes
-3. Run the [./scripts/run.sh](./scripts/run.sh) script with the same token to run all the required components - again, don't forget the quotes around the token
+1. Run the [./scripts/run.sh](./scripts/run.sh) script with the same token to run all the required components - again, don't forget the quotes around the token
 
 Charge stations can connect to the CSMS using:
 * `ws://localhost/ws/<cs-id>`
@@ -40,7 +38,7 @@ Charge stations can connect to the CSMS using:
 
 Charge stations can use either OCPP 1.6j or OCPP 2.0.1.
 
-For TLS, the charge station should use a certificate provisioned using the 
+For TLS, the charge station should use a certificate provisioned using the
 [Hubject CPO EST service](https://hubject.stoplight.io/docs/open-plugncharge/486f0b8b3ded4-simple-enroll-iso-15118-2-and-iso-15118-20).
 
 A charge station must first be registered with the CSMS before it can be used. This can be done using the
