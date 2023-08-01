@@ -10,7 +10,6 @@ import (
 
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
 	types "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
-	"golang.org/x/exp/slog"
 	"k8s.io/utils/clock"
 )
 
@@ -23,15 +22,6 @@ func (b BootNotificationHandler) HandleCall(ctx context.Context, chargeStationId
 	span := trace.SpanFromContext(ctx)
 
 	req := request.(*types.BootNotificationRequestJson)
-	var serialNumber string
-	if req.ChargingStation.SerialNumber != nil {
-		serialNumber = *req.ChargingStation.SerialNumber
-	} else {
-		serialNumber = "*unknown*"
-	}
-	slog.Info("booting", slog.String("chargeStationId", chargeStationId),
-		slog.String("serialNumber", serialNumber),
-		slog.String("reason", string(req.Reason)))
 
 	span.SetAttributes(
 		attribute.String("request.status", string(types.RegistrationStatusEnumTypeAccepted)),

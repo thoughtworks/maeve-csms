@@ -14,7 +14,6 @@ import (
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
 	types "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp16"
 	"github.com/thoughtworks/maeve-csms/manager/schemas"
-	"golang.org/x/exp/slog"
 )
 
 type DataTransferHandler struct {
@@ -31,8 +30,6 @@ func (d DataTransferHandler) HandleCall(ctx context.Context, chargeStationId str
 	if req.MessageId != nil {
 		messageId = *req.MessageId
 	}
-	slog.Info("data transfer",
-		slog.String("vendorId", req.VendorId), slog.String("messageId", messageId))
 
 	span.SetAttributes(attribute.String("datatransfer.vendor_id", req.VendorId))
 	if messageId != "" {
@@ -80,7 +77,7 @@ func (d DataTransferHandler) HandleCall(ctx context.Context, chargeStationId str
 		}
 		err = schemas.Validate(b, d.SchemaFS, route.ResponseSchema)
 		if err != nil {
-			slog.Warn("data transfer response is not valid", slog.String("vendorId", req.VendorId), slog.String("messageId", messageId), err)
+			span.SetAttributes(attribute.String("datatransfer.invalid_response", err.Error()))
 		}
 		dataTransferResponseString := string(b)
 		dataTransferResponseData = &dataTransferResponseString

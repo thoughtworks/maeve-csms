@@ -3,9 +3,12 @@
 package server
 
 import (
+	"fmt"
+	"golang.org/x/exp/slog"
 	"net/http"
 	"os"
 	"text/template"
+	"time"
 
 	"github.com/rs/cors"
 	"github.com/thoughtworks/maeve-csms/manager/api"
@@ -18,6 +21,30 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/thoughtworks/maeve-csms/manager/templates"
 )
+
+type logEntry struct {
+	method     string
+	path       string
+	remoteAddr string
+}
+
+func (l logEntry) Write(status, bytes int, header http.Header, elapsed time.Duration, extra interface{}) {
+	slog.Info(fmt.Sprintf("%s %s", l.method, l.path), slog.String("remote_addr", l.remoteAddr), slog.Int("status", status), slog.Int("bytes", bytes), slog.Duration("duration", elapsed))
+}
+
+func (l logEntry) Panic(v interface{}, stack []byte) {
+	slog.Info(fmt.Sprintf("%s %s", l.method, l.path), slog.String("remote_addr", l.remoteAddr), slog.Any("panic", v), slog.String("stack", string(stack)))
+}
+
+type logFormatter struct{}
+
+func (l logFormatter) NewLogEntry(r *http.Request) middleware.LogEntry {
+	return logEntry{
+		method:     r.Method,
+		path:       r.URL.Path,
+		remoteAddr: r.RemoteAddr,
+	}
+}
 
 func NewApiHandler(engine store.Engine) http.Handler {
 	apiServer, err := api.NewServer(engine, clock.RealClock{})
@@ -38,12 +65,15 @@ func NewApiHandler(engine store.Engine) http.Handler {
 	})
 
 	r := chi.NewRouter()
-	r.Use(middleware.Logger, middleware.Recoverer, secureMiddleware.Handler, cors.Default().Handler, api.ValidationMiddleware)
+
+	logger := middleware.RequestLogger(logFormatter{})
+
+	r.Use(middleware.Recoverer, secureMiddleware.Handler, cors.Default().Handler, api.ValidationMiddleware)
 	r.Get("/health", health)
 	r.Get("/transactions", transactions(engine))
 	r.Handle("/metrics", promhttp.Handler())
 	r.Get("/api/openapi.json", getSwaggerJson)
-	r.Mount("/api/v0", api.Handler(apiServer))
+	r.With(logger).Mount("/api/v0", api.Handler(apiServer))
 	return r
 }
 

@@ -29,7 +29,7 @@ func (s SignCertificateHandler) HandleCall(ctx context.Context, chargeStationId 
 		certificateType = *req.CertificateType
 	}
 
-	slog.Info("sign certificate", slog.String("certificateType", string(certificateType)))
+	span.SetAttributes(attribute.String("sign_cert.cert_type", string(certificateType)))
 
 	status := types.GenericStatusEnumTypeRejected
 

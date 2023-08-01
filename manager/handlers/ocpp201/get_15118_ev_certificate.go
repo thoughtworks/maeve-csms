@@ -10,7 +10,6 @@ import (
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
 	types "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
 	"github.com/thoughtworks/maeve-csms/manager/services"
-	"golang.org/x/exp/slog"
 )
 
 type Get15118EvCertificateHandler struct {
@@ -30,7 +29,7 @@ func (g Get15118EvCertificateHandler) HandleCall(ctx context.Context, _ string, 
 		res, err := g.EvCertificateProvider.ProvideCertificate(ctx, req.ExiRequest)
 
 		if err != nil {
-			slog.Error("failed to provide certificate", "err", err)
+			span.SetAttributes(attribute.String("get_ev_cert.error", err.Error()))
 		} else {
 			response = types.Get15118EVCertificateResponseJson{
 				Status:      res.Status,

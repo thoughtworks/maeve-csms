@@ -10,7 +10,6 @@ import (
 
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
 	types "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp16"
-	"golang.org/x/exp/slog"
 	"k8s.io/utils/clock"
 )
 
@@ -24,13 +23,6 @@ func (b BootNotificationHandler) HandleCall(ctx context.Context, chargeStationId
 
 	req := request.(*types.BootNotificationJson)
 
-	var serialNumber string
-	if req.ChargePointSerialNumber != nil {
-		serialNumber = *req.ChargePointSerialNumber
-	} else {
-		serialNumber = "*unknown*"
-	}
-
 	span.SetAttributes(
 		attribute.String("request.status", string(types.BootNotificationResponseJsonStatusAccepted)),
 		attribute.String("boot.vendor", req.ChargePointVendor),
@@ -43,8 +35,6 @@ func (b BootNotificationHandler) HandleCall(ctx context.Context, chargeStationId
 		span.SetAttributes(attribute.String("boot.firmware", *req.FirmwareVersion))
 	}
 
-	slog.Info("booting", slog.String("chargeStationId", chargeStationId),
-		slog.String("serialNumber", serialNumber))
 	return &types.BootNotificationResponseJson{
 		CurrentTime: b.Clock.Now().Format(time.RFC3339),
 		Interval:    b.HeartbeatInterval,

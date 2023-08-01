@@ -13,7 +13,6 @@ import (
 	types "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
 	"github.com/thoughtworks/maeve-csms/manager/services"
 	"github.com/thoughtworks/maeve-csms/manager/store"
-	"golang.org/x/exp/slog"
 )
 
 type AuthorizeHandler struct {
@@ -25,9 +24,6 @@ func (a AuthorizeHandler) HandleCall(ctx context.Context, chargeStationId string
 	span := trace.SpanFromContext(ctx)
 
 	req := request.(*types.AuthorizeRequestJson)
-	slog.Info("checking", slog.String("chargeStationId", chargeStationId),
-		slog.String("idToken", req.IdToken.IdToken),
-		slog.String("idTokenType", string(req.IdToken.Type)))
 
 	span.SetAttributes(
 		attribute.String("authorize.token", req.IdToken.IdToken),
@@ -57,30 +53,27 @@ func (a AuthorizeHandler) HandleCall(ctx context.Context, chargeStationId string
 			}
 			_, err = a.CertificateValidationService.ValidatePEMCertificateChain(ctx, []byte(*req.Certificate), req.IdToken.IdToken)
 			status, certificateStatus = handleCertificateValidationError(err)
+			if err != nil {
+				span.SetAttributes(attribute.String("authorize.cert_error", err.Error()))
+			}
 		}
 
 		if req.Iso15118CertificateHashData != nil {
 			_, err := a.CertificateValidationService.ValidateHashedCertificateChain(ctx, *req.Iso15118CertificateHashData)
 			status, certificateStatus = handleCertificateValidationError(err)
+			if err != nil {
+				span.SetAttributes(attribute.String("authorize.cert_error", err.Error()))
+			}
 		}
 	}
 
-	if status == types.AuthorizationStatusEnumTypeAccepted {
-		slog.Info("charge station authorized", slog.String("chargeStationId", chargeStationId),
-			slog.String("idToken", req.IdToken.IdToken),
-			slog.String("type", string(req.IdToken.Type)))
-	} else {
+	if status != types.AuthorizationStatusEnumTypeAccepted {
 		var certStatus types.AuthorizeCertificateStatusEnumType
 		if certificateStatus != nil {
 			certStatus = *certificateStatus
 		} else {
 			certStatus = types.AuthorizeCertificateStatusEnumTypeNoCertificateAvailable
 		}
-		slog.Warn("charge station not authorized",
-			slog.String("chargeStationId", chargeStationId),
-			slog.String("idToken", req.IdToken.IdToken),
-			slog.String("type", string(req.IdToken.Type)),
-			slog.String("certStatus", string(certStatus)))
 
 		span.SetAttributes(attribute.String("authorize.cert_status", string(certStatus)))
 	}
@@ -110,7 +103,6 @@ func handleCertificateValidationError(err error) (types.AuthorizationStatusEnumT
 			certStatus = types.AuthorizeCertificateStatusEnumTypeCertChainError
 		}
 	} else if err != nil {
-		slog.Error("general validation error", "err", err)
 		status = types.AuthorizationStatusEnumTypeBlocked
 		certStatus = types.AuthorizeCertificateStatusEnumTypeSignatureError
 	}

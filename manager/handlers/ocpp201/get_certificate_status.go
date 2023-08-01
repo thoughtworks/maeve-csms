@@ -10,7 +10,6 @@ import (
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
 	types "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
 	"github.com/thoughtworks/maeve-csms/manager/services"
-	"golang.org/x/exp/slog"
 )
 
 type GetCertificateStatusHandler struct {
@@ -22,12 +21,12 @@ func (g GetCertificateStatusHandler) HandleCall(ctx context.Context, chargeStati
 
 	req := request.(*types.GetCertificateStatusRequestJson)
 
-	slog.Info("Get certificate status", slog.String("serialNumber", req.OcspRequestData.SerialNumber))
+	span.SetAttributes(attribute.String("cert_status.serial_number", req.OcspRequestData.SerialNumber))
 
 	status := types.GetCertificateStatusEnumTypeAccepted
 	ocspResp, err := g.CertificateValidationService.ValidateHashedCertificateChain(ctx, []types.OCSPRequestDataType{req.OcspRequestData})
 	if err != nil {
-		slog.Error("validating hashed certificate chain", "err", err)
+		span.SetAttributes(attribute.String("cert_status.error", err.Error()))
 	}
 	if ocspResp == nil {
 		status = types.GetCertificateStatusEnumTypeFailed

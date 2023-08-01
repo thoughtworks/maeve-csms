@@ -10,7 +10,6 @@ import (
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
 	types "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp16"
 	"github.com/thoughtworks/maeve-csms/manager/store"
-	"golang.org/x/exp/slog"
 )
 
 type AuthorizeHandler struct {
@@ -21,8 +20,6 @@ func (a AuthorizeHandler) HandleCall(ctx context.Context, chargeStationId string
 	span := trace.SpanFromContext(ctx)
 
 	req := request.(*types.AuthorizeJson)
-	slog.Info("checking", slog.String("chargeStationId", chargeStationId),
-		slog.String("idTag", req.IdTag))
 
 	status := types.AuthorizeResponseJsonIdTagInfoStatusInvalid
 	tok, err := a.TokenStore.LookupToken(ctx, req.IdTag)
