@@ -99,4 +99,4 @@ fileignoreconfig:
     checksum: eab0c50edc72d8a53c2a2d0c4238924f9705666dc962a344384d793a501dea50
 scopeconfig:
   - scope: go
-version: ""
+version: ''

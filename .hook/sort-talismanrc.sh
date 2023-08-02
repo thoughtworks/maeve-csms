@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-yq -i '.fileignoreconfig |= sort_by(.filename)' .talismanrc
+yq -y -i '.fileignoreconfig |= sort_by(.filename)' .talismanrc
