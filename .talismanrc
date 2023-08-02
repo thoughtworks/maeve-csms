@@ -95,8 +95,6 @@ fileignoreconfig:
     checksum: b31b2ed998237c77a6cd3501ce4231c2cbe15a2aca68db8715f4f43f9fc7e01c
   - filename: manager/store/inmemory/cert_test.go
     checksum: 535591f9b2a347dd1fc00f07aa3742660c96a636dae8f724c9e2842e09b95356
-  - filename: scripts/generate-tls-cert.sh
-    checksum: eab0c50edc72d8a53c2a2d0c4238924f9705666dc962a344384d793a501dea50
 scopeconfig:
   - scope: go
 version: ''
