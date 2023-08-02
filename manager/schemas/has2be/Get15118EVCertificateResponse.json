@@ -1,0 +1,62 @@
+{
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "$id": "urn:Has2Be:1.3:2019:10:Get15118EVCertificateResponse",
+  "comment": "https://has-to-be.com/wp-content/uploads/2019/11/OCPP-1.6_v1.3-ISO-15118-extension-1.pdf",
+  "definitions": {
+    "Iso15118EVCertificateStatusEnumType": {
+      "description": "Indicates whether the message was processed properly.\r\n",
+      "javaType": "Iso15118EVCertificateStatusEnum",
+      "type": "string",
+      "additionalProperties": false,
+      "enum": [
+        "Accepted",
+        "Failed"
+      ]
+    },
+    "CertificateChainType": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "certificate": {
+          "type": "string",
+          "maxLength": 800
+        },
+        "childCertificate": {
+          "type": "array",
+          "additionalItems": false,
+          "items": {
+            "type": "string",
+            "maxLength": 800
+          },
+          "minItems": 1,
+          "maxItems": 4
+        }
+      },
+      "required": [
+        "certificate"
+      ]
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "status": {
+      "$ref": "#/definitions/Iso15118EVCertificateStatusEnumType"
+    },
+    "exiResponse": {
+      "description": "Raw CertificateInstallationRes response for the EV, Base64 encoded.\r\n",
+      "type": "string",
+      "maxLength": 5600
+    },
+    "contractSignatureCertificateChain": {
+      "$ref": "#/definitions/CertificateChainType"
+    },
+    "saProvisioningCertificateChain": {
+      "$ref": "#/definitions/CertificateChainType"
+    }
+  },
+  "required": [
+    "status",
+    "exiResponse"
+  ]
+}

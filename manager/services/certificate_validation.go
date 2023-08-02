@@ -200,9 +200,20 @@ func (o OnlineCertificateValidationService) validatePEMCertificateChainOCSPStatu
 func (o OnlineCertificateValidationService) performOCSPCheck(ctx context.Context, ocspResponderUrls []string, ocspRequest []byte, issuerCert *x509.Certificate, maxAttempts int) (*string, error) {
 	var ocspResponderUrlCount int
 	if ocspResponderUrls != nil {
+		var ocspResponderUrlsCopy []string
+		for _, url := range ocspResponderUrls {
+			if url != "" {
+				ocspResponderUrlsCopy = append(ocspResponderUrlsCopy, url)
+			}
+		}
+		ocspResponderUrls = ocspResponderUrlsCopy
 		ocspResponderUrlCount = len(ocspResponderUrls)
 	} else {
 		return nil, errors.New("no OCSP servers specified")
+	}
+
+	if len(ocspResponderUrls) == 0 {
+		return nil, nil
 	}
 
 	for attempt := 1; attempt <= maxAttempts; attempt++ {
@@ -215,7 +226,7 @@ func (o OnlineCertificateValidationService) performOCSPCheck(ctx context.Context
 		if errors.As(err, &ocspError) {
 			return ocspResponse, fmt.Errorf("ocsp check status: %d: %w", ocspError, ValidationErrorCertRevoked)
 		}
-		slog.Warn("ocsp check", slog.Int("attempt", attempt), slog.Int("maxAttempts", maxAttempts), err)
+		slog.Warn("ocsp check", slog.Int("attempt", attempt), slog.Int("maxAttempts", maxAttempts), "error", err)
 	}
 
 	return nil, fmt.Errorf("failed to perform ocsp check after %d attempts", maxAttempts)

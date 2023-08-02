@@ -7,12 +7,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/thoughtworks/maeve-csms/manager/ocpp/has2be"
 	"io/fs"
 	"reflect"
 	"time"
 
 	"github.com/santhosh-tekuri/jsonschema"
 	"github.com/thoughtworks/maeve-csms/manager/handlers"
+	handlersHasToBe "github.com/thoughtworks/maeve-csms/manager/handlers/has2be"
 	handlers16 "github.com/thoughtworks/maeve-csms/manager/handlers/ocpp16"
 	handlers201 "github.com/thoughtworks/maeve-csms/manager/handlers/ocpp201"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
@@ -150,6 +152,17 @@ func NewV16Router(emitter Emitter,
 								ResponseSchema: "ocpp201/Get15118EVCertificateResponse.json",
 								Handler: handlers201.Get15118EvCertificateHandler{
 									EvCertificateProvider: certProviderService,
+								},
+							},
+						},
+						"iso15118": { // has2be extensions
+							"Authorize": {
+								NewRequest:     func() ocpp.Request { return new(has2be.AuthorizeRequestJson) },
+								RequestSchema:  "has2be/AuthorizeRequest.json",
+								ResponseSchema: "has2be/AuthorizeResponse.json",
+								Handler: handlersHasToBe.AuthorizeHandler{
+									TokenStore:                   tokenStore,
+									CertificateValidationService: certValidationService,
 								},
 							},
 						},

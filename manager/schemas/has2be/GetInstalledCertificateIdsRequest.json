@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "$id": "urn:Has2Be:1.3:2019:10:GetInstalledCertificateIdsRequest",
+  "comment": "https://has-to-be.com/wp-content/uploads/2019/11/OCPP-1.6_v1.3-ISO-15118-extension-1.pdf",
+  "definitions": {
+    "GetCertificateIdUseEnumType": {
+      "javaType": "GetCertificateIdUseEnum",
+      "type": "string",
+      "additionalProperties": false,
+      "enum": [
+        "V2GRootCertificate",
+        "MORootCertificate",
+        "CSMSRootCertificate",
+        "V2GCertificateChain",
+        "ManufacturerRootCertificate"
+      ]
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "typeOfCertificate": {
+      "description": "Indicates the type of certificates requested. When omitted, all certificate types are requested.\r\n",
+      "type": "array",
+      "additionalItems": false,
+      "items": {
+        "$ref": "#/definitions/GetCertificateIdUseEnumType"
+      },
+      "minItems": 1
+    }
+  }
+}

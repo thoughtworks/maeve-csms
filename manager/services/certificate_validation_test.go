@@ -437,6 +437,86 @@ func TestValidatingHashedCertificateChainWithRevokedCertificate(t *testing.T) {
 	assert.Nil(t, ocspResp)
 }
 
+func TestValidatingHashedCertificateChainWithNoOCSPResponderUrlOnIntermediate(t *testing.T) {
+	ocspResponder := &OCSPResponder{
+		T: t,
+	}
+
+	server := httptest.NewServer(ocspResponder)
+	defer server.Close()
+
+	rootCACerts, intCACert, leafCert := setupOCSPResponder(t, server.URL, ocspResponder)
+
+	validationService := services.OnlineCertificateValidationService{
+		RootCertificates: rootCACerts,
+		MaxOCSPAttempts:  3,
+		HttpClient:       http.DefaultClient,
+	}
+
+	intCAPublicKeyBytes, err := getPublicKeyBytes(intCACert.RawSubjectPublicKeyInfo)
+	require.NoError(t, err)
+	ca2PublicKeyBytes, err := getPublicKeyBytes(rootCACerts[1].RawSubjectPublicKeyInfo)
+	require.NoError(t, err)
+
+	ocspResp, err := validationService.ValidateHashedCertificateChain(context.TODO(), []ocpp201.OCSPRequestDataType{
+		{
+			HashAlgorithm:  "SHA256",
+			IssuerNameHash: hashBytes(leafCert.RawIssuer),
+			IssuerKeyHash:  hashBytes(intCAPublicKeyBytes),
+			ResponderURL:   leafCert.OCSPServer[0],
+			SerialNumber:   leafCert.SerialNumber.Text(16),
+		},
+		{
+			HashAlgorithm:  "SHA256",
+			IssuerNameHash: hashBytes(intCACert.RawIssuer),
+			IssuerKeyHash:  hashBytes(ca2PublicKeyBytes),
+			SerialNumber:   intCACert.SerialNumber.Text(16),
+		},
+	})
+	require.NoError(t, err)
+
+	validateOCSPResponse(t, ocspResp)
+}
+
+func TestValidatingHashedCertificateChainWithNoOCSPResponderUrlOnLeaf(t *testing.T) {
+	ocspResponder := &OCSPResponder{
+		T: t,
+	}
+
+	server := httptest.NewServer(ocspResponder)
+	defer server.Close()
+
+	rootCACerts, intCACert, leafCert := setupOCSPResponder(t, server.URL, ocspResponder)
+
+	validationService := services.OnlineCertificateValidationService{
+		RootCertificates: rootCACerts,
+		MaxOCSPAttempts:  3,
+		HttpClient:       http.DefaultClient,
+	}
+
+	intCAPublicKeyBytes, err := getPublicKeyBytes(intCACert.RawSubjectPublicKeyInfo)
+	require.NoError(t, err)
+	ca2PublicKeyBytes, err := getPublicKeyBytes(rootCACerts[1].RawSubjectPublicKeyInfo)
+	require.NoError(t, err)
+
+	ocspResp, err := validationService.ValidateHashedCertificateChain(context.TODO(), []ocpp201.OCSPRequestDataType{
+		{
+			HashAlgorithm:  "SHA256",
+			IssuerNameHash: hashBytes(leafCert.RawIssuer),
+			IssuerKeyHash:  hashBytes(intCAPublicKeyBytes),
+			SerialNumber:   leafCert.SerialNumber.Text(16),
+		},
+		{
+			HashAlgorithm:  "SHA256",
+			IssuerNameHash: hashBytes(intCACert.RawIssuer),
+			IssuerKeyHash:  hashBytes(ca2PublicKeyBytes),
+			SerialNumber:   intCACert.SerialNumber.Text(16),
+		},
+	})
+	require.NoError(t, err)
+	require.Nil(t, ocspResp)
+}
+
 func getPublicKeyBytes(rawSubjectPublicKeyInfo []byte) ([]byte, error) {
 	var publicKeyInfo struct {
 		Algorithm pkix.AlgorithmIdentifier

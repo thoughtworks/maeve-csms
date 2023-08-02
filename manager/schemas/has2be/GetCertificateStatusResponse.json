@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "$id": "urn:Has2Be:1.3:2019:10:GetCertificateStatusResponse",
+  "comment": "https://has-to-be.com/wp-content/uploads/2019/11/OCPP-1.6_v1.3-ISO-15118-extension-1.pdf",
+  "definitions": {
+    "GetCertificateStatusEnumType": {
+      "description": "This indicates whether the charging station was able to retrieve the OCSP certificate status.\r\n",
+      "javaType": "GetCertificateStatusEnum",
+      "type": "string",
+      "additionalProperties": false,
+      "enum": [
+        "Accepted",
+        "Failed"
+      ]
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "status": {
+      "$ref": "#/definitions/GetCertificateStatusEnumType"
+    },
+    "ocspResult": {
+      "description": "OCSPResponse class as defined in &lt;&lt;ref-ocpp_security_24, IETF RFC 6960&gt;&gt;. DER encoded (as defined in &lt;&lt;ref-ocpp_security_24, IETF RFC 6960&gt;&gt;), and then base64 encoded. MAY only be omitted when status is not Accepted.\r\n",
+      "type": "string",
+      "maxLength": 5500
+    }
+  },
+  "required": [
+    "status"
+  ]
+}

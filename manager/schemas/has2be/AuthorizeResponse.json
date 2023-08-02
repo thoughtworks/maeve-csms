@@ -1,0 +1,68 @@
+{
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "$id": "urn:Has2Be:1.3:2019:10:AuthorizeResponse",
+  "comment": "https://has-to-be.com/wp-content/uploads/2019/11/OCPP-1.6_v1.3-ISO-15118-extension-1.pdf",
+  "definitions": {
+    "AuthorizationStatusEnumType": {
+      "description": "ID_ Token. Status. Authorization_ Status\r\nurn:x-oca:ocpp:uid:1:569372\r\nCurrent status of the ID Token.\r\n",
+      "javaType": "AuthorizationStatusEnum",
+      "type": "string",
+      "additionalProperties": false,
+      "enum": [
+        "Accepted",
+        "Blocked",
+        "ConcurrentTx",
+        "Expired",
+        "Invalid",
+        "NoCredit",
+        "NotAllowedTypeEVSE",
+        "NotAtThisLocation",
+        "NotAtThisTime",
+        "Unknown"
+      ]
+    },
+    "AuthorizeCertificateStatusEnumType": {
+      "description": "Certificate status information. \r\n- if all certificates are valid: return 'Accepted'.\r\n- if one of the certificates was revoked, return 'CertificateRevoked'.\r\n",
+      "javaType": "AuthorizeCertificateStatusEnum",
+      "type": "string",
+      "additionalProperties": false,
+      "enum": [
+        "Accepted",
+        "CertificateRevoked"
+      ]
+    },
+    "IdTokenInfoType": {
+      "description": "ID_ Token\r\nurn:x-oca:ocpp:uid:2:233247\r\nContains status information about an identifier.\r\nIt is advised to not stop charging for a token that expires during charging, as ExpiryDate is only used for caching purposes. If ExpiryDate is not given, the status has no end date.\r\n",
+      "javaType": "IdTokenInfo",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "$ref": "#/definitions/AuthorizationStatusEnumType"
+        },
+        "cacheExpiryDateTime": {
+          "description": "ID_ Token. Expiry. Date_ Time\r\nurn:x-oca:ocpp:uid:1:569373\r\nDate and Time after which the token must be considered invalid.\r\n",
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "status"
+      ]
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "idTokenInfo": {
+      "$ref": "#/definitions/IdTokenInfoType"
+    },
+    "certificateStatus": {
+      "$ref": "#/definitions/AuthorizeCertificateStatusEnumType"
+    }
+  },
+  "required": [
+    "certificateStatus",
+    "idTokenInfo"
+  ]
+}

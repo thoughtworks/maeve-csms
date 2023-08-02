@@ -1,0 +1,77 @@
+{
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "$id": "urn:Has2Be:1.3:2019:10:GetInstalledCertificateIdsResponse",
+  "comment": "https://has-to-be.com/wp-content/uploads/2019/11/OCPP-1.6_v1.3-ISO-15118-extension-1.pdf",
+  "definitions": {
+    "GetInstalledCertificateStatusEnumType": {
+      "description": "Charging Station indicates if it can process the request.\r\n",
+      "javaType": "GetInstalledCertificateStatusEnum",
+      "type": "string",
+      "additionalProperties": false,
+      "enum": [
+        "Accepted",
+        "NotFound"
+      ]
+    },
+    "HashAlgorithmEnumType": {
+      "description": "Used algorithms for the hashes provided.\r\n",
+      "javaType": "HashAlgorithmEnum",
+      "type": "string",
+      "additionalProperties": false,
+      "enum": [
+        "SHA256",
+        "SHA384",
+        "SHA512"
+      ]
+    },
+    "CertificateHashDataType": {
+      "javaType": "CertificateHashData",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hashAlgorithm": {
+          "$ref": "#/definitions/HashAlgorithmEnumType"
+        },
+        "issuerNameHash": {
+          "description": "Hashed value of the Issuer DN (Distinguished Name).\r\n\r\n",
+          "type": "string",
+          "maxLength": 128
+        },
+        "issuerKeyHash": {
+          "description": "Hashed value of the issuers public key\r\n",
+          "type": "string",
+          "maxLength": 128
+        },
+        "serialNumber": {
+          "description": "The serial number of the certificate.\r\n",
+          "type": "string",
+          "maxLength": 40
+        }
+      },
+      "required": [
+        "hashAlgorithm",
+        "issuerNameHash",
+        "issuerKeyHash",
+        "serialNumber"
+      ]
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "status": {
+      "$ref": "#/definitions/GetInstalledCertificateStatusEnumType"
+    },
+    "certificateHashDataChain": {
+      "type": "array",
+      "additionalItems": false,
+      "items": {
+        "$ref": "#/definitions/CertificateHashDataType"
+      },
+      "minItems": 1
+    }
+  },
+  "required": [
+    "status"
+  ]
+}

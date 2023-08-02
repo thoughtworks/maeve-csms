@@ -31,6 +31,8 @@ fileignoreconfig:
     checksum: 297c27a0f612af86cfdce543d5e4a21e60e70f4eb48b57d3c833257bb1b05647
   - filename: manager/cmd/serve.go
     checksum: 7b5688335f7ad1b5339fc7cc8deaf08e10f42e03cbe086810d2bd70567f923c5
+  - filename: manager/handlers/has2be/authorize.go
+    checksum: 7f914b4be35175afb2d3bea1babc80036f3b4cfb94ce38dadeb3a257d2156fbe
   - filename: manager/handlers/ocpp16/data_transfer_test.go
     checksum: ff19ad1feeb979a62c6a53e256ab3fe879bd540242153792b8b1148ae7010c4b
   - filename: manager/handlers/ocpp16/stop_transaction.go
@@ -43,6 +45,8 @@ fileignoreconfig:
     checksum: 880513a5d3f0070619c4890b5aab9fcf10650afc79550a83c1ad9a986c7e7367
   - filename: manager/ocpp/emaid_test.go
     checksum: 9a7e7aa8c3e8c2ea5ea2ad070d4fc734c086fc796bc06148d6db891a413ed4af
+  - filename: manager/ocpp/has2be/authorize_request.go
+    checksum: be25dc1ae4b0ed897ede8396a7544802fb635bb2eadf9da341265a7136aedcb6
   - filename: manager/ocpp/ocpp201/authorize_request.go
     checksum: 0d8a2377b6f329c6c765c9be5f5720c1b6a06de8569be8251747e70e94538b69
   - filename: manager/ocpp/ocpp201/certificate_signed_request.go
@@ -84,7 +88,7 @@ fileignoreconfig:
   - filename: manager/services/certificate_validation_hubject_test.go
     checksum: 100d8f7a7fe642abae94812a2e9f6938f5045bbd22c358b2e0adc684a45698ce
   - filename: manager/services/certificate_validation_test.go
-    checksum: 893e918e122b2dd321bad4a02ee0523f25df1a3b501538e5541f9bbbbc4bd794
+    checksum: 5e207ccc347d453d0352e1dcbc6ca129f9a0b7f1ae8a54469d870845ba046b77
   - filename: manager/services/ev_certificate_provider.go
     checksum: 42480a4243292eb9f5c2324cfaf6760df7b35e7a716591c11a1ecb40574f213f
   - filename: manager/store/firestore/cert_test.go

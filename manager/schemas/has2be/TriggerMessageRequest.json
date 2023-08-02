@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "$id": "urn:Has2Be:1.3:2019:10:TriggerMessageRequest",
+  "comment": "https://has-to-be.com/wp-content/uploads/2019/11/OCPP-1.6_v1.3-ISO-15118-extension-1.pdf",
+  "definitions": {
+    "MessageTriggerEnumType": {
+      "description": "Type of message to be triggered.\r\n",
+      "javaType": "MessageTriggerEnum",
+      "type": "string",
+      "additionalProperties": false,
+      "enum": [
+        "SignChargingStationCertificate",
+        "SignV2GCertificate"
+      ]
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "requestedMessage": {
+      "$ref": "#/definitions/MessageTriggerEnumType"
+    }
+  },
+  "required": [
+    "requestedMessage"
+  ]
+}

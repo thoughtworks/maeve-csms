@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "$id": "urn:Has2Be:1.3:2019:10:Get15118EVCertificateRequest",
+  "comment": "https://has-to-be.com/wp-content/uploads/2019/11/OCPP-1.6_v1.3-ISO-15118-extension-1.pdf",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "15118SchemaVersion": {
+      "description": "Schema version currently used for the 15118 session between EV and Charging Station. Needed for parsing of the EXI stream by the CSMS.\r\n\r\n",
+      "type": "string",
+      "maxLength": 50
+    },
+    "exiRequest": {
+      "description": "Raw CertificateInstallationReq request from EV, Base64 encoded.\r\n",
+      "type": "string",
+      "maxLength": 5500
+    }
+  },
+  "required": [
+    "iso15118SchemaVersion",
+    "exiRequest"
+  ]
+}
