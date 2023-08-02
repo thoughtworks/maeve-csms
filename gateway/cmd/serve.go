@@ -56,7 +56,7 @@ func initProvider(collectorAddr string) (func(context.Context) error, error) {
 			resource.WithTelemetrySDK(),
 			resource.WithAttributes(
 				// the service name used to display traces in backends
-				semconv.ServiceName("maeve-csms-manager"),
+				semconv.ServiceName("maeve-csms-gateway"),
 			),
 		)
 		if err != nil {
