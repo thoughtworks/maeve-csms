@@ -45,6 +45,10 @@ fileignoreconfig:
     checksum: f50f660eddefba27ad7bd433080946b9d090334349a0facf221604448e61a9f3
   - filename: manager/handlers/has2be/authorize.go
     checksum: 7f914b4be35175afb2d3bea1babc80036f3b4cfb94ce38dadeb3a257d2156fbe
+  - filename: manager/handlers/has2be/get_certificate_status.go
+    checksum: b0acc87b2f077a6bf86f768c72e8d6235c41fa0637ff49766e9ab3c9036c2fd7
+  - filename: manager/handlers/has2be/get_certificate_status_test.go
+    checksum: 5695931f0c6c0c50715520142264d3e77591506d0607fbd56a559a1440c11248
   - filename: manager/handlers/ocpp16/data_transfer_test.go
     checksum: ff19ad1feeb979a62c6a53e256ab3fe879bd540242153792b8b1148ae7010c4b
   - filename: manager/handlers/ocpp16/stop_transaction.go
@@ -59,6 +63,8 @@ fileignoreconfig:
     checksum: 9a7e7aa8c3e8c2ea5ea2ad070d4fc734c086fc796bc06148d6db891a413ed4af
   - filename: manager/ocpp/has2be/authorize_request.go
     checksum: be25dc1ae4b0ed897ede8396a7544802fb635bb2eadf9da341265a7136aedcb6
+  - filename: manager/ocpp/has2be/types.go
+    checksum: a39ac33ecb106ed0511aef5f11131c6a73941b04f2e193c415d513a5a48fb47a
   - filename: manager/ocpp/ocpp201/authorize_request.go
     checksum: 0d8a2377b6f329c6c765c9be5f5720c1b6a06de8569be8251747e70e94538b69
   - filename: manager/ocpp/ocpp201/certificate_signed_request.go
