@@ -31,6 +31,16 @@ fileignoreconfig:
     checksum: 297c27a0f612af86cfdce543d5e4a21e60e70f4eb48b57d3c833257bb1b05647
   - filename: manager/cmd/serve.go
     checksum: 7b5688335f7ad1b5339fc7cc8deaf08e10f42e03cbe086810d2bd70567f923c5
+  - filename: manager/config/base_config_test.go
+    checksum: 1da75b3709b5bf69b251690199fc2e19fbb4d5c1996b703f2c01fb23b140ee1b
+  - filename: manager/config/config.go
+    checksum: e82e6fbcd7f9076abc6dc7582e8ca79094f5e1637fc428fe636a6080a670e13a
+  - filename: manager/config/settings_config.go
+    checksum: cd96899088c1ab4ae43ff2635bb9a9b97b64d1e624acf4a0ff8bcca1c2f08c46
+  - filename: manager/config/testdata/config.toml
+    checksum: 609645675cbd566896921b9f80861b142048c26c4e322f0dee7ccb9d87461625
+  - filename: manager/config/testdata/root_ca.pem
+    checksum: f50f660eddefba27ad7bd433080946b9d090334349a0facf221604448e61a9f3
   - filename: manager/handlers/has2be/authorize.go
     checksum: 7f914b4be35175afb2d3bea1babc80036f3b4cfb94ce38dadeb3a257d2156fbe
   - filename: manager/handlers/ocpp16/data_transfer_test.go
@@ -84,13 +94,15 @@ fileignoreconfig:
   - filename: manager/services/certificate_signer_test.go
     checksum: 487797450a17f27cf8190d00a85d13096ec4e9e9ee1ab1c7c685f3c8a387280d
   - filename: manager/services/certificate_validation.go
-    checksum: d54492d1c7105ca8dbc3273eeac29b522205498c4eec67880f019d04b551df1f
+    checksum: c56dba57d1502acbecb680f97f6efbbd42fda3fde3ca5f54e63da883684db610
   - filename: manager/services/certificate_validation_hubject_test.go
     checksum: 100d8f7a7fe642abae94812a2e9f6938f5045bbd22c358b2e0adc684a45698ce
   - filename: manager/services/certificate_validation_test.go
     checksum: 5e207ccc347d453d0352e1dcbc6ca129f9a0b7f1ae8a54469d870845ba046b77
   - filename: manager/services/ev_certificate_provider.go
     checksum: 42480a4243292eb9f5c2324cfaf6760df7b35e7a716591c11a1ecb40574f213f
+  - filename: manager/services/http_auth.go
+    checksum: e917c19aff7b192c3758a21030afae51eddd887937d8b8e95aa78589a027c774
   - filename: manager/store/firestore/cert_test.go
     checksum: 5882e08beca19cfcaab9abda418c87aa13251b49424817e9c3a54a4be4bb268c
   - filename: manager/store/firestore/cs.go

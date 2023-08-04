@@ -1,0 +1,30 @@
+[api]
+addr = ":9410"
+
+[mqtt]
+urls = ["mqtt://mqtt:1883"]
+
+[storage]
+type = "firestore"
+firestore.project_id = "*detect-project-id*"
+
+[contract_cert_validator]
+type = "ocsp"
+
+[contract_cert_validator.ocsp.root_certs]
+type = "opcp"
+opcp.url = "https://open.plugncharge-test.hubject.com/mo/cacerts/ISO15118-2"
+opcp.auth.type = "env_token"
+opcp.auth.env_token.variable = "MO_OPCP_TOKEN"
+
+[contract_cert_provider]
+type = "opcp"
+opcp.url = "https://open.plugncharge-test.hubject.com"
+opcp.auth.type = "env_token"
+opcp.auth.env_token.variable = "MO_OPCP_TOKEN"
+
+[charge_station_cert_provider]
+type = "opcp"
+opcp.url = "https://open.plugncharge-test.hubject.com"
+opcp.auth.type = "env_token"
+opcp.auth.env_token.variable = "CSO_OPCP_TOKEN"

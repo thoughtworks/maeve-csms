@@ -12,8 +12,8 @@ import (
 	"os"
 )
 
-type RootCertificateRetrieverService interface {
-	RetrieveCertificates(ctx context.Context) ([]*x509.Certificate, error)
+type RootCertificateProviderService interface {
+	ProvideCertificates(ctx context.Context) ([]*x509.Certificate, error)
 }
 
 type FileReader interface {
@@ -32,7 +32,7 @@ type FileRootCertificateRetrieverService struct {
 	FileReader FileReader
 }
 
-func (s FileRootCertificateRetrieverService) RetrieveCertificates(ctx context.Context) (certs []*x509.Certificate, e error) {
+func (s FileRootCertificateRetrieverService) ProvideCertificates(ctx context.Context) (certs []*x509.Certificate, e error) {
 	for _, pemFile := range s.FilePaths {
 		bytes, e := s.FileReader.ReadFile(pemFile)
 		if e != nil {
@@ -55,7 +55,7 @@ type OpcpRootCertificateRetrieverService struct {
 	HttpClient     *http.Client
 }
 
-func (s OpcpRootCertificateRetrieverService) RetrieveCertificates(ctx context.Context) (certs []*x509.Certificate, e error) {
+func (s OpcpRootCertificateRetrieverService) ProvideCertificates(ctx context.Context) (certs []*x509.Certificate, e error) {
 	body, err := s.retrieveCertificatesFromUrl(ctx)
 	if err != nil {
 		return nil, err

@@ -12,6 +12,11 @@ import (
 	"github.com/thoughtworks/maeve-csms/manager/store/firestore"
 )
 
+var (
+	storageEngine string
+	gcloudProject string
+)
+
 var long = `Get transactions from the transaction store.
 Requires an even number of arguments in the format "cs-id transaction-id".`
 

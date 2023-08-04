@@ -188,3 +188,9 @@ func encodeLeafAndChain(leaf, chain []byte) (string, error) {
 
 	return string(pemBytes), nil
 }
+
+type DefaultCpoCertificateSignerService struct{}
+
+func (n DefaultCpoCertificateSignerService) SignCertificate(context.Context, CertificateType, string) (pemEncodedCertificateChain string, err error) {
+	return "", fmt.Errorf("not implemented")
+}

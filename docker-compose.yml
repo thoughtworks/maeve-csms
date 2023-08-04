@@ -89,24 +89,20 @@ services:
     environment:
       ENVIRONMENT: dev
       FIRESTORE_EMULATOR_HOST: firestore:8080
+      MO_OPCP_TOKEN: "${MO_OPCP_TOKEN}"
+      CSO_OPCP_TOKEN: "${CSO_OPCP_TOKEN}"
     command:
       - "serve"
-      - "--api-addr"
-      - ":9410"
-      - "--mqtt-addr"
-      - "mqtt://mqtt:1883"
-      - "--cso-opcp-token"
-      - "${CSO_OPCP_TOKEN}"
-      - "--mo-opcp-token"
-      - "${MO_OPCP_TOKEN}"
-      - "--storage-engine"
-      - "${STORAGE_ENGINE:-firestore}"
-      - "--mo-root-certificate-pool"
-      - "https://open.plugncharge-test.hubject.com/mo/cacerts/ISO15118-2"
+      - "-c"
+      - "/config/config.toml"
     volumes:
       - type: bind
         source: ./config/certificates
         target: /certificates
+        read_only: true
+      - type: bind
+        source: ./config/manager
+        target: /config
         read_only: true
     expose:
       - "9410"

@@ -11,6 +11,7 @@ require (
 	github.com/go-chi/render v1.0.2
 	github.com/google/uuid v1.3.0
 	github.com/mochi-co/mqtt/v2 v2.2.13
+	github.com/pelletier/go-toml/v2 v2.0.9
 	github.com/prometheus/client_golang v1.15.1
 	github.com/rodaine/table v1.1.0
 	github.com/rs/cors v1.9.0
@@ -101,7 +102,6 @@ require (
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0-rc2 // indirect
 	github.com/opencontainers/runc v1.1.5 // indirect
-	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
 	github.com/perimeterx/marshmallow v1.1.4 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect

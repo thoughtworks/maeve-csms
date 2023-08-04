@@ -1,0 +1,45 @@
+[api]
+addr = ":9410"
+
+[mqtt]
+urls = ["mqtt://127.0.0.1:1883"]
+prefix = "cs"
+group = "manager"
+
+[observability]
+log_format = "text"
+otel_collector_addr = "localhost:4317"
+tls_keylog_file = "/keylog/manager.log"
+
+[storage]
+type = "firestore"
+firestore.project_id = "*detect-project-id*"
+
+[contract_cert_validator]
+type = "ocsp"
+ocsp.max_attempts = 3
+
+[contract_cert_validator.ocsp.root_certs]
+type = "opcp"
+opcp.url = "https://open.plugncharge-test.hubject.com"
+opcp.auth.type = "env_token"
+opcp.auth.env_token.variable = "RCP_TOKEN"
+opcp.cache.file = "/certs/root_certs.json"
+opcp.cache.ttl = "24h"
+
+[contract_cert_provider]
+type = "opcp"
+opcp.url = "https://open.plugncharge-test.hubject.com"
+opcp.auth.type = "env_token"
+opcp.auth.env_token.variable = "EST_TOKEN"
+
+[charge_station_cert_provider]
+type = "opcp"
+opcp.url = "https://open.plugncharge-test.hubject.com"
+opcp.auth.type = "hubject_test_token"
+opcp.auth.hubject_test_token.url = "https://hubject.stoplight.io/docs/open-plugncharge/6bb8b3bc79c2e-authorization-token"
+opcp.auth.hubject_test_token.cache.file = "/tmp/hubject_token.txt"
+opcp.auth.hubject_test_token.cache.ttl = "1h"
+
+[tariff_service]
+type = "kwh"

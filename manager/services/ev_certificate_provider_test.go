@@ -6,7 +6,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"go.opentelemetry.io/otel/trace"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -88,8 +87,6 @@ func certificateInstallationResponse(request, exiResponse string) string {
 }
 
 func TestEvCertificateProvider(t *testing.T) {
-	tracer := trace.NewNoopTracerProvider().Tracer("test")
-
 	hubject := newOtherHubjectHttpHandler()
 
 	server := httptest.NewServer(&hubject)
@@ -98,7 +95,6 @@ func TestEvCertificateProvider(t *testing.T) {
 	provider := services.OpcpEvCertificateProvider{
 		BaseURL:     server.URL,
 		BearerToken: "TestToken",
-		Tracer:      tracer,
 	}
 
 	response, err := provider.ProvideCertificate(context.Background(), "valid")
@@ -109,8 +105,6 @@ func TestEvCertificateProvider(t *testing.T) {
 }
 
 func TestEvCertificateProviderWithFlakyResponses(t *testing.T) {
-	tracer := trace.NewNoopTracerProvider().Tracer("test")
-
 	hubject := newOtherHubjectHttpHandler()
 
 	server := httptest.NewServer(&hubject)
@@ -119,7 +113,6 @@ func TestEvCertificateProviderWithFlakyResponses(t *testing.T) {
 	provider := services.OpcpEvCertificateProvider{
 		BaseURL:     server.URL,
 		BearerToken: "TestToken",
-		Tracer:      tracer,
 	}
 
 	response, err := provider.ProvideCertificate(context.Background(), "flaky")
@@ -130,8 +123,6 @@ func TestEvCertificateProviderWithFlakyResponses(t *testing.T) {
 }
 
 func TestEvCertificateProviderFailureCases(t *testing.T) {
-	tracer := trace.NewNoopTracerProvider().Tracer("test")
-
 	tests := map[string]struct {
 		token      string
 		exiRequest string
@@ -151,7 +142,6 @@ func TestEvCertificateProviderFailureCases(t *testing.T) {
 			provider := services.OpcpEvCertificateProvider{
 				BaseURL:     server.URL,
 				BearerToken: tc.token,
-				Tracer:      tracer,
 			}
 
 			response, err := provider.ProvideCertificate(context.Background(), tc.exiRequest)

@@ -65,7 +65,7 @@ func TestFileMoRootCertificateRetrievalServiceRetrieveCertificates(t *testing.T)
 		FileReader: DummyFileReader{},
 	}
 
-	certs, e := fileRetrievalService.RetrieveCertificates(context.TODO())
+	certs, e := fileRetrievalService.ProvideCertificates(context.TODO())
 	assert.NoError(t, e)
 	assert.Equal(t, "Thoughtworks", certs[0].Issuer.CommonName)
 }
@@ -81,7 +81,7 @@ func TestOpcpMoRootCertificateRetrievalServiceRetrieveCertificatesNotAuthorised(
 
 	defer server.Close()
 
-	_, err := service.RetrieveCertificates(context.TODO())
+	_, err := service.ProvideCertificates(context.TODO())
 
 	var httpError HttpError
 	assert.ErrorAs(t, err, &httpError)
@@ -98,7 +98,7 @@ func TestOpcpMoRootCertificateRetrievalServiceRetrieveCertificates(t *testing.T)
 	}
 	defer server.Close()
 
-	result, err := service.RetrieveCertificates(context.TODO())
+	result, err := service.ProvideCertificates(context.TODO())
 
 	require.NoError(t, err)
 

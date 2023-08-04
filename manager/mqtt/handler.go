@@ -55,6 +55,12 @@ func WithMqttBrokerUrl(brokerUrl *url.URL) HandlerOpt {
 	}
 }
 
+func WithMqttBrokerUrls(brokerUrls []*url.URL) HandlerOpt {
+	return func(h *Handler) {
+		h.mqttBrokerUrls = brokerUrls
+	}
+}
+
 func WithMqttPrefix(mqttPrefix string) HandlerOpt {
 	return func(h *Handler) {
 		h.mqttPrefix = mqttPrefix
@@ -165,7 +171,7 @@ func ensureDefaults(h *Handler) {
 		h.clock = clock.RealClock{}
 	}
 	if h.certValidationService == nil {
-		h.certValidationService = services.OnlineCertificateValidationService{
+		h.certValidationService = &services.OnlineCertificateValidationService{
 			HttpClient: http.DefaultClient,
 		}
 	}

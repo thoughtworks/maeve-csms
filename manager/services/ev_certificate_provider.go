@@ -26,7 +26,6 @@ type OpcpEvCertificateProvider struct {
 	BaseURL     string
 	BearerToken string
 	HttpClient  *http.Client
-	Tracer      trace.Tracer
 }
 
 type EvCertificate15118Response struct {
@@ -69,7 +68,7 @@ func (h OpcpEvCertificateProvider) ProvideCertificate(ctx context.Context, exiRe
 		return EvCertificate15118Response{}, fmt.Errorf("marshalling body: %w", err)
 	}
 
-	resp, err := withRetries(ctx, h.Tracer, func(fnCtx context.Context) (*http.Response, error) {
+	resp, err := withRetries(ctx, func(fnCtx context.Context) (*http.Response, error) {
 		req, err := h.moRequest(fnCtx, requestUrl, marshalledBody)
 		if err != nil {
 			return &http.Response{}, fmt.Errorf("requesting certificate: %w", err)
@@ -143,8 +142,9 @@ func (h OpcpEvCertificateProvider) moRequest(ctx context.Context, requestUrl str
 
 type retryFunc func(context.Context) (*http.Response, error)
 
-func withRetries(ctx context.Context, tracer trace.Tracer, action retryFunc, attempts int) (*http.Response, error) {
-	newCtx, span := tracer.Start(ctx, "get_signed_contract_data")
+func withRetries(ctx context.Context, action retryFunc, attempts int) (*http.Response, error) {
+	span := trace.SpanFromContext(ctx)
+	newCtx, span := span.TracerProvider().Tracer("manager").Start(ctx, "get_signed_contract_data")
 	defer span.End()
 
 	var lastErr error
@@ -173,4 +173,12 @@ func withRetries(ctx context.Context, tracer trace.Tracer, action retryFunc, att
 	}
 
 	return &http.Response{}, lastErr
+}
+
+type DefaultEvCertificateProvider struct{}
+
+func (d DefaultEvCertificateProvider) ProvideCertificate(context.Context, string) (EvCertificate15118Response, error) {
+	return EvCertificate15118Response{
+		Status: ocpp201.Iso15118EVCertificateStatusEnumTypeFailed,
+	}, errors.New("not implemented")
 }
