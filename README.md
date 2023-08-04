@@ -66,10 +66,11 @@ $ curl http://localhost:9410/api/v0/token -H 'content-type: application/json' -d
 
 ## Configuration
 
-All configuration in the system is currently through command-line flags. The available flags for each
-component can be viewed using the `-h` flag. The configuration is mostly limited to connection details for the
-various components and their dependencies. As mentioned in [Getting started](#getting-started) the allowed charge
-stations and tokens are currently hard-coded in the server start up commands.
+The gateway is configured through command-line flags. The available flags can be viewed using the `-h` flag. 
+
+The manager is configured through a TOML configuration file. An example configuration file can be found in 
+[./config/manager/config.toml](./config/manager/config.toml). Details of the available configuration options
+can be found in [./manager/config/README.md](./manager/config/README.md).
 
 ## Contributing
 
