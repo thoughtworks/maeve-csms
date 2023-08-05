@@ -102,7 +102,11 @@ fileignoreconfig:
   - filename: manager/services/ev_certificate_provider.go
     checksum: 42480a4243292eb9f5c2324cfaf6760df7b35e7a716591c11a1ecb40574f213f
   - filename: manager/services/http_auth.go
-    checksum: e917c19aff7b192c3758a21030afae51eddd887937d8b8e95aa78589a027c774
+    checksum: 22109b756999ae2c08514482d06d47d06948c08957327eb9b7b7acc6108fcafb
+  - filename: manager/services/root_certificate_provider.go
+    checksum: 2a6600b180491790f406abfd5feb1e5325bf06c2632dfd62d8652fc62151ad9b
+  - filename: manager/services/testdata/root_ca.pem
+    checksum: b51bd1be395933cf9ef4548e20c3ba7bddf8ff81d69343e6ebae2c28de21a79b
   - filename: manager/store/firestore/cert_test.go
     checksum: 5882e08beca19cfcaab9abda418c87aa13251b49424817e9c3a54a4be4bb268c
   - filename: manager/store/firestore/cs.go

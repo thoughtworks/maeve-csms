@@ -210,10 +210,8 @@ func getContractCertValidator(ctx context.Context, cfg *ContractCertValidatorCon
 func getRootCertificateProvider(ctx context.Context, cfg *RootCertProviderConfig, httpClient *http.Client) (rootCertificateProvider services.RootCertificateProviderService, err error) {
 	switch cfg.Type {
 	case "file":
-		fileReader := services.RealFileReader{}
 		rootCertificateProvider = services.FileRootCertificateRetrieverService{
-			FilePaths:  cfg.File.FileNames,
-			FileReader: fileReader,
+			FilePaths: cfg.File.FileNames,
 		}
 	case "opcp":
 		httpAuth, err := getHttpAuthService(ctx, &cfg.Opcp.HttpAuth)
@@ -221,21 +219,10 @@ func getRootCertificateProvider(ctx context.Context, cfg *RootCertProviderConfig
 			return nil, fmt.Errorf("create http auth service: %w", err)
 		}
 
-		// temporary hack to get the token from the service
-		r, err := http.NewRequest(http.MethodGet, "http://example.com", nil)
-		if err != nil {
-			return nil, fmt.Errorf("create http request: %w", err)
-		}
-		err = httpAuth.Authenticate(r)
-		if err != nil {
-			return nil, fmt.Errorf("get http token: %w", err)
-		}
-		token := r.Header.Get("x-api-key")
-
 		rootCertificateProvider = services.OpcpRootCertificateRetrieverService{
-			MoRootCertPool: cfg.Opcp.Url,
-			MoOPCPToken:    token, // TODO: change to take an HttpAuthService!
-			HttpClient:     httpClient,
+			BaseURL:         cfg.Opcp.Url,
+			HttpAuthService: httpAuth,
+			HttpClient:      httpClient,
 		}
 	default:
 		return nil, fmt.Errorf("unknown root certificate provider type: %s", cfg.Type)

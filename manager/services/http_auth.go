@@ -37,3 +37,20 @@ func (e *EnvTokenHttpAuthService) Authenticate(r *http.Request) error {
 
 	return nil
 }
+
+type FixedTokenHttpAuthService struct {
+	token string
+}
+
+func NewFixedTokenHttpAuthService(token string) *FixedTokenHttpAuthService {
+	return &FixedTokenHttpAuthService{
+		token: token,
+	}
+}
+
+func (f *FixedTokenHttpAuthService) Authenticate(r *http.Request) error {
+	r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", f.token))
+	r.Header.Set("X-API-Key", f.token)
+
+	return nil
+}
