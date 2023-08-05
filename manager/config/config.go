@@ -120,17 +120,17 @@ func Configure(ctx context.Context, cfg *BaseConfig) (c *Config, err error) {
 		return nil, err
 	}
 
-	c.ContractCertProviderService, err = getContractCertProvider(ctx, &cfg.ContractCertProvider, httpClient)
+	c.ContractCertProviderService, err = getContractCertProvider(&cfg.ContractCertProvider, httpClient)
 	if err != nil {
 		return nil, err
 	}
 
-	c.ChargeStationCertProviderService, err = getChargeStationCertProvider(ctx, &cfg.ChargeStationCertProvider, httpClient)
+	c.ChargeStationCertProviderService, err = getChargeStationCertProvider(&cfg.ChargeStationCertProvider, httpClient)
 	if err != nil {
 		return nil, err
 	}
 
-	c.TariffService, err = getTariffService(ctx, &cfg.TariffService)
+	c.TariffService, err = getTariffService(&cfg.TariffService)
 	if err != nil {
 		return nil, err
 	}
@@ -184,7 +184,7 @@ func getContractCertValidator(ctx context.Context, cfg *ContractCertValidatorCon
 	switch cfg.Type {
 	case "ocsp":
 		var rootCertificateProvider services.RootCertificateProviderService
-		rootCertificateProvider, err = getRootCertificateProvider(ctx, &cfg.Ocsp.RootCertProvider, httpClient)
+		rootCertificateProvider, err = getRootCertificateProvider(&cfg.Ocsp.RootCertProvider, httpClient)
 		if err != nil {
 			return nil, fmt.Errorf("create root certificate provider: %w", err)
 		}
@@ -207,14 +207,14 @@ func getContractCertValidator(ctx context.Context, cfg *ContractCertValidatorCon
 	return
 }
 
-func getRootCertificateProvider(ctx context.Context, cfg *RootCertProviderConfig, httpClient *http.Client) (rootCertificateProvider services.RootCertificateProviderService, err error) {
+func getRootCertificateProvider(cfg *RootCertProviderConfig, httpClient *http.Client) (rootCertificateProvider services.RootCertificateProviderService, err error) {
 	switch cfg.Type {
 	case "file":
 		rootCertificateProvider = services.FileRootCertificateRetrieverService{
 			FilePaths: cfg.File.FileNames,
 		}
 	case "opcp":
-		httpAuth, err := getHttpAuthService(ctx, &cfg.Opcp.HttpAuth)
+		httpAuth, err := getHttpAuthService(&cfg.Opcp.HttpAuth)
 		if err != nil {
 			return nil, fmt.Errorf("create http auth service: %w", err)
 		}
@@ -231,10 +231,10 @@ func getRootCertificateProvider(ctx context.Context, cfg *RootCertProviderConfig
 	return
 }
 
-func getContractCertProvider(ctx context.Context, cfg *ContractCertProviderConfig, httpClient *http.Client) (evCertificateProvider services.EvCertificateProvider, err error) {
+func getContractCertProvider(cfg *ContractCertProviderConfig, httpClient *http.Client) (evCertificateProvider services.EvCertificateProvider, err error) {
 	switch cfg.Type {
 	case "opcp":
-		httpAuth, err := getHttpAuthService(ctx, &cfg.Opcp.HttpAuth)
+		httpAuth, err := getHttpAuthService(&cfg.Opcp.HttpAuth)
 		if err != nil {
 			return nil, fmt.Errorf("create http auth service: %w", err)
 		}
@@ -264,10 +264,10 @@ func getContractCertProvider(ctx context.Context, cfg *ContractCertProviderConfi
 	return
 }
 
-func getChargeStationCertProvider(ctx context.Context, cfg *ChargeStationCertProviderConfig, httpClient *http.Client) (chargeStationCertProvider services.CertificateSignerService, err error) {
+func getChargeStationCertProvider(cfg *ChargeStationCertProviderConfig, httpClient *http.Client) (chargeStationCertProvider services.CertificateSignerService, err error) {
 	switch cfg.Type {
 	case "opcp":
-		httpAuth, err := getHttpAuthService(ctx, &cfg.Opcp.HttpAuth)
+		httpAuth, err := getHttpAuthService(&cfg.Opcp.HttpAuth)
 		if err != nil {
 			return nil, fmt.Errorf("create http auth service: %w", err)
 		}
@@ -298,10 +298,12 @@ func getChargeStationCertProvider(ctx context.Context, cfg *ChargeStationCertPro
 	return
 }
 
-func getHttpAuthService(ctx context.Context, cfg *HttpAuthConfig) (httpAuthService services.HttpAuthService, err error) {
+func getHttpAuthService(cfg *HttpAuthConfig) (httpAuthService services.HttpAuthService, err error) {
 	switch cfg.Type {
 	case "env_token":
 		httpAuthService = services.NewEnvTokenHttpAuthService(cfg.EnvToken.EnvVar)
+	case "fixed_token":
+		httpAuthService = services.NewFixedTokenHttpAuthService(cfg.FixedToken.Token)
 	default:
 		return nil, fmt.Errorf("unknown http auth service type: %s", cfg.Type)
 	}
@@ -309,7 +311,7 @@ func getHttpAuthService(ctx context.Context, cfg *HttpAuthConfig) (httpAuthServi
 	return
 }
 
-func getTariffService(ctx context.Context, cfg *TariffServiceConfig) (tariffService services.TariffService, err error) {
+func getTariffService(cfg *TariffServiceConfig) (tariffService services.TariffService, err error) {
 	switch cfg.Type {
 	case "kwh":
 		tariffService = services.BasicKwhTariffService{}

@@ -145,6 +145,7 @@ There are several implementations of RootCertProvider:
 
 There are several implementation of HttpAuthService:
 * [`env_token`](#environment-token-auth-service) - token is read from an environment variable
+* [`fixed_token`](#fixed-token-auth-service) - token is read from the configuration
 * [`hubject_test_token`](#hubject-test-token-auth-service) - token is scraped from the Hubject test environment authorization page
 
 #### Environment token auth service
@@ -152,6 +153,12 @@ There are several implementation of HttpAuthService:
 | Key      | Type   | Description                      |
 |----------|--------|----------------------------------|
 | variable | string | Name of the environment variable |
+
+#### Fixed token auth service
+
+| Key   | Type   | Description     |
+|-------|--------|-----------------|
+| token | string | The token value |
 
 #### Hubject test token auth service
 
