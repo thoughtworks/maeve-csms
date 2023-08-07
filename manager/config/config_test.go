@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/thoughtworks/maeve-csms/manager/config"
 	"net/url"
+	"os"
 	"testing"
 	"time"
 )
@@ -46,6 +47,8 @@ func TestConfigure(t *testing.T) {
 }
 
 func TestConfigureFirestoreStorage(t *testing.T) {
+	_ = os.Setenv("FIRESTORE_EMULATOR_HOST", "localhost:8080")
+
 	cfg := &config.DefaultConfig
 	cfg.ContractCertValidator.Ocsp.RootCertProvider.File.FileNames = []string{"testdata/root_ca.pem"}
 	cfg.Storage.Type = "firestore"
