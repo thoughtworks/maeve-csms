@@ -77,7 +77,7 @@ go test ./... --tags=integration
 
 ## How to report a bug and track issues
 
-Bugs are reported and tracked via [GitHub issues](https://github.com/twlabs/maeve-csms/issues). Please use this platform
+Bugs are reported and tracked via [GitHub issues](https://github.com/thoughtworks/maeve-csms/issues). Please use this platform
 to report any issues to our community.
 
 When reporting a bug, please provide the following information about your environment setup:
@@ -97,7 +97,7 @@ Please follow these steps to submit your changes:
 *Note: While we generally follow a pull request model for contributions, contributors from the core team who are more
 familiar with the project and the component external interfaces are welcome to follow trunk-based development.*
 
-1. Fork the repository by clicking the "Fork" button on the [repository's page](https://github.com/twlabs/maeve-csms).
+1. Fork the repository by clicking the "Fork" button on the [repository's page](https://github.com/thoughtworks/maeve-csms).
 
 2. Work on your own repository fork following our guidelines listed on this page until you are satisfied with your
    work (e.g. a feature has been completed, or a bug is now fixed)
@@ -135,7 +135,7 @@ contributors what your change is about.
 This will us keep commits small and centered around something specific we are working on.
 
 For example, you can check
-out [this commit](https://github.com/twlabs/maeve-csms/commit/2c64552a689f185728566c841bfa7609469015f5) as a reference
+out [this commit](https://github.com/thoughtworks/maeve-csms/commit/2c64552a689f185728566c841bfa7609469015f5) as a reference
 to what a good commit looks like.
 
 _Please note that all verbs should be at the present tense e.g. Add / ~~Adding~~ / ~~Added~~ ._

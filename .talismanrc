@@ -2,7 +2,7 @@ fileignoreconfig:
   - filename: .gitignore
     checksum: 66a920c9d4e428e6066e074d3375dc1149500f7e275041e939c92eddd751755c
   - filename: CONTRIBUTING.md
-    checksum: 75534cf22b02aef4e54959044a33d16bd2532383fe4bafdcf8585aed58f10eaf
+    checksum: cdbde511dee737388ba023585fbe3f923af5655e68ad5c21e70b1ced74e73dad
   - filename: README.md
     checksum: 31e36953a79714f038a16dc3c36365434aea5237bbb5b7b3fdc4276e92edc82e
   - filename: config/envoy/envoy.yaml
