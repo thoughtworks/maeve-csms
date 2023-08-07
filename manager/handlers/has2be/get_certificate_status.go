@@ -24,8 +24,6 @@ func (g GetCertificateStatusHandler) HandleCall(ctx context.Context, chargeStati
 
 	span.SetAttributes(attribute.String("cert_status.serial_number", req.OcspRequestData.SerialNumber))
 
-	status := types.GetCertificateStatusEnumTypeAccepted
-
 	ocpp201RequestData := ocpp201.OCSPRequestDataType{
 		HashAlgorithm:  ocpp201.HashAlgorithmEnumType(req.OcspRequestData.HashAlgorithm),
 		IssuerKeyHash:  req.OcspRequestData.IssuerKeyHash,
@@ -37,6 +35,7 @@ func (g GetCertificateStatusHandler) HandleCall(ctx context.Context, chargeStati
 		ocpp201RequestData.ResponderURL = *req.OcspRequestData.ResponderURL
 	}
 
+	status := types.GetCertificateStatusEnumTypeAccepted
 	ocspResp, err := g.CertificateValidationService.ValidateHashedCertificateChain(ctx, []ocpp201.OCSPRequestDataType{ocpp201RequestData})
 	if err != nil {
 		span.SetAttributes(attribute.String("cert_status.error", err.Error()))
