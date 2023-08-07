@@ -13,7 +13,7 @@ type = "ocsp"
 
 [contract_cert_validator.ocsp.root_certs]
 type = "opcp"
-opcp.url = "https://open.plugncharge-test.hubject.com/mo/cacerts/ISO15118-2"
+opcp.url = "https://open.plugncharge-test.hubject.com"
 opcp.auth.type = "env_token"
 opcp.auth.env_token.variable = "MO_OPCP_TOKEN"
 
