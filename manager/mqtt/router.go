@@ -166,7 +166,7 @@ func NewV16Router(emitter Emitter,
 								},
 							},
 							"GetCertificateStatus": {
-								NewRequest:     func() ocpp.Request { return new(has2be.AuthorizeRequestJson) },
+								NewRequest:     func() ocpp.Request { return new(has2be.GetCertificateStatusRequestJson) },
 								RequestSchema:  "has2be/GetCertificateStatusRequest.json",
 								ResponseSchema: "has2be/GetCertificateStatusResponse.json",
 								Handler:        handlersHasToBe.GetCertificateStatusHandler{},
