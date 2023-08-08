@@ -89,8 +89,6 @@ services:
     environment:
       ENVIRONMENT: dev
       FIRESTORE_EMULATOR_HOST: firestore:8080
-      MO_OPCP_TOKEN: "${MO_OPCP_TOKEN}"
-      CSO_OPCP_TOKEN: "${CSO_OPCP_TOKEN}"
     command:
       - "serve"
       - "-c"

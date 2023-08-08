@@ -7,6 +7,8 @@ fileignoreconfig:
     checksum: 31e36953a79714f038a16dc3c36365434aea5237bbb5b7b3fdc4276e92edc82e
   - filename: config/envoy/envoy.yaml
     checksum: 90b8cf1a728636d65356a9d0041cc853024f5847e903ad093a0e032279b29429
+  - filename: config/manager/config.toml
+    checksum: 103e08cb1d9507cbeb377f4212606e52375d2f77c079aaad7465873ebb5fdd98
   - filename: docker-compose.yml
     checksum: bebfd6c63f4d2a688fdda876093b7f4a95e38c331cb70bcec548b43b80c93cd7
   - filename: gateway/cmd/serve.go
