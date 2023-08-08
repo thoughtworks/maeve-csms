@@ -9,6 +9,9 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
+	"go.opentelemetry.io/otel/codes"
+	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
+	"go.opentelemetry.io/otel/trace"
 	"io"
 	"k8s.io/utils/clock"
 	"net/http"
@@ -141,9 +144,9 @@ type OpcpRootCertificateProviderService struct {
 }
 
 func (s OpcpRootCertificateProviderService) ProvideCertificates(ctx context.Context) (certs []*x509.Certificate, err error) {
-	body, err := s.retrieveCertificatesFromUrl(ctx)
+	body, err := s.retrieveCertificatesFromUrlWithRetry(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to retrieve certificates from url: %w", err)
 	}
 
 	var rootCertificates OpcpRootCertificateReturnType
@@ -167,13 +170,30 @@ func (s OpcpRootCertificateProviderService) ProvideCertificates(ctx context.Cont
 	return
 }
 
-func (s OpcpRootCertificateProviderService) retrieveCertificatesFromUrl(ctx context.Context) ([]byte, error) {
+func (s OpcpRootCertificateProviderService) retrieveCertificatesFromUrlWithRetry(ctx context.Context) ([]byte, error) {
+	span := trace.SpanFromContext(ctx)
+	newCtx, span := span.TracerProvider().Tracer("manager").Start(ctx, "get_certificates_from_url")
+	defer span.End()
+
+	certs, err := s.retrieveCertificatesFromUrl(newCtx, false)
+	if err != nil {
+		span.SetAttributes(semconv.HTTPResendCount(1))
+		certs, err = s.retrieveCertificatesFromUrl(newCtx, true)
+		if err != nil {
+			span.SetStatus(codes.Error, "retries exhausted")
+			span.RecordError(err)
+		}
+	}
+	return certs, err
+}
+
+func (s OpcpRootCertificateProviderService) retrieveCertificatesFromUrl(ctx context.Context, retry bool) ([]byte, error) {
 	req, err := http.NewRequestWithContext(ctx, "GET", fmt.Sprintf("%s/v1/root/rootCerts", s.BaseURL), nil)
 	if err != nil {
 		return nil, err
 	}
 	req.Header.Add("Accept", "application/json")
-	token, err := s.TokenService.GetToken(ctx, false)
+	token, err := s.TokenService.GetToken(ctx, retry)
 	if err != nil {
 		return nil, err
 	}

@@ -37,7 +37,7 @@ func TestGet15118EvCertificate(t *testing.T) {
 	}
 
 	h := handlers.Get15118EvCertificateHandler{
-		EvCertificateProvider: dummyEvCertificateProvider{},
+		ContractCertificateProvider: dummyEvCertificateProvider{},
 	}
 
 	got, err := h.HandleCall(context.Background(), "cs001", req)

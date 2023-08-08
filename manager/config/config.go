@@ -48,8 +48,8 @@ type Config struct {
 	TracerProvider                   *trace.TracerProvider
 	Storage                          store.Engine
 	ContractCertValidationService    services.CertificateValidationService
-	ContractCertProviderService      services.EvCertificateProvider
-	ChargeStationCertProviderService services.CertificateSignerService
+	ContractCertProviderService      services.ContractCertificateProvider
+	ChargeStationCertProviderService services.ChargeStationCertificateProvider
 	TariffService                    services.TariffService
 }
 
@@ -116,7 +116,7 @@ func Configure(ctx context.Context, cfg *BaseConfig) (c *Config, err error) {
 		return nil, err
 	}
 
-	c.ContractCertValidationService, err = getContractCertValidator(ctx, &cfg.ContractCertValidator, httpClient)
+	c.ContractCertValidationService, err = getContractCertValidator(&cfg.ContractCertValidator, httpClient)
 	if err != nil {
 		return nil, err
 	}
@@ -181,11 +181,11 @@ func getStorage(ctx context.Context, cfg *StorageConfig) (engine store.Engine, e
 	return
 }
 
-func getContractCertValidator(ctx context.Context, cfg *ContractCertValidatorConfig, httpClient *http.Client) (contractCertValidator services.CertificateValidationService, err error) {
+func getContractCertValidator(cfg *ContractCertValidatorConfig, httpClient *http.Client) (contractCertValidator services.CertificateValidationService, err error) {
 	switch cfg.Type {
 	case "ocsp":
 		var rootCertificateProvider services.RootCertificateProviderService
-		rootCertificateProvider, err = getRootCertificateProvider(&cfg.Ocsp.RootCertProvider, httpClient)
+		rootCertificateProvider, err = getRootCertProvider(&cfg.Ocsp.RootCertProvider, httpClient)
 		if err != nil {
 			return nil, fmt.Errorf("create root certificate provider: %w", err)
 		}
@@ -202,7 +202,7 @@ func getContractCertValidator(ctx context.Context, cfg *ContractCertValidatorCon
 	return
 }
 
-func getRootCertificateProvider(cfg *RootCertProviderConfig, httpClient *http.Client) (rootCertificateProvider services.RootCertificateProviderService, err error) {
+func getRootCertProvider(cfg *RootCertProviderConfig, httpClient *http.Client) (rootCertificateProvider services.RootCertificateProviderService, err error) {
 	switch cfg.Type {
 	case "file":
 		rootCertificateProvider = services.FileRootCertificateProviderService{
@@ -237,7 +237,7 @@ func getRootCertificateProvider(cfg *RootCertProviderConfig, httpClient *http.Cl
 	return
 }
 
-func getContractCertProvider(cfg *ContractCertProviderConfig, httpClient *http.Client) (evCertificateProvider services.EvCertificateProvider, err error) {
+func getContractCertProvider(cfg *ContractCertProviderConfig, httpClient *http.Client) (evCertificateProvider services.ContractCertificateProvider, err error) {
 	switch cfg.Type {
 	case "opcp":
 		httpTokenService, err := getHttpTokenService(&cfg.Opcp.HttpAuth, httpClient)
@@ -245,13 +245,13 @@ func getContractCertProvider(cfg *ContractCertProviderConfig, httpClient *http.C
 			return nil, fmt.Errorf("create http auth service: %w", err)
 		}
 
-		evCertificateProvider = &services.OpcpEvCertificateProvider{
+		evCertificateProvider = &services.OpcpContractCertificateProvider{
 			BaseURL:          cfg.Opcp.Url,
 			HttpTokenService: httpTokenService,
 			HttpClient:       httpClient,
 		}
 	case "default":
-		evCertificateProvider = &services.DefaultEvCertificateProvider{}
+		evCertificateProvider = &services.DefaultContractCertificateProvider{}
 	default:
 		return nil, fmt.Errorf("unknown contract certificate provider type: %s", cfg.Type)
 	}
@@ -259,7 +259,7 @@ func getContractCertProvider(cfg *ContractCertProviderConfig, httpClient *http.C
 	return
 }
 
-func getChargeStationCertProvider(cfg *ChargeStationCertProviderConfig, httpClient *http.Client) (chargeStationCertProvider services.CertificateSignerService, err error) {
+func getChargeStationCertProvider(cfg *ChargeStationCertProviderConfig, httpClient *http.Client) (chargeStationCertProvider services.ChargeStationCertificateProvider, err error) {
 	switch cfg.Type {
 	case "opcp":
 		httpTokenService, err := getHttpTokenService(&cfg.Opcp.HttpAuth, httpClient)
@@ -267,14 +267,14 @@ func getChargeStationCertProvider(cfg *ChargeStationCertProviderConfig, httpClie
 			return nil, fmt.Errorf("create http auth service: %w", err)
 		}
 
-		chargeStationCertProvider = &services.OpcpCpoCertificateSignerService{
+		chargeStationCertProvider = &services.OpcpChargeStationCertificateProvider{
 			BaseURL:          cfg.Opcp.Url,
 			ISOVersion:       services.ISO15118V2,
 			HttpTokenService: httpTokenService,
 			HttpClient:       httpClient,
 		}
 	case "default":
-		chargeStationCertProvider = &services.DefaultCpoCertificateSignerService{}
+		chargeStationCertProvider = &services.DefaultChargeStationCertificateProvider{}
 	default:
 		return nil, fmt.Errorf("unknown charge station certificate provider type: %s", cfg.Type)
 	}

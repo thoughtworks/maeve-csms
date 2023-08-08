@@ -121,21 +121,22 @@ func (h opcpHttpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 }
 
-func TestOPCPCertificateSignerService(t *testing.T) {
+func TestOPCPChargeStationCertificateProvider(t *testing.T) {
 	opcp := newOPCPHttpHandler(t)
 
 	server := httptest.NewServer(opcp)
 	defer server.Close()
 
-	opcpSigner := services.OpcpCpoCertificateSignerService{
+	provider := services.OpcpChargeStationCertificateProvider{
 		BaseURL:          server.URL,
 		HttpTokenService: services.NewFixedHttpTokenService("TestToken"),
 		ISOVersion:       services.ISO15118V2,
+		HttpClient:       http.DefaultClient,
 	}
 
 	csr := createCertificateSigningRequest(t)
 
-	pemChain, err := opcpSigner.SignCertificate(context.TODO(), services.CertificateTypeV2G, string(csr))
+	pemChain, err := provider.ProvideCertificate(context.TODO(), services.CertificateTypeV2G, string(csr))
 	require.NoError(t, err)
 
 	pemBytes := []byte(pemChain)

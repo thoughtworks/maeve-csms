@@ -13,7 +13,7 @@ import (
 )
 
 type Get15118EvCertificateHandler struct {
-	EvCertificateProvider services.EvCertificateProvider
+	ContractCertificateProvider services.ContractCertificateProvider
 }
 
 func (g Get15118EvCertificateHandler) HandleCall(ctx context.Context, _ string, request ocpp.Request) (ocpp.Response, error) {
@@ -25,8 +25,8 @@ func (g Get15118EvCertificateHandler) HandleCall(ctx context.Context, _ string, 
 	response := types.Get15118EVCertificateResponseJson{
 		Status: status,
 	}
-	if g.EvCertificateProvider != nil {
-		res, err := g.EvCertificateProvider.ProvideCertificate(ctx, req.ExiRequest)
+	if g.ContractCertificateProvider != nil {
+		res, err := g.ContractCertificateProvider.ProvideCertificate(ctx, req.ExiRequest)
 
 		if err != nil {
 			span.SetAttributes(attribute.String("get_ev_cert.error", err.Error()))

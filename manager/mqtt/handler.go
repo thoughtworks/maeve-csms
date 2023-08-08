@@ -30,21 +30,21 @@ import (
 )
 
 type Handler struct {
-	mqttBrokerUrls        []*url.URL
-	mqttPrefix            string
-	mqttGroup             string
-	mqttConnectTimeout    time.Duration
-	mqttConnectRetryDelay time.Duration
-	mqttKeepAliveInterval uint16
-	clock                 clock.PassiveClock
-	tariffService         services.TariffService
-	certValidationService services.CertificateValidationService
-	certSignerService     services.CertificateSignerService
-	certProviderService   services.EvCertificateProvider
-	heartbeatInterval     time.Duration
-	schemaFS              fs.FS
-	storageEngine         store.Engine
-	tracer                trace.Tracer
+	mqttBrokerUrls            []*url.URL
+	mqttPrefix                string
+	mqttGroup                 string
+	mqttConnectTimeout        time.Duration
+	mqttConnectRetryDelay     time.Duration
+	mqttKeepAliveInterval     uint16
+	clock                     clock.PassiveClock
+	tariffService             services.TariffService
+	certValidationService     services.CertificateValidationService
+	chargeStationCertProvider services.ChargeStationCertificateProvider
+	contractCertProvider      services.ContractCertificateProvider
+	heartbeatInterval         time.Duration
+	schemaFS                  fs.FS
+	storageEngine             store.Engine
+	tracer                    trace.Tracer
 }
 
 type HandlerOpt func(h *Handler)
@@ -99,15 +99,15 @@ func WithCertValidationService(certValidationService services.CertificateValidat
 	}
 }
 
-func WithCertSignerService(certSignerService services.CertificateSignerService) HandlerOpt {
+func WithChargeStationCertificateProvider(provider services.ChargeStationCertificateProvider) HandlerOpt {
 	return func(h *Handler) {
-		h.certSignerService = certSignerService
+		h.chargeStationCertProvider = provider
 	}
 }
 
-func WithCertificateProviderService(certProviderService services.EvCertificateProvider) HandlerOpt {
+func WithContractCertificateProvider(provider services.ContractCertificateProvider) HandlerOpt {
 	return func(h *Handler) {
-		h.certProviderService = certProviderService
+		h.contractCertProvider = provider
 	}
 }
 
@@ -194,8 +194,8 @@ func (h *Handler) Connect(errCh chan error) {
 	v16Emitter := &ProxyEmitter{}
 	v201Emitter := &ProxyEmitter{}
 
-	v16Router := NewV16Router(v16Emitter, h.clock, h.storageEngine, h.storageEngine, h.certValidationService, h.certSignerService, h.certProviderService, h.heartbeatInterval, h.schemaFS)
-	v201Router := NewV201Router(v201Emitter, h.clock, h.storageEngine, h.storageEngine, h.tariffService, h.certValidationService, h.certSignerService, h.certProviderService, h.heartbeatInterval)
+	v16Router := NewV16Router(v16Emitter, h.clock, h.storageEngine, h.storageEngine, h.certValidationService, h.chargeStationCertProvider, h.contractCertProvider, h.heartbeatInterval, h.schemaFS)
+	v201Router := NewV201Router(v201Emitter, h.clock, h.storageEngine, h.storageEngine, h.tariffService, h.certValidationService, h.chargeStationCertProvider, h.contractCertProvider, h.heartbeatInterval)
 
 	mqttV16Topic := fmt.Sprintf("$share/%s/%s/in/ocpp1.6/#", h.mqttGroup, h.mqttPrefix)
 	mqttV201Topic := fmt.Sprintf("$share/%s/%s/in/ocpp2.0.1/#", h.mqttGroup, h.mqttPrefix)

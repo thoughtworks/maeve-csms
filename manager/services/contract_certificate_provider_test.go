@@ -86,13 +86,13 @@ func certificateInstallationResponse(request, exiResponse string) string {
 	}
 }
 
-func TestEvCertificateProvider(t *testing.T) {
+func TestContractCertificateProvider(t *testing.T) {
 	hubject := newOtherHubjectHttpHandler()
 
 	server := httptest.NewServer(&hubject)
 	defer server.Close()
 
-	provider := services.OpcpEvCertificateProvider{
+	provider := services.OpcpContractCertificateProvider{
 		BaseURL:          server.URL,
 		HttpTokenService: services.NewFixedHttpTokenService("TestToken"),
 	}
@@ -104,13 +104,13 @@ func TestEvCertificateProvider(t *testing.T) {
 	assert.Equal(t, dummyExiResponse, response.CertificateInstallationRes)
 }
 
-func TestEvCertificateProviderWithFlakyResponses(t *testing.T) {
+func TestContractCertificateProviderWithFlakyResponses(t *testing.T) {
 	hubject := newOtherHubjectHttpHandler()
 
 	server := httptest.NewServer(&hubject)
 	defer server.Close()
 
-	provider := services.OpcpEvCertificateProvider{
+	provider := services.OpcpContractCertificateProvider{
 		BaseURL:          server.URL,
 		HttpTokenService: services.NewFixedHttpTokenService("TestToken"),
 	}
@@ -122,7 +122,7 @@ func TestEvCertificateProviderWithFlakyResponses(t *testing.T) {
 	assert.Equal(t, dummyExiResponse, response.CertificateInstallationRes)
 }
 
-func TestEvCertificateProviderFailureCases(t *testing.T) {
+func TestContractCertificateProviderFailureCases(t *testing.T) {
 	tests := map[string]struct {
 		token      string
 		exiRequest string
@@ -139,7 +139,7 @@ func TestEvCertificateProviderFailureCases(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			provider := services.OpcpEvCertificateProvider{
+			provider := services.OpcpContractCertificateProvider{
 				BaseURL:          server.URL,
 				HttpTokenService: services.NewFixedHttpTokenService(tc.token),
 			}

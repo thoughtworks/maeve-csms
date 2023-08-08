@@ -15,8 +15,8 @@ import (
 )
 
 type SignCertificateHandler struct {
-	CertificateSignerService services.CertificateSignerService
-	CallMaker                handlers.CallMaker
+	ChargeStationCertificateProvider services.ChargeStationCertificateProvider
+	CallMaker                        handlers.CallMaker
 }
 
 func (s SignCertificateHandler) HandleCall(ctx context.Context, chargeStationId string, request ocpp.Request) (ocpp.Response, error) {
@@ -33,7 +33,7 @@ func (s SignCertificateHandler) HandleCall(ctx context.Context, chargeStationId 
 
 	status := types.GenericStatusEnumTypeRejected
 
-	if s.CertificateSignerService != nil {
+	if s.ChargeStationCertificateProvider != nil {
 		status = types.GenericStatusEnumTypeAccepted
 
 		go func() {
@@ -44,7 +44,7 @@ func (s SignCertificateHandler) HandleCall(ctx context.Context, chargeStationId 
 				certType = services.CertificateTypeV2G
 			}
 
-			pemChain, err := s.CertificateSignerService.SignCertificate(ctx, certType, req.Csr)
+			pemChain, err := s.ChargeStationCertificateProvider.ProvideCertificate(ctx, certType, req.Csr)
 			if err != nil {
 				slog.Error("failed to sign certificate", "err", err)
 			} else {

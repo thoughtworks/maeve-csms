@@ -18,11 +18,11 @@ import (
 
 const XsdMsgDefinition = "urn:iso:15118:2:2013:MsgDef"
 
-type EvCertificateProvider interface {
+type ContractCertificateProvider interface {
 	ProvideCertificate(ctx context.Context, exiRequest string) (EvCertificate15118Response, error)
 }
 
-type OpcpEvCertificateProvider struct {
+type OpcpContractCertificateProvider struct {
 	BaseURL          string
 	HttpTokenService HttpTokenService
 	HttpClient       *http.Client
@@ -52,7 +52,7 @@ type SignedContractDataResponse struct {
 	XsdMsgDefNamespace string      `json:"xsdMsgDefNamespace"`
 }
 
-func (h OpcpEvCertificateProvider) ProvideCertificate(ctx context.Context, exiRequest string) (EvCertificate15118Response, error) {
+func (h OpcpContractCertificateProvider) ProvideCertificate(ctx context.Context, exiRequest string) (EvCertificate15118Response, error) {
 	client := h.HttpClient
 	if client == nil {
 		client = http.DefaultClient
@@ -128,7 +128,7 @@ func (h OpcpEvCertificateProvider) ProvideCertificate(ctx context.Context, exiRe
 	return response, nil
 }
 
-func (h OpcpEvCertificateProvider) moRequest(ctx context.Context, isRetry bool, requestUrl string, marshalledBody []byte) (*http.Request, error) {
+func (h OpcpContractCertificateProvider) moRequest(ctx context.Context, isRetry bool, requestUrl string, marshalledBody []byte) (*http.Request, error) {
 	req, err := http.NewRequestWithContext(ctx, "POST", requestUrl, bytes.NewReader(marshalledBody))
 	if err != nil {
 		return nil, err
@@ -179,9 +179,9 @@ func withRetries(ctx context.Context, action retryFunc, attempts int) (*http.Res
 	return &http.Response{}, lastErr
 }
 
-type DefaultEvCertificateProvider struct{}
+type DefaultContractCertificateProvider struct{}
 
-func (d DefaultEvCertificateProvider) ProvideCertificate(context.Context, string) (EvCertificate15118Response, error) {
+func (d DefaultContractCertificateProvider) ProvideCertificate(context.Context, string) (EvCertificate15118Response, error) {
 	return EvCertificate15118Response{
 		Status: ocpp201.Iso15118EVCertificateStatusEnumTypeFailed,
 	}, errors.New("not implemented")

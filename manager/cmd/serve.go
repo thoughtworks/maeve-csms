@@ -53,8 +53,8 @@ the gateway and send appropriate responses.`,
 			mqtt.WithMqttConnectSettings(settings.Mqtt.ConnectTimeout, settings.Mqtt.ConnectRetryDelay, settings.Mqtt.KeepAliveInterval),
 			mqtt.WithStorageEngine(settings.Storage),
 			mqtt.WithCertValidationService(settings.ContractCertValidationService),
-			mqtt.WithCertificateProviderService(settings.ContractCertProviderService),
-			mqtt.WithCertSignerService(settings.ChargeStationCertProviderService),
+			mqtt.WithContractCertificateProvider(settings.ContractCertProviderService),
+			mqtt.WithChargeStationCertificateProvider(settings.ChargeStationCertProviderService),
 			mqtt.WithTariffService(settings.TariffService),
 			mqtt.WithOtelTracer(tracer))
 
