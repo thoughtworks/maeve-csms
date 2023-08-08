@@ -172,8 +172,10 @@ func NewV16Router(emitter Emitter,
 		},
 		CallResultRoutes: map[string]handlers.CallResultRoute{
 			"DataTransfer": {
-				NewRequest:  func() ocpp.Request { return new(ocpp16.DataTransferJson) },
-				NewResponse: func() ocpp.Response { return new(ocpp16.DataTransferResponseJson) },
+				NewRequest:     func() ocpp.Request { return new(ocpp16.DataTransferJson) },
+				NewResponse:    func() ocpp.Response { return new(ocpp16.DataTransferResponseJson) },
+				RequestSchema:  "ocpp16/DataTransfer.json",
+				ResponseSchema: "ocpp16/DataTransferResponse.json",
 				Handler: handlers16.DataTransferResultHandler{
 					SchemaFS: schemaFS,
 					CallResultRoutes: map[string]map[string]handlers.CallResultRoute{
