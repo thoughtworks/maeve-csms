@@ -33,10 +33,10 @@ const (
 
 // The OpcpCpoCertificateSignerService issues certificates using the CPO CA
 type OpcpCpoCertificateSignerService struct {
-	BaseURL     string
-	BearerToken string
-	ISOVersion  ISOVersion
-	HttpClient  *http.Client
+	BaseURL          string
+	HttpTokenService HttpTokenService
+	ISOVersion       ISOVersion
+	HttpClient       *http.Client
 }
 
 type HttpError int
@@ -56,14 +56,19 @@ func (h OpcpCpoCertificateSignerService) SignCertificate(ctx context.Context, ty
 		client = http.DefaultClient
 	}
 
+	token, err := h.HttpTokenService.GetToken(ctx, false)
+	if err != nil {
+		return "", fmt.Errorf("getting token: %w", err)
+	}
+
 	enrollUrl := fmt.Sprintf("%s/cpo/simpleenroll/%s", h.BaseURL, h.ISOVersion)
-	cert, err := requestCertificate(ctx, client, enrollUrl, h.BearerToken, csr)
+	cert, err := requestCertificate(ctx, client, enrollUrl, token, csr)
 	if err != nil {
 		return "", fmt.Errorf("requesting certificate: %w", err)
 	}
 
 	caUrl := fmt.Sprintf("%s/cpo/cacerts/%s", h.BaseURL, h.ISOVersion)
-	chain, err := requestChain(ctx, client, caUrl, h.BearerToken)
+	chain, err := requestChain(ctx, client, caUrl, token)
 	if err != nil {
 		return "", fmt.Errorf("requesting ca certificates: %w", err)
 	}

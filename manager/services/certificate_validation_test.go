@@ -134,9 +134,9 @@ func TestValidatingPEMCertificateChain(t *testing.T) {
 	rootCACerts, intCACert, leafCert := setupOCSPResponder(t, server.URL, ocspResponder)
 
 	validationService := services.OnlineCertificateValidationService{
-		RootCertificates: rootCACerts,
-		MaxOCSPAttempts:  3,
-		HttpClient:       http.DefaultClient,
+		RootCertificateProvider: services.X509RootCertificateProviderService{Certificates: rootCACerts},
+		MaxOCSPAttempts:         3,
+		HttpClient:              http.DefaultClient,
 	}
 
 	pemChain := pem.EncodeToMemory(&pem.Block{
@@ -174,9 +174,9 @@ func TestValidatingPEMCertificateChainWithRevokedCertificate(t *testing.T) {
 	ocspResponder.RevokedSerialNumbers = []string{intCACert.SerialNumber.Text(16)}
 
 	validationService := services.OnlineCertificateValidationService{
-		RootCertificates: rootCACerts,
-		MaxOCSPAttempts:  3,
-		HttpClient:       http.DefaultClient,
+		RootCertificateProvider: services.X509RootCertificateProviderService{Certificates: rootCACerts},
+		MaxOCSPAttempts:         3,
+		HttpClient:              http.DefaultClient,
 	}
 
 	pemChain := pem.EncodeToMemory(&pem.Block{
@@ -204,9 +204,9 @@ func TestValidatingPEMCertificateChainWithWrongEmaid(t *testing.T) {
 	rootCACerts, intCACert, leafCert := setupOCSPResponder(t, server.URL, ocspResponder)
 
 	validationService := services.OnlineCertificateValidationService{
-		RootCertificates: rootCACerts,
-		MaxOCSPAttempts:  3,
-		HttpClient:       http.DefaultClient,
+		RootCertificateProvider: services.X509RootCertificateProviderService{Certificates: rootCACerts},
+		MaxOCSPAttempts:         3,
+		HttpClient:              http.DefaultClient,
 	}
 
 	pemChain := pem.EncodeToMemory(&pem.Block{
@@ -234,9 +234,9 @@ func TestValidatingPEMCertificateChainInvalidChain(t *testing.T) {
 	rootCACerts, _, leafCert := setupOCSPResponder(t, server.URL, ocspResponder)
 
 	validationService := services.OnlineCertificateValidationService{
-		RootCertificates: rootCACerts,
-		MaxOCSPAttempts:  3,
-		HttpClient:       http.DefaultClient,
+		RootCertificateProvider: services.X509RootCertificateProviderService{Certificates: rootCACerts},
+		MaxOCSPAttempts:         3,
+		HttpClient:              http.DefaultClient,
 	}
 
 	pemChain := pem.EncodeToMemory(&pem.Block{
@@ -260,9 +260,9 @@ func TestValidatingPEMCertificateChainIncludingRootCertificate(t *testing.T) {
 	rootCACerts, intCACert, leafCert := setupOCSPResponder(t, server.URL, ocspResponder)
 
 	validationService := services.OnlineCertificateValidationService{
-		RootCertificates: rootCACerts,
-		MaxOCSPAttempts:  3,
-		HttpClient:       http.DefaultClient,
+		RootCertificateProvider: services.X509RootCertificateProviderService{Certificates: rootCACerts},
+		MaxOCSPAttempts:         3,
+		HttpClient:              http.DefaultClient,
 	}
 
 	pemChain := pem.EncodeToMemory(&pem.Block{
@@ -295,9 +295,9 @@ func TestValidatingPEMCertificateChainIncludingUntrustedRootCertificate(t *testi
 	rootCACerts, intCACert, leafCert := setupOCSPResponder(t, server.URL, ocspResponder)
 
 	validationService := services.OnlineCertificateValidationService{
-		RootCertificates: []*x509.Certificate{rootCACerts[0]},
-		MaxOCSPAttempts:  3,
-		HttpClient:       http.DefaultClient,
+		RootCertificateProvider: services.X509RootCertificateProviderService{Certificates: []*x509.Certificate{rootCACerts[0]}},
+		MaxOCSPAttempts:         3,
+		HttpClient:              http.DefaultClient,
 	}
 
 	pemChain := pem.EncodeToMemory(&pem.Block{
@@ -331,9 +331,9 @@ func TestValidatingPEMCertificateChainWithNoOCSPOnLeafCertificate(t *testing.T) 
 	rootCACerts, intCACert, leafCert := setupOCSPResponder(t, "", ocspResponder)
 
 	validationService := services.OnlineCertificateValidationService{
-		RootCertificates: rootCACerts,
-		MaxOCSPAttempts:  3,
-		HttpClient:       http.DefaultClient,
+		RootCertificateProvider: services.X509RootCertificateProviderService{Certificates: rootCACerts},
+		MaxOCSPAttempts:         3,
+		HttpClient:              http.DefaultClient,
 	}
 
 	pemChain := pem.EncodeToMemory(&pem.Block{
@@ -364,9 +364,9 @@ func TestValidatingHashedCertificateChain(t *testing.T) {
 	rootCACerts, intCACert, leafCert := setupOCSPResponder(t, server.URL, ocspResponder)
 
 	validationService := services.OnlineCertificateValidationService{
-		RootCertificates: rootCACerts,
-		MaxOCSPAttempts:  3,
-		HttpClient:       http.DefaultClient,
+		RootCertificateProvider: services.X509RootCertificateProviderService{Certificates: rootCACerts},
+		MaxOCSPAttempts:         3,
+		HttpClient:              http.DefaultClient,
 	}
 
 	intCAPublicKeyBytes, err := getPublicKeyBytes(intCACert.RawSubjectPublicKeyInfo)
@@ -407,9 +407,9 @@ func TestValidatingHashedCertificateChainWithRevokedCertificate(t *testing.T) {
 	ocspResponder.RevokedSerialNumbers = []string{intCACert.SerialNumber.String()}
 
 	validationService := services.OnlineCertificateValidationService{
-		RootCertificates: rootCACerts,
-		MaxOCSPAttempts:  3,
-		HttpClient:       http.DefaultClient,
+		RootCertificateProvider: services.X509RootCertificateProviderService{Certificates: rootCACerts},
+		MaxOCSPAttempts:         3,
+		HttpClient:              http.DefaultClient,
 	}
 
 	intCAPublicKeyBytes, err := getPublicKeyBytes(intCACert.RawSubjectPublicKeyInfo)
@@ -448,9 +448,9 @@ func TestValidatingHashedCertificateChainWithNoOCSPResponderUrlOnIntermediate(t 
 	rootCACerts, intCACert, leafCert := setupOCSPResponder(t, server.URL, ocspResponder)
 
 	validationService := services.OnlineCertificateValidationService{
-		RootCertificates: rootCACerts,
-		MaxOCSPAttempts:  3,
-		HttpClient:       http.DefaultClient,
+		RootCertificateProvider: services.X509RootCertificateProviderService{Certificates: rootCACerts},
+		MaxOCSPAttempts:         3,
+		HttpClient:              http.DefaultClient,
 	}
 
 	intCAPublicKeyBytes, err := getPublicKeyBytes(intCACert.RawSubjectPublicKeyInfo)
@@ -489,9 +489,9 @@ func TestValidatingHashedCertificateChainWithNoOCSPResponderUrlOnLeaf(t *testing
 	rootCACerts, intCACert, leafCert := setupOCSPResponder(t, server.URL, ocspResponder)
 
 	validationService := services.OnlineCertificateValidationService{
-		RootCertificates: rootCACerts,
-		MaxOCSPAttempts:  3,
-		HttpClient:       http.DefaultClient,
+		RootCertificateProvider: services.X509RootCertificateProviderService{Certificates: rootCACerts},
+		MaxOCSPAttempts:         3,
+		HttpClient:              http.DefaultClient,
 	}
 
 	intCAPublicKeyBytes, err := getPublicKeyBytes(intCACert.RawSubjectPublicKeyInfo)

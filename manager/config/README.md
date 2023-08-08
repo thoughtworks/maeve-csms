@@ -128,12 +128,11 @@ There are several implementations of RootCertProvider:
 
 #### OPCP root certificate provider
 
-| Key        | Type                                  | Description                                                       |
-|------------|---------------------------------------|-------------------------------------------------------------------|
-| url        | string                                | Base URL for OPCP service that provides the root certificate pool |
-| cache.ttl  | string                                | Time before cached values are discarded, e.g. "1h"                |
-| cache.file | string                                | File where cached values are stored, e.g. "cache.pem"             |
-| auth       | [HttpAuthService](#http-auth-service) | Configures how to authenticate with the OPCP service              |
+| Key  | Type                                  | Description                                                       |
+|------|---------------------------------------|-------------------------------------------------------------------|
+| url  | string                                | Base URL for OPCP service that provides the root certificate pool |
+| ttl  | string                                | Time before cached values are discarded, e.g. "1h"                |
+| auth | [HttpAuthService](#http-auth-service) | Configures how to authenticate with the OPCP service              |
 
 #### File root certificate provider
 
@@ -150,9 +149,10 @@ There are several implementation of HttpAuthService:
 
 #### Environment token auth service
 
-| Key      | Type   | Description                      |
-|----------|--------|----------------------------------|
-| variable | string | Name of the environment variable |
+| Key      | Type   | Description                                          |
+|----------|--------|------------------------------------------------------|
+| variable | string | Name of the environment variable                     |
+| ttl      | string | The duration for which the token is valid, e.g. "1h" |
 
 #### Fixed token auth service
 
@@ -165,6 +165,7 @@ There are several implementation of HttpAuthService:
 | Key | Type   | Description                                            |
 |-----|--------|--------------------------------------------------------|
 | url | string | URL of the Hubject test environment authorization page |
+| ttl | string | The duration for which the token is valid, e.g. "1h"   |
 
 ## Example configuration
 

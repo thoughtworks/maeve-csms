@@ -22,6 +22,7 @@ import (
 	"golang.org/x/exp/slog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"k8s.io/utils/clock"
 	"net/http"
 	"net/url"
 	"os"
@@ -189,16 +190,10 @@ func getContractCertValidator(ctx context.Context, cfg *ContractCertValidatorCon
 			return nil, fmt.Errorf("create root certificate provider: %w", err)
 		}
 
-		// temporary hack to get root certificates from service
-		rootCertificates, err := rootCertificateProvider.ProvideCertificates(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("provide root certificates: %w", err)
-		}
-
 		contractCertValidator, err = &services.OnlineCertificateValidationService{
-			RootCertificates: rootCertificates, // TODO: change to take root certificate provider
-			MaxOCSPAttempts:  cfg.Ocsp.MaxAttempts,
-			HttpClient:       httpClient,
+			RootCertificateProvider: rootCertificateProvider,
+			MaxOCSPAttempts:         cfg.Ocsp.MaxAttempts,
+			HttpClient:              httpClient,
 		}, nil
 	default:
 		return nil, fmt.Errorf("unknown contract certificate validator type: %s", cfg.Type)
@@ -210,20 +205,31 @@ func getContractCertValidator(ctx context.Context, cfg *ContractCertValidatorCon
 func getRootCertificateProvider(cfg *RootCertProviderConfig, httpClient *http.Client) (rootCertificateProvider services.RootCertificateProviderService, err error) {
 	switch cfg.Type {
 	case "file":
-		rootCertificateProvider = services.FileRootCertificateRetrieverService{
+		rootCertificateProvider = services.FileRootCertificateProviderService{
 			FilePaths: cfg.File.FileNames,
 		}
 	case "opcp":
-		httpAuth, err := getHttpAuthService(&cfg.Opcp.HttpAuth)
+		ttl := 24 * time.Hour
+
+		if cfg.Opcp.Ttl != "" {
+			ttl, err = time.ParseDuration(cfg.Opcp.Ttl)
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse root certificate provider TTL: %w", err)
+			}
+		}
+
+		httpTokenService, err := getHttpTokenService(&cfg.Opcp.HttpAuth, httpClient)
 		if err != nil {
 			return nil, fmt.Errorf("create http auth service: %w", err)
 		}
 
-		rootCertificateProvider = services.OpcpRootCertificateRetrieverService{
-			BaseURL:         cfg.Opcp.Url,
-			HttpAuthService: httpAuth,
-			HttpClient:      httpClient,
-		}
+		rootCertificateProvider = services.NewCachingRootCertificateProviderService(
+			services.OpcpRootCertificateProviderService{
+				BaseURL:      cfg.Opcp.Url,
+				TokenService: httpTokenService,
+				HttpClient:   httpClient,
+			}, ttl, clock.RealClock{})
+
 	default:
 		return nil, fmt.Errorf("unknown root certificate provider type: %s", cfg.Type)
 	}
@@ -234,26 +240,15 @@ func getRootCertificateProvider(cfg *RootCertProviderConfig, httpClient *http.Cl
 func getContractCertProvider(cfg *ContractCertProviderConfig, httpClient *http.Client) (evCertificateProvider services.EvCertificateProvider, err error) {
 	switch cfg.Type {
 	case "opcp":
-		httpAuth, err := getHttpAuthService(&cfg.Opcp.HttpAuth)
+		httpTokenService, err := getHttpTokenService(&cfg.Opcp.HttpAuth, httpClient)
 		if err != nil {
 			return nil, fmt.Errorf("create http auth service: %w", err)
 		}
 
-		// temporary hack to get the token from the service
-		r, err := http.NewRequest(http.MethodGet, "http://example.com", nil)
-		if err != nil {
-			return nil, fmt.Errorf("create http request: %w", err)
-		}
-		err = httpAuth.Authenticate(r)
-		if err != nil {
-			return nil, fmt.Errorf("get http token: %w", err)
-		}
-		token := r.Header.Get("x-api-key")
-
 		evCertificateProvider = &services.OpcpEvCertificateProvider{
-			BaseURL:     cfg.Opcp.Url,
-			BearerToken: token, // TODO: change interface to take HttpAuthService
-			HttpClient:  httpClient,
+			BaseURL:          cfg.Opcp.Url,
+			HttpTokenService: httpTokenService,
+			HttpClient:       httpClient,
 		}
 	case "default":
 		evCertificateProvider = &services.DefaultEvCertificateProvider{}
@@ -267,27 +262,16 @@ func getContractCertProvider(cfg *ContractCertProviderConfig, httpClient *http.C
 func getChargeStationCertProvider(cfg *ChargeStationCertProviderConfig, httpClient *http.Client) (chargeStationCertProvider services.CertificateSignerService, err error) {
 	switch cfg.Type {
 	case "opcp":
-		httpAuth, err := getHttpAuthService(&cfg.Opcp.HttpAuth)
+		httpTokenService, err := getHttpTokenService(&cfg.Opcp.HttpAuth, httpClient)
 		if err != nil {
 			return nil, fmt.Errorf("create http auth service: %w", err)
 		}
 
-		// temporary hack to get the token from the service
-		r, err := http.NewRequest(http.MethodGet, "http://example.com", nil)
-		if err != nil {
-			return nil, fmt.Errorf("create http request: %w", err)
-		}
-		err = httpAuth.Authenticate(r)
-		if err != nil {
-			return nil, fmt.Errorf("get http token: %w", err)
-		}
-		token := r.Header.Get("x-api-key")
-
 		chargeStationCertProvider = &services.OpcpCpoCertificateSignerService{
-			BaseURL:     cfg.Opcp.Url,
-			ISOVersion:  services.ISO15118V2,
-			BearerToken: token, // TODO: change interface to take HttpAuthService
-			HttpClient:  httpClient,
+			BaseURL:          cfg.Opcp.Url,
+			ISOVersion:       services.ISO15118V2,
+			HttpTokenService: httpTokenService,
+			HttpClient:       httpClient,
 		}
 	case "default":
 		chargeStationCertProvider = &services.DefaultCpoCertificateSignerService{}
@@ -298,12 +282,22 @@ func getChargeStationCertProvider(cfg *ChargeStationCertProviderConfig, httpClie
 	return
 }
 
-func getHttpAuthService(cfg *HttpAuthConfig) (httpAuthService services.HttpAuthService, err error) {
+func getHttpTokenService(cfg *HttpAuthConfig, httpClient *http.Client) (httpTokenService services.HttpTokenService, err error) {
 	switch cfg.Type {
 	case "env_token":
-		httpAuthService = services.NewEnvTokenHttpAuthService(cfg.EnvToken.EnvVar)
+		httpTokenService, err = services.NewEnvHttpTokenService(cfg.EnvToken.EnvVar)
 	case "fixed_token":
-		httpAuthService = services.NewFixedTokenHttpAuthService(cfg.FixedToken.Token)
+		httpTokenService = services.NewFixedHttpTokenService(cfg.FixedToken.Token)
+	case "hubject_test_token":
+		ttl := 24 * time.Hour
+		if cfg.HubjectTestToken.Ttl != "" {
+			ttl, err = time.ParseDuration(cfg.HubjectTestToken.Ttl)
+			if err != nil {
+				return nil, fmt.Errorf("parse hubject test token ttl: %w", err)
+			}
+		}
+		httpTokenService = services.NewCachingHttpTokenService(
+			services.NewHubjectTestHttpTokenService(cfg.HubjectTestToken.Url, httpClient), ttl, clock.RealClock{})
 	default:
 		return nil, fmt.Errorf("unknown http auth service type: %s", cfg.Type)
 	}

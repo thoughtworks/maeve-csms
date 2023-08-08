@@ -128,9 +128,9 @@ func TestOPCPCertificateSignerService(t *testing.T) {
 	defer server.Close()
 
 	opcpSigner := services.OpcpCpoCertificateSignerService{
-		BaseURL:     server.URL,
-		BearerToken: "TestToken",
-		ISOVersion:  services.ISO15118V2,
+		BaseURL:          server.URL,
+		HttpTokenService: services.NewFixedHttpTokenService("TestToken"),
+		ISOVersion:       services.ISO15118V2,
 	}
 
 	csr := createCertificateSigningRequest(t)

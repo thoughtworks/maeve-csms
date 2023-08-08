@@ -2,15 +2,10 @@
 
 package config
 
-type OpcpRootCertProviderCacheConfig struct {
-	Ttl  string `mapstructure:"ttl" toml:"ttl"`
-	File string `mapstructure:"file" toml:"file"`
-}
-
 type OpcpRootCertProviderConfig struct {
-	Url      string                          `mapstructure:"url" toml:"url"`
-	Cache    OpcpRootCertProviderCacheConfig `mapstructure:"cache" toml:"cache"`
-	HttpAuth HttpAuthConfig                  `mapstructure:"auth" toml:"auth"`
+	Url      string         `mapstructure:"url" toml:"url"`
+	Ttl      string         `mapstructure:"ttl" toml:"ttl"`
+	HttpAuth HttpAuthConfig `mapstructure:"auth" toml:"auth"`
 }
 
 type FileRootCertProviderConfig struct {

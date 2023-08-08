@@ -24,8 +24,7 @@ type = "opcp"
 opcp.url = "https://open.plugncharge-test.hubject.com"
 opcp.auth.type = "env_token"
 opcp.auth.env_token.variable = "RCP_TOKEN"
-opcp.cache.file = "/certs/root_certs.json"
-opcp.cache.ttl = "24h"
+opcp.ttl = "24h"
 
 [contract_cert_provider]
 type = "opcp"

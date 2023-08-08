@@ -1,17 +1,16 @@
-package services
+// SPDX-License-Identifier: Apache-2.0
+
+package services_test
 
 import (
 	"context"
-	"crypto/ecdsa"
-	"crypto/elliptic"
-	"crypto/rand"
 	"crypto/x509"
-	"crypto/x509/pkix"
 	"encoding/base64"
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"math/big"
+	"github.com/thoughtworks/maeve-csms/manager/services"
+	"k8s.io/utils/clock"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -21,10 +20,8 @@ import (
 
 const rcpUrl = "/v1/root/rootCerts"
 
-type moRootCertificatePoolHandler struct{}
-
-func newHandler() moRootCertificatePoolHandler {
-	return moRootCertificatePoolHandler{}
+type moRootCertificatePoolHandler struct {
+	caCert *x509.Certificate
 }
 
 func (h moRootCertificatePoolHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -33,25 +30,19 @@ func (h moRootCertificatePoolHandler) ServeHTTP(w http.ResponseWriter, r *http.R
 			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 			return
 		}
-		crt := createRootCACertificate("V2G Root CA QA G1")
-		x5c, err := x509.ParseCertificate(crt)
-		if err != nil {
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			return
-		}
 
-		b64crt := base64.StdEncoding.EncodeToString(crt)
+		b64crt := base64.StdEncoding.EncodeToString(h.caCert.Raw)
 
-		enc, err := json.Marshal(OpcpRootCertificateReturnType{
-			RootCertificateCollection: OpcpRootCertificateCollectionType{
-				RootCertificates: []OpcpRootCertificateType{
+		enc, err := json.Marshal(services.OpcpRootCertificateReturnType{
+			RootCertificateCollection: services.OpcpRootCertificateCollectionType{
+				RootCertificates: []services.OpcpRootCertificateType{
 					{
-						RootCertificateId: x5c.SerialNumber.String(),
-						CommonName:        x5c.Subject.CommonName,
-						OrganizationName:  x5c.Subject.Organization[0],
-						DN:                x5c.Subject.String(),
-						ValidFrom:         x5c.NotBefore.Format(time.RFC3339),
-						ValidTo:           x5c.NotAfter.Format(time.RFC3339),
+						RootCertificateId: h.caCert.SerialNumber.String(),
+						CommonName:        h.caCert.Subject.CommonName,
+						OrganizationName:  h.caCert.Subject.Organization[0],
+						DN:                h.caCert.Subject.String(),
+						ValidFrom:         h.caCert.NotBefore.Format(time.RFC3339),
+						ValidTo:           h.caCert.NotAfter.Format(time.RFC3339),
 						CACertificate:     b64crt,
 					},
 				},
@@ -69,8 +60,8 @@ func (h moRootCertificatePoolHandler) ServeHTTP(w http.ResponseWriter, r *http.R
 	}
 }
 
-func TestFileMoRootCertificateRetrievalServiceRetrieveCertificates(t *testing.T) {
-	fileRetrievalService := FileRootCertificateRetrieverService{
+func TestFileMoRootCertificateProviderServiceRetrieveCertificates(t *testing.T) {
+	fileRetrievalService := services.FileRootCertificateProviderService{
 		FilePaths: []string{"testdata/root_ca.pem"},
 	}
 
@@ -79,31 +70,33 @@ func TestFileMoRootCertificateRetrievalServiceRetrieveCertificates(t *testing.T)
 	assert.Equal(t, "V2G Root CA QA G1", certs[0].Issuer.CommonName)
 }
 
-func TestOpcpMoRootCertificateRetrievalServiceRetrieveCertificatesNotAuthorised(t *testing.T) {
-	handler := moRootCertificatePoolHandler{}
+func TestOpcpMoRootCertificateProviderServiceRetrieveCertificatesNotAuthorised(t *testing.T) {
+	rootCA, _ := createRootCACertificate(t, "V2G Root CA QA G1")
+	handler := moRootCertificatePoolHandler{caCert: rootCA}
 	server := httptest.NewServer(handler)
-	service := OpcpRootCertificateRetrieverService{
-		HttpAuthService: NewFixedTokenHttpAuthService("BadToken"),
-		BaseURL:         server.URL,
-		HttpClient:      http.DefaultClient,
+	service := services.OpcpRootCertificateProviderService{
+		TokenService: services.NewFixedHttpTokenService("BadToken"),
+		BaseURL:      server.URL,
+		HttpClient:   http.DefaultClient,
 	}
 
 	defer server.Close()
 
 	_, err := service.ProvideCertificates(context.TODO())
 
-	var httpError HttpError
+	var httpError services.HttpError
 	assert.ErrorAs(t, err, &httpError)
 	assert.Equal(t, http.StatusUnauthorized, int(httpError))
 }
 
-func TestOpcpMoRootCertificateRetrievalServiceRetrieveCertificates(t *testing.T) {
-	handler := newHandler()
+func TestOpcpMoRootCertificateProviderServiceRetrieveCertificates(t *testing.T) {
+	rootCA, _ := createRootCACertificate(t, "V2G Root CA QA G1")
+	handler := moRootCertificatePoolHandler{caCert: rootCA}
 	server := httptest.NewServer(handler)
-	service := OpcpRootCertificateRetrieverService{
-		HttpAuthService: NewFixedTokenHttpAuthService("Token"),
-		BaseURL:         server.URL,
-		HttpClient:      http.DefaultClient,
+	service := services.OpcpRootCertificateProviderService{
+		TokenService: services.NewFixedHttpTokenService("Token"),
+		BaseURL:      server.URL,
+		HttpClient:   http.DefaultClient,
 	}
 	defer server.Close()
 
@@ -114,17 +107,37 @@ func TestOpcpMoRootCertificateRetrievalServiceRetrieveCertificates(t *testing.T)
 	assert.Equal(t, "V2G Root CA QA G1", result[0].Issuer.CommonName)
 }
 
-func createRootCACertificate(commonName string) []byte {
-	caKeyPair, _ := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+type CountingRootCertificateProviderService struct {
+	Count        int
+	Certificates []*x509.Certificate
+}
 
-	caCertTemplate := x509.Certificate{
-		SerialNumber: big.NewInt(1),
-		Subject: pkix.Name{
-			CommonName:   commonName,
-			Organization: []string{"Thoughtworks"},
-		},
+func (c *CountingRootCertificateProviderService) ProvideCertificates(context.Context) ([]*x509.Certificate, error) {
+	c.Count++
+	return c.Certificates, nil
+}
+
+func TestCachingRootCertificateProviderService(t *testing.T) {
+	rootCA, _ := createRootCACertificate(t, "V2G Root CA QA G1")
+	svc := &CountingRootCertificateProviderService{
+		Certificates: []*x509.Certificate{rootCA},
 	}
+	cachingService := services.NewCachingRootCertificateProviderService(svc, 100*time.Millisecond, &clock.RealClock{})
 
-	crt, _ := x509.CreateCertificate(rand.Reader, &caCertTemplate, &caCertTemplate, &caKeyPair.PublicKey, caKeyPair)
-	return crt
+	certs, err := cachingService.ProvideCertificates(context.TODO())
+	require.NoError(t, err)
+	assert.Equal(t, 1, svc.Count)
+	assert.Equal(t, "V2G Root CA QA G1", certs[0].Issuer.CommonName)
+
+	certs, err = cachingService.ProvideCertificates(context.TODO())
+	require.NoError(t, err)
+	assert.Equal(t, 1, svc.Count)
+	assert.Equal(t, "V2G Root CA QA G1", certs[0].Issuer.CommonName)
+
+	time.Sleep(100 * time.Millisecond)
+
+	certs, err = cachingService.ProvideCertificates(context.TODO())
+	require.NoError(t, err)
+	assert.Equal(t, 2, svc.Count)
+	assert.Equal(t, "V2G Root CA QA G1", certs[0].Issuer.CommonName)
 }

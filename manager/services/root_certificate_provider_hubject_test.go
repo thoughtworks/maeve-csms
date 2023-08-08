@@ -10,20 +10,16 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/thoughtworks/maeve-csms/manager/services"
 	"net/http"
-	"os"
 	"testing"
 )
 
 func TestProvideCertificatesWithHubjectRootCertificatePool(t *testing.T) {
-	bearerToken, ok := os.LookupEnv("HUBJECT_TOKEN")
-	if !ok {
-		t.Fatal("no bearer token for Hubject API - set the HUBJECT_TOKEN environment variable")
-	}
-
-	rcp := &services.OpcpRootCertificateRetrieverService{
-		BaseURL:         "https://open.plugncharge-test.hubject.com",
-		HttpAuthService: services.NewFixedTokenHttpAuthService(bearerToken),
-		HttpClient:      http.DefaultClient,
+	rcp := &services.OpcpRootCertificateProviderService{
+		BaseURL: "https://open.plugncharge-test.hubject.com",
+		TokenService: services.NewHubjectTestHttpTokenService(
+			"https://hubject.stoplight.io/api/v1/projects/cHJqOjk0NTg5/nodes/6bb8b3bc79c2e-authorization-token",
+			http.DefaultClient),
+		HttpClient: http.DefaultClient,
 	}
 
 	certificates, err := rcp.ProvideCertificates(context.Background())

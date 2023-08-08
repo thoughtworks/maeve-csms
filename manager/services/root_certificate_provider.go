@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 package services
 
 import (
@@ -8,19 +10,22 @@ import (
 	"encoding/pem"
 	"fmt"
 	"io"
+	"k8s.io/utils/clock"
 	"net/http"
 	"os"
+	"sync"
+	"time"
 )
 
 type RootCertificateProviderService interface {
 	ProvideCertificates(ctx context.Context) ([]*x509.Certificate, error)
 }
 
-type FileRootCertificateRetrieverService struct {
+type FileRootCertificateProviderService struct {
 	FilePaths []string
 }
 
-func (s FileRootCertificateRetrieverService) ProvideCertificates(context.Context) (certs []*x509.Certificate, err error) {
+func (s FileRootCertificateProviderService) ProvideCertificates(context.Context) (certs []*x509.Certificate, err error) {
 	for _, pemFile := range s.FilePaths {
 		//#nosec G304 - only files specified by the person running the application will be loaded
 		bytes, e := os.ReadFile(pemFile)
@@ -70,6 +75,40 @@ func parseCertificate(pemData []byte) (cert *x509.Certificate, rest []byte, err 
 	return
 }
 
+type CachingRootCertificateProviderService struct {
+	sync.Mutex
+	delegate RootCertificateProviderService
+	ttl      time.Duration
+	clock    clock.PassiveClock
+	expiry   time.Time
+	certs    []*x509.Certificate
+}
+
+func NewCachingRootCertificateProviderService(delegate RootCertificateProviderService, ttl time.Duration, clock clock.PassiveClock) *CachingRootCertificateProviderService {
+	return &CachingRootCertificateProviderService{
+		delegate: delegate,
+		ttl:      ttl,
+		clock:    clock,
+		expiry:   clock.Now(),
+	}
+}
+
+func (c *CachingRootCertificateProviderService) ProvideCertificates(ctx context.Context) ([]*x509.Certificate, error) {
+	c.Lock()
+	defer c.Unlock()
+
+	if c.clock.Now().After(c.expiry) {
+		var err error
+		c.certs, err = c.delegate.ProvideCertificates(ctx)
+		if err != nil {
+			return nil, err
+		}
+		c.expiry = c.clock.Now().Add(c.ttl)
+	}
+
+	return c.certs, nil
+}
+
 type OpcpRootCertificateReturnType struct {
 	RootCertificateCollection OpcpRootCertificateCollectionType `json:"RootCertificateCollection"`
 }
@@ -95,13 +134,13 @@ type OpcpRootCertificateType struct {
 	Fingerprint                string `json:"fingerprint"`
 }
 
-type OpcpRootCertificateRetrieverService struct {
-	BaseURL         string
-	HttpAuthService HttpAuthService
-	HttpClient      *http.Client
+type OpcpRootCertificateProviderService struct {
+	BaseURL      string
+	TokenService HttpTokenService
+	HttpClient   *http.Client
 }
 
-func (s OpcpRootCertificateRetrieverService) ProvideCertificates(ctx context.Context) (certs []*x509.Certificate, err error) {
+func (s OpcpRootCertificateProviderService) ProvideCertificates(ctx context.Context) (certs []*x509.Certificate, err error) {
 	body, err := s.retrieveCertificatesFromUrl(ctx)
 	if err != nil {
 		return nil, err
@@ -128,16 +167,18 @@ func (s OpcpRootCertificateRetrieverService) ProvideCertificates(ctx context.Con
 	return
 }
 
-func (s OpcpRootCertificateRetrieverService) retrieveCertificatesFromUrl(ctx context.Context) ([]byte, error) {
+func (s OpcpRootCertificateProviderService) retrieveCertificatesFromUrl(ctx context.Context) ([]byte, error) {
 	req, err := http.NewRequestWithContext(ctx, "GET", fmt.Sprintf("%s/v1/root/rootCerts", s.BaseURL), nil)
 	if err != nil {
 		return nil, err
 	}
 	req.Header.Add("Accept", "application/json")
-	err = s.HttpAuthService.Authenticate(req)
+	token, err := s.TokenService.GetToken(ctx, false)
 	if err != nil {
 		return nil, err
 	}
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+	req.Header.Set("X-API-Key", token)
 
 	resp, err := s.HttpClient.Do(req)
 	if err != nil {
@@ -154,4 +195,12 @@ func (s OpcpRootCertificateRetrieverService) retrieveCertificatesFromUrl(ctx con
 		return nil, err
 	}
 	return body, nil
+}
+
+type X509RootCertificateProviderService struct {
+	Certificates []*x509.Certificate
+}
+
+func (x X509RootCertificateProviderService) ProvideCertificates(ctx context.Context) ([]*x509.Certificate, error) {
+	return x.Certificates, nil
 }

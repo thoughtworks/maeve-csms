@@ -81,6 +81,11 @@ func TestConfigureOcspContractCertValidator(t *testing.T) {
 }
 
 func TestConfigureOpcpContractCertProvider(t *testing.T) {
+	_ = os.Setenv("TEST_OPCP_TOKEN", "test-token")
+	defer func() {
+		_ = os.Unsetenv("TEST_OPCP_TOKEN")
+	}()
+
 	cfg := &config.DefaultConfig
 	cfg.ContractCertValidator.Ocsp.RootCertProvider.File.FileNames = []string{"testdata/root_ca.pem"}
 	cfg.ContractCertProvider.Type = "opcp"
@@ -88,7 +93,7 @@ func TestConfigureOpcpContractCertProvider(t *testing.T) {
 		Url: "http://localhost:8080",
 		HttpAuth: config.HttpAuthConfig{
 			Type: "env_token",
-			EnvToken: &config.EnvTokenHttpAuthConfig{
+			EnvToken: &config.EnvHttpTokenConfig{
 				EnvVar: "TEST_OPCP_TOKEN",
 			},
 		},
@@ -110,6 +115,11 @@ func TestConfigureDefaultContractCertProvider(t *testing.T) {
 }
 
 func TestConfigureOpcpChargeStationCertProvider(t *testing.T) {
+	_ = os.Setenv("TEST_OPCP_TOKEN", "test-token")
+	defer func() {
+		_ = os.Unsetenv("TEST_OPCP_TOKEN")
+	}()
+
 	cfg := &config.DefaultConfig
 	cfg.ContractCertValidator.Ocsp.RootCertProvider.File.FileNames = []string{"testdata/root_ca.pem"}
 	cfg.ChargeStationCertProvider.Type = "opcp"
@@ -117,7 +127,7 @@ func TestConfigureOpcpChargeStationCertProvider(t *testing.T) {
 		Url: "http://localhost:8080",
 		HttpAuth: config.HttpAuthConfig{
 			Type: "env_token",
-			EnvToken: &config.EnvTokenHttpAuthConfig{
+			EnvToken: &config.EnvHttpTokenConfig{
 				EnvVar: "TEST_OPCP_TOKEN",
 			},
 		},

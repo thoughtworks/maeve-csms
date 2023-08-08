@@ -4,7 +4,6 @@ package cmd
 
 import (
 	"context"
-	"crypto/x509"
 	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/thoughtworks/maeve-csms/manager/services"
@@ -21,17 +20,14 @@ var validateCmd = &cobra.Command{
 	Short: "Validate a contract certificate",
 	Long:  "Takes a list of <emaid>:<pemFile> arguments and validates each using the OCSP validator",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		var trustRoots []*x509.Certificate
-		moRootCertRetrievalService := services.FileRootCertificateRetrieverService{
+		moRootCertRetrievalService := services.FileRootCertificateProviderService{
 			FilePaths: validationTrustRoots,
 		}
 
-		trustRoots, _ = moRootCertRetrievalService.ProvideCertificates(context.Background())
-
 		validator := services.OnlineCertificateValidationService{
-			RootCertificates: trustRoots,
-			MaxOCSPAttempts:  3,
-			HttpClient:       http.DefaultClient,
+			RootCertificateProvider: moRootCertRetrievalService,
+			MaxOCSPAttempts:         3,
+			HttpClient:              http.DefaultClient,
 		}
 
 		for _, emaidAndPemFile := range args {

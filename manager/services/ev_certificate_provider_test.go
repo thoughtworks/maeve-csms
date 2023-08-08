@@ -93,8 +93,8 @@ func TestEvCertificateProvider(t *testing.T) {
 	defer server.Close()
 
 	provider := services.OpcpEvCertificateProvider{
-		BaseURL:     server.URL,
-		BearerToken: "TestToken",
+		BaseURL:          server.URL,
+		HttpTokenService: services.NewFixedHttpTokenService("TestToken"),
 	}
 
 	response, err := provider.ProvideCertificate(context.Background(), "valid")
@@ -111,8 +111,8 @@ func TestEvCertificateProviderWithFlakyResponses(t *testing.T) {
 	defer server.Close()
 
 	provider := services.OpcpEvCertificateProvider{
-		BaseURL:     server.URL,
-		BearerToken: "TestToken",
+		BaseURL:          server.URL,
+		HttpTokenService: services.NewFixedHttpTokenService("TestToken"),
 	}
 
 	response, err := provider.ProvideCertificate(context.Background(), "flaky")
@@ -140,8 +140,8 @@ func TestEvCertificateProviderFailureCases(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			provider := services.OpcpEvCertificateProvider{
-				BaseURL:     server.URL,
-				BearerToken: tc.token,
+				BaseURL:          server.URL,
+				HttpTokenService: services.NewFixedHttpTokenService(tc.token),
 			}
 
 			response, err := provider.ProvideCertificate(context.Background(), tc.exiRequest)

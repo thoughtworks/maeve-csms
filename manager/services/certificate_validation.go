@@ -57,9 +57,9 @@ type CertificateValidationService interface {
 }
 
 type OnlineCertificateValidationService struct {
-	RootCertificates []*x509.Certificate
-	MaxOCSPAttempts  int
-	HttpClient       *http.Client
+	RootCertificateProvider RootCertificateProviderService
+	MaxOCSPAttempts         int
+	HttpClient              *http.Client
 }
 
 func (o *OnlineCertificateValidationService) ValidatePEMCertificateChain(ctx context.Context, pemChain []byte, eMAID string) (*string, error) {
@@ -77,12 +77,17 @@ func (o *OnlineCertificateValidationService) ValidatePEMCertificateChain(ctx con
 		return nil, err
 	}
 
-	err = o.validatePEMCertificateChain(certificateChain, o.RootCertificates)
+	rootCerts, err := o.RootCertificateProvider.ProvideCertificates(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	ocspResponse, err := o.validatePEMCertificateChainOCSPStatus(ctx, certificateChain, o.RootCertificates, o.MaxOCSPAttempts)
+	err = o.validatePEMCertificateChain(certificateChain, rootCerts)
+	if err != nil {
+		return nil, err
+	}
+
+	ocspResponse, err := o.validatePEMCertificateChainOCSPStatus(ctx, certificateChain, rootCerts, o.MaxOCSPAttempts)
 	if err != nil {
 		return ocspResponse, err
 	}

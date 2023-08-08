@@ -96,15 +96,17 @@ fileignoreconfig:
   - filename: manager/services/certificate_validation.go
     checksum: c56dba57d1502acbecb680f97f6efbbd42fda3fde3ca5f54e63da883684db610
   - filename: manager/services/certificate_validation_hubject_test.go
-    checksum: 100d8f7a7fe642abae94812a2e9f6938f5045bbd22c358b2e0adc684a45698ce
+    checksum: 6a0f464624416815d5f97cdb9c4f3600c1f0407b466ac4db48b6f6295eb23323
   - filename: manager/services/certificate_validation_test.go
     checksum: 5e207ccc347d453d0352e1dcbc6ca129f9a0b7f1ae8a54469d870845ba046b77
   - filename: manager/services/ev_certificate_provider.go
     checksum: 42480a4243292eb9f5c2324cfaf6760df7b35e7a716591c11a1ecb40574f213f
-  - filename: manager/services/http_auth.go
-    checksum: 22109b756999ae2c08514482d06d47d06948c08957327eb9b7b7acc6108fcafb
+  - filename: manager/services/http_token_hubject_test.go
+    checksum: 8c86e20c1bc4a233db56055dde20f62d90fc24e6f4981465cbcb638571cc07db
   - filename: manager/services/root_certificate_provider.go
     checksum: 2a6600b180491790f406abfd5feb1e5325bf06c2632dfd62d8652fc62151ad9b
+  - filename: manager/services/root_certificate_provider_hubject_test.go
+    checksum: a62fd5bac85a93176159414748da823ac9766fdc57dc50f8bff1a9c1b96e14ae
   - filename: manager/services/testdata/root_ca.pem
     checksum: b51bd1be395933cf9ef4548e20c3ba7bddf8ff81d69343e6ebae2c28de21a79b
   - filename: manager/store/firestore/cert_test.go

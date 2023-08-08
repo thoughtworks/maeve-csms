@@ -23,9 +23,9 @@ type EvCertificateProvider interface {
 }
 
 type OpcpEvCertificateProvider struct {
-	BaseURL     string
-	BearerToken string
-	HttpClient  *http.Client
+	BaseURL          string
+	HttpTokenService HttpTokenService
+	HttpClient       *http.Client
 }
 
 type EvCertificate15118Response struct {
@@ -68,8 +68,8 @@ func (h OpcpEvCertificateProvider) ProvideCertificate(ctx context.Context, exiRe
 		return EvCertificate15118Response{}, fmt.Errorf("marshalling body: %w", err)
 	}
 
-	resp, err := withRetries(ctx, func(fnCtx context.Context) (*http.Response, error) {
-		req, err := h.moRequest(fnCtx, requestUrl, marshalledBody)
+	resp, err := withRetries(ctx, func(fnCtx context.Context, isRetry bool) (*http.Response, error) {
+		req, err := h.moRequest(fnCtx, isRetry, requestUrl, marshalledBody)
 		if err != nil {
 			return &http.Response{}, fmt.Errorf("requesting certificate: %w", err)
 		}
@@ -128,19 +128,23 @@ func (h OpcpEvCertificateProvider) ProvideCertificate(ctx context.Context, exiRe
 	return response, nil
 }
 
-func (h OpcpEvCertificateProvider) moRequest(ctx context.Context, requestUrl string, marshalledBody []byte) (*http.Request, error) {
+func (h OpcpEvCertificateProvider) moRequest(ctx context.Context, isRetry bool, requestUrl string, marshalledBody []byte) (*http.Request, error) {
 	req, err := http.NewRequestWithContext(ctx, "POST", requestUrl, bytes.NewReader(marshalledBody))
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Add("x-api-key", h.BearerToken)
-	req.Header.Add("authorization", fmt.Sprintf("Bearer %s", h.BearerToken))
+	token, err := h.HttpTokenService.GetToken(ctx, isRetry)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("x-api-key", token)
+	req.Header.Add("authorization", fmt.Sprintf("Bearer %s", token))
 	req.Header.Add("content-type", "application/json")
 
 	return req, nil
 }
 
-type retryFunc func(context.Context) (*http.Response, error)
+type retryFunc func(context.Context, bool) (*http.Response, error)
 
 func withRetries(ctx context.Context, action retryFunc, attempts int) (*http.Response, error) {
 	span := trace.SpanFromContext(ctx)
@@ -150,7 +154,7 @@ func withRetries(ctx context.Context, action retryFunc, attempts int) (*http.Res
 	var lastErr error
 
 	for attempt := 1; attempt <= attempts; attempt++ {
-		resp, err := action(newCtx)
+		resp, err := action(newCtx, attempt > 1)
 		if err == nil && resp.StatusCode == http.StatusOK {
 			if attempt > 1 {
 				span.SetAttributes(semconv.HTTPResendCount(attempt - 1))

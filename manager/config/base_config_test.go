@@ -41,13 +41,10 @@ func TestParseConfig(t *testing.T) {
 					Type: "opcp",
 					Opcp: &config.OpcpRootCertProviderConfig{
 						Url: "https://open.plugncharge-test.hubject.com",
-						Cache: config.OpcpRootCertProviderCacheConfig{
-							Ttl:  "24h",
-							File: "/certs/root_certs.json",
-						},
+						Ttl: "24h",
 						HttpAuth: config.HttpAuthConfig{
 							Type: "env_token",
-							EnvToken: &config.EnvTokenHttpAuthConfig{
+							EnvToken: &config.EnvHttpTokenConfig{
 								EnvVar: "RCP_TOKEN",
 							},
 						},
@@ -62,7 +59,7 @@ func TestParseConfig(t *testing.T) {
 				Url: "https://open.plugncharge-test.hubject.com",
 				HttpAuth: config.HttpAuthConfig{
 					Type: "env_token",
-					EnvToken: &config.EnvTokenHttpAuthConfig{
+					EnvToken: &config.EnvHttpTokenConfig{
 						EnvVar: "EST_TOKEN",
 					},
 				},
@@ -74,7 +71,7 @@ func TestParseConfig(t *testing.T) {
 				Url: "https://open.plugncharge-test.hubject.com",
 				HttpAuth: config.HttpAuthConfig{
 					Type: "hubject_test_token",
-					HubjectTestToken: &config.HubjectTestTokenHttpAuthConfig{
+					HubjectTestToken: &config.HubjectTestHttpTokenConfig{
 						Url: "https://hubject.stoplight.io/docs/open-plugncharge/6bb8b3bc79c2e-authorization-token",
 					},
 				},
