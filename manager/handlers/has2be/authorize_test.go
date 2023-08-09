@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 package has2be_test
 
 import (
@@ -5,8 +7,9 @@ import (
 	"errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	handlers "github.com/thoughtworks/maeve-csms/manager/handlers/has2be"
-	types "github.com/thoughtworks/maeve-csms/manager/ocpp/has2be"
+	handlersHasToBe "github.com/thoughtworks/maeve-csms/manager/handlers/has2be"
+	handlers201 "github.com/thoughtworks/maeve-csms/manager/handlers/ocpp201"
+	typesHasToBe "github.com/thoughtworks/maeve-csms/manager/ocpp/has2be"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
 	"github.com/thoughtworks/maeve-csms/manager/services"
 	"github.com/thoughtworks/maeve-csms/manager/store"
@@ -86,17 +89,19 @@ func TestAuthorizeWithEmaidAndCertificateHashes(t *testing.T) {
 	err := setupTokenStore(engine)
 	require.NoError(t, err)
 
-	ah := handlers.AuthorizeHandler{
-		TokenStore:                   engine,
-		CertificateValidationService: mockCertValidationService{},
+	ah := handlersHasToBe.AuthorizeHandler{
+		Handler201: handlers201.AuthorizeHandler{
+			TokenStore:                   engine,
+			CertificateValidationService: mockCertValidationService{},
+		},
 	}
 
-	req := &types.AuthorizeRequestJson{
-		IdToken: types.IdTokenType{
-			Type:    types.IdTokenEnumTypeEMAID,
+	req := &typesHasToBe.AuthorizeRequestJson{
+		IdToken: typesHasToBe.IdTokenType{
+			Type:    typesHasToBe.IdTokenEnumTypeEMAID,
 			IdToken: "MYEMAID",
 		},
-		ISO15118CertificateHashData: []types.OCSPRequestDataType{
+		ISO15118CertificateHashData: []typesHasToBe.OCSPRequestDataType{
 			{
 				SerialNumber: "mockCertificate",
 			},
@@ -106,10 +111,10 @@ func TestAuthorizeWithEmaidAndCertificateHashes(t *testing.T) {
 	got, err := ah.HandleCall(context.Background(), "cs001", req)
 	assert.NoError(t, err)
 
-	certStatus := types.AuthorizeCertificateStatusEnumTypeAccepted
-	want := &types.AuthorizeResponseJson{
-		IdTokenInfo: types.IdTokenInfoType{
-			Status: types.AuthorizationStatusEnumTypeAccepted,
+	certStatus := typesHasToBe.AuthorizeCertificateStatusEnumTypeAccepted
+	want := &typesHasToBe.AuthorizeResponseJson{
+		IdTokenInfo: typesHasToBe.IdTokenInfoType{
+			Status: typesHasToBe.AuthorizationStatusEnumTypeAccepted,
 		},
 		CertificateStatus: certStatus,
 	}
@@ -122,27 +127,29 @@ func TestAuthorizeWithEmaidAndInvalidCertificateHashes(t *testing.T) {
 	err := setupTokenStore(engine)
 	require.NoError(t, err)
 
-	ah := handlers.AuthorizeHandler{
-		TokenStore:                   engine,
-		CertificateValidationService: mockCertValidationService{},
+	ah := handlersHasToBe.AuthorizeHandler{
+		Handler201: handlers201.AuthorizeHandler{
+			TokenStore:                   engine,
+			CertificateValidationService: mockCertValidationService{},
+		},
 	}
 
 	testCases := []string{"invalidCertChain", "revokedCertChain", "expiredCertChain", "signatureError"}
-	expectedErrors := []types.AuthorizeCertificateStatusEnumType{
-		types.AuthorizeCertificateStatusEnumTypeCertificateRevoked,
-		types.AuthorizeCertificateStatusEnumTypeCertificateRevoked,
-		types.AuthorizeCertificateStatusEnumTypeCertificateRevoked,
-		types.AuthorizeCertificateStatusEnumTypeCertificateRevoked,
+	expectedErrors := []typesHasToBe.AuthorizeCertificateStatusEnumType{
+		typesHasToBe.AuthorizeCertificateStatusEnumTypeCertificateRevoked,
+		typesHasToBe.AuthorizeCertificateStatusEnumTypeCertificateRevoked,
+		typesHasToBe.AuthorizeCertificateStatusEnumTypeCertificateRevoked,
+		typesHasToBe.AuthorizeCertificateStatusEnumTypeCertificateRevoked,
 	}
 
 	for index, testCase := range testCases {
 		t.Run(testCase, func(t *testing.T) {
-			req := &types.AuthorizeRequestJson{
-				IdToken: types.IdTokenType{
-					Type:    types.IdTokenEnumTypeEMAID,
+			req := &typesHasToBe.AuthorizeRequestJson{
+				IdToken: typesHasToBe.IdTokenType{
+					Type:    typesHasToBe.IdTokenEnumTypeEMAID,
 					IdToken: "MYEMAID",
 				},
-				ISO15118CertificateHashData: []types.OCSPRequestDataType{
+				ISO15118CertificateHashData: []typesHasToBe.OCSPRequestDataType{
 					{
 						SerialNumber: testCase,
 					},
@@ -152,9 +159,9 @@ func TestAuthorizeWithEmaidAndInvalidCertificateHashes(t *testing.T) {
 			got, err := ah.HandleCall(context.Background(), "cs001", req)
 			assert.NoError(t, err)
 
-			want := &types.AuthorizeResponseJson{
-				IdTokenInfo: types.IdTokenInfoType{
-					Status: types.AuthorizationStatusEnumTypeBlocked,
+			want := &typesHasToBe.AuthorizeResponseJson{
+				IdTokenInfo: typesHasToBe.IdTokenInfoType{
+					Status: typesHasToBe.AuthorizationStatusEnumTypeBlocked,
 				},
 				CertificateStatus: expectedErrors[index],
 			}

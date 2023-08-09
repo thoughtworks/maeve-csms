@@ -161,8 +161,30 @@ func NewV16Router(emitter Emitter,
 								RequestSchema:  "has2be/AuthorizeRequest.json",
 								ResponseSchema: "has2be/AuthorizeResponse.json",
 								Handler: handlersHasToBe.AuthorizeHandler{
-									TokenStore:                   tokenStore,
-									CertificateValidationService: certValidationService,
+									Handler201: handlers201.AuthorizeHandler{
+										TokenStore:                   tokenStore,
+										CertificateValidationService: certValidationService,
+									},
+								},
+							},
+							"GetCertificateStatus": {
+								NewRequest:     func() ocpp.Request { return new(has2be.GetCertificateStatusRequestJson) },
+								RequestSchema:  "has2be/GetCertificateStatusRequest.json",
+								ResponseSchema: "has2be/GetCertificateStatusResponse.json",
+								Handler: handlersHasToBe.GetCertificateStatusHandler{
+									Handler201: handlers201.GetCertificateStatusHandler{
+										CertificateValidationService: certValidationService,
+									},
+								},
+							},
+							"Get15118EVCertificate": {
+								NewRequest:     func() ocpp.Request { return new(has2be.Get15118EVCertificateRequestJson) },
+								RequestSchema:  "has2be/Get15118EVCertificateRequest.json",
+								ResponseSchema: "has2be/Get15118EVCertificateResponse.json",
+								Handler: handlersHasToBe.Get15118EvCertificateHandler{
+									Handler201: handlers201.Get15118EvCertificateHandler{
+										ContractCertificateProvider: contractCertProvider,
+									},
 								},
 							},
 						},
