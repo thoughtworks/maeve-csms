@@ -2,41 +2,34 @@ package has2be
 
 import (
 	"context"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/trace"
-
+	handlers201 "github.com/thoughtworks/maeve-csms/manager/handlers/ocpp201"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
-	types "github.com/thoughtworks/maeve-csms/manager/ocpp/has2be"
-	"github.com/thoughtworks/maeve-csms/manager/services"
+	typesHasToBe "github.com/thoughtworks/maeve-csms/manager/ocpp/has2be"
+	types201 "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
 )
 
 type Get15118EvCertificateHandler struct {
-	EvCertificateProvider services.EvCertificateProvider
+	Handler201 handlers201.Get15118EvCertificateHandler
 }
 
 func (g Get15118EvCertificateHandler) HandleCall(ctx context.Context, _ string, request ocpp.Request) (ocpp.Response, error) {
-	span := trace.SpanFromContext(ctx)
+	req := request.(*typesHasToBe.Get15118EVCertificateRequestJson)
 
-	req := request.(*types.Get15118EVCertificateRequestJson)
-
-	status := types.Iso15118EVCertificateStatusEnumTypeFailed
-	response := types.Get15118EVCertificateResponseJson{
-		Status: status,
-	}
-	if g.EvCertificateProvider != nil {
-		res, err := g.EvCertificateProvider.ProvideCertificate(ctx, req.ExiRequest)
-
-		if err != nil {
-			span.SetAttributes(attribute.String("get_ev_cert.error", err.Error()))
-		} else {
-			response = types.Get15118EVCertificateResponseJson{
-				Status:      types.Iso15118EVCertificateStatusEnumType(res.Status),
-				ExiResponse: res.CertificateInstallationRes,
-			}
-		}
+	req201 := types201.Get15118EVCertificateRequestJson{
+		ExiRequest:            req.ExiRequest,
+		Iso15118SchemaVersion: *req.A15118SchemaVersion,
+		// TODO: always assume it's Install not Update?
+		Action: types201.CertificateActionEnumTypeInstall,
 	}
 
-	span.SetAttributes(attribute.String("request.status", string(status)))
+	res, err := g.Handler201.HandleCall(ctx, "", &req201)
+	if err != nil {
+		return nil, err
+	}
+	res201 := res.(*types201.Get15118EVCertificateResponseJson)
 
-	return &response, nil
+	return &typesHasToBe.Get15118EVCertificateResponseJson{
+		Status:      typesHasToBe.Iso15118EVCertificateStatusEnumType(res201.Status),
+		ExiResponse: res201.ExiResponse,
+	}, nil
 }

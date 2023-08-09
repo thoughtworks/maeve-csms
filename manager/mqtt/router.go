@@ -182,7 +182,9 @@ func NewV16Router(emitter Emitter,
 								RequestSchema:  "has2be/Get15118EVCertificateRequest.json",
 								ResponseSchema: "has2be/Get15118EVCertificateResponse.json",
 								Handler: handlersHasToBe.Get15118EvCertificateHandler{
-									EvCertificateProvider: certProviderService,
+									Handler201: handlers201.Get15118EvCertificateHandler{
+										EvCertificateProvider: certProviderService,
+									},
 								},
 							},
 						},

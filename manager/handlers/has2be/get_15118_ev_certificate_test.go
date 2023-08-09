@@ -4,7 +4,8 @@ import (
 	"context"
 	"errors"
 	"github.com/stretchr/testify/assert"
-	types "github.com/thoughtworks/maeve-csms/manager/ocpp/has2be"
+	handlers201 "github.com/thoughtworks/maeve-csms/manager/handlers/ocpp201"
+	typesHasToBe "github.com/thoughtworks/maeve-csms/manager/ocpp/has2be"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
 	"github.com/thoughtworks/maeve-csms/manager/services"
 	"testing"
@@ -29,18 +30,20 @@ func (d dummyEvCertificateProvider) ProvideCertificate(_ context.Context, exiReq
 
 func TestGet15118EvCertificate(t *testing.T) {
 	schemaVersion := "urn:iso:15118:2:2013:MsgDef"
-	req := &types.Get15118EVCertificateRequestJson{
+	req := &typesHasToBe.Get15118EVCertificateRequestJson{
 		A15118SchemaVersion: &schemaVersion,
 		ExiRequest:          "success",
 	}
 
 	h := Get15118EvCertificateHandler{
-		EvCertificateProvider: dummyEvCertificateProvider{},
+		Handler201: handlers201.Get15118EvCertificateHandler{
+			EvCertificateProvider: dummyEvCertificateProvider{},
+		},
 	}
 
 	got, err := h.HandleCall(context.Background(), "cs001", req)
-	want := &types.Get15118EVCertificateResponseJson{
-		Status:      types.Iso15118EVCertificateStatusEnumTypeAccepted,
+	want := &typesHasToBe.Get15118EVCertificateResponseJson{
+		Status:      typesHasToBe.Iso15118EVCertificateStatusEnumTypeAccepted,
 		ExiResponse: "dummy exi",
 	}
 
