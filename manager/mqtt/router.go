@@ -161,8 +161,10 @@ func NewV16Router(emitter Emitter,
 								RequestSchema:  "has2be/AuthorizeRequest.json",
 								ResponseSchema: "has2be/AuthorizeResponse.json",
 								Handler: handlersHasToBe.AuthorizeHandler{
-									TokenStore:                   tokenStore,
-									CertificateValidationService: certValidationService,
+									Handler201: handlers201.AuthorizeHandler{
+										TokenStore:                   tokenStore,
+										CertificateValidationService: certValidationService,
+									},
 								},
 							},
 							"GetCertificateStatus": {

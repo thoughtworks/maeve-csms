@@ -26,11 +26,11 @@ func (g GetCertificateStatusHandler) HandleCall(ctx context.Context, chargeStati
 		ocpp201RequestData.ResponderURL = *req.OcspRequestData.ResponderURL
 	}
 
-	request201 := &types201.GetCertificateStatusRequestJson{
+	req201 := &types201.GetCertificateStatusRequestJson{
 		OcspRequestData: ocpp201RequestData,
 	}
 
-	res, err := g.Handler201.HandleCall(ctx, chargeStationId, request201)
+	res, err := g.Handler201.HandleCall(ctx, chargeStationId, req201)
 	if err != nil {
 		return nil, err
 	}

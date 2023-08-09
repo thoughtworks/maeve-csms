@@ -45,6 +45,10 @@ fileignoreconfig:
     checksum: f50f660eddefba27ad7bd433080946b9d090334349a0facf221604448e61a9f3
   - filename: manager/handlers/has2be/authorize.go
     checksum: 7f914b4be35175afb2d3bea1babc80036f3b4cfb94ce38dadeb3a257d2156fbe
+  - filename: manager/handlers/has2be/authorize.go
+    checksum: 7e65e7b7c01381870b17e66877a9ef77526256f9de37561778b5beafee413d1b
+  - filename: manager/handlers/has2be/authorize.go
+    checksum: 7e65e7b7c01381870b17e66877a9ef77526256f9de37561778b5beafee413d1b
   - filename: manager/handlers/has2be/get_certificate_status.go
     checksum: b0acc87b2f077a6bf86f768c72e8d6235c41fa0637ff49766e9ab3c9036c2fd7
   - filename: manager/handlers/has2be/get_certificate_status_test.go
