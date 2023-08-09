@@ -10,6 +10,7 @@ import (
 	"encoding/pem"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/thoughtworks/maeve-csms/manager/store"
 )
@@ -34,30 +35,48 @@ func NewStore() *Store {
 	}
 }
 
-func (s *Store) SetChargeStationAuth(ctx context.Context, chargeStationId string, auth *store.ChargeStationAuth) error {
+func (s *Store) SetChargeStationAuth(_ context.Context, chargeStationId string, auth *store.ChargeStationAuth) error {
 	s.Lock()
 	defer s.Unlock()
 	s.chargeStationAuth[chargeStationId] = auth
 	return nil
 }
 
-func (s *Store) LookupChargeStationAuth(ctx context.Context, chargeStationId string) (*store.ChargeStationAuth, error) {
+func (s *Store) LookupChargeStationAuth(_ context.Context, chargeStationId string) (*store.ChargeStationAuth, error) {
 	s.Lock()
 	defer s.Unlock()
 	return s.chargeStationAuth[chargeStationId], nil
 }
 
-func (s *Store) SetToken(ctx context.Context, token *store.Token) error {
+func (s *Store) SetToken(_ context.Context, token *store.Token) error {
 	s.Lock()
 	defer s.Unlock()
+	token.LastUpdated = time.Now().UTC().Format(time.RFC3339)
 	s.tokens[token.Uid] = token
 	return nil
 }
 
-func (s *Store) LookupToken(ctx context.Context, tokenUid string) (*store.Token, error) {
+func (s *Store) LookupToken(_ context.Context, tokenUid string) (*store.Token, error) {
 	s.Lock()
 	defer s.Unlock()
 	return s.tokens[tokenUid], nil
+}
+
+func (s *Store) ListTokens(_ context.Context, offset int, limit int) ([]*store.Token, error) {
+	s.Lock()
+	defer s.Unlock()
+	var tokens []*store.Token
+	count := 0
+	for _, token := range s.tokens {
+		if count >= offset && count < offset+limit {
+			tokens = append(tokens, token)
+		}
+		count++
+	}
+	if tokens == nil {
+		tokens = make([]*store.Token, 0)
+	}
+	return tokens, nil
 }
 
 func transactionKey(chargeStationId, transactionId string) string {
@@ -204,7 +223,7 @@ func (s *Store) LookupCertificate(_ context.Context, certificateHash string) (st
 	return s.certificates[certificateHash], nil
 }
 
-func (s *Store) DeleteCertificate(ctx context.Context, certificateHash string) error {
+func (s *Store) DeleteCertificate(_ context.Context, certificateHash string) error {
 	s.Lock()
 	defer s.Unlock()
 

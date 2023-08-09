@@ -89,8 +89,7 @@ func TestLookupChargeStationAuthThatDoesNotExist(t *testing.T) {
 }
 
 func TestSetToken(t *testing.T) {
-	server, r, engine, c := setupServer(t)
-	now := c.Now()
+	server, r, engine, _ := setupServer(t)
 	defer server.Close()
 
 	token := api.Token{
@@ -125,10 +124,13 @@ func TestSetToken(t *testing.T) {
 		Issuer:      "Thoughtworks",
 		Valid:       true,
 		CacheMode:   "ALWAYS",
-		LastUpdated: now.Format(time.RFC3339),
 	}
 
 	got, err := engine.LookupToken(context.Background(), "012345678")
+
+	assert.Regexp(t, `^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z`, got.LastUpdated)
+	got.LastUpdated = ""
+
 	require.NoError(t, err)
 	assert.Equal(t, want, got)
 }
@@ -178,6 +180,44 @@ func TestLookupToken(t *testing.T) {
 	}
 
 	assert.Equal(t, want, got)
+}
+
+func TestListTokens(t *testing.T) {
+	ctx := context.Background()
+	server, r, engine, _ := setupServer(t)
+	defer server.Close()
+
+	tokens := make([]*store.Token, 20)
+	for i := 0; i < 20; i++ {
+		tokens[i] = &store.Token{
+			CountryCode: "GB",
+			PartyId:     "TWK",
+			Type:        "RFID",
+			Uid:         fmt.Sprintf("123456%02d", i),
+			ContractId:  "GBTWK012345678V",
+			Issuer:      "TWK",
+			Valid:       true,
+			CacheMode:   store.CacheModeAllowed,
+		}
+	}
+
+	for _, token := range tokens {
+		err := engine.SetToken(ctx, token)
+		require.NoError(t, err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/token", nil)
+	req.Header.Set("accept", "application/json")
+	rr := httptest.NewRecorder()
+	r.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Result().StatusCode)
+	decoder := json.NewDecoder(rr.Result().Body)
+	var got []api.Token
+	err := decoder.Decode(&got)
+	require.NoError(t, err)
+
+	t.Logf("got: %+v", got)
 }
 
 func TestSetCertificate(t *testing.T) {

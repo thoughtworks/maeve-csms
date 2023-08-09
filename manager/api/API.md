@@ -181,6 +181,90 @@ Creates or updates a token that can be used to authorize a charge
 This operation does not require authentication
 </aside>
 
+## listTokens
+
+<a id="opIdlistTokens"></a>
+
+`GET /token`
+
+*List authorization tokens*
+
+Lists all tokens that can be used to authorize a charge
+
+<h3 id="listtokens-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|offset|query|integer|false|none|
+|limit|query|integer|false|none|
+
+> Example responses
+
+> 200 Response
+
+```json
+[
+  {
+    "countryCode": "st",
+    "partyId": "str",
+    "type": "AD_HOC_USER",
+    "uid": "string",
+    "contractId": "string",
+    "visualNumber": "string",
+    "issuer": "string",
+    "groupId": "string",
+    "valid": true,
+    "languageCode": "st",
+    "cacheMode": "ALWAYS",
+    "lastUpdated": "2019-08-24T14:15:22Z"
+  }
+]
+```
+
+<h3 id="listtokens-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|List of tokens|Inline|
+|default|Default|Unexpected error|[Status](#schemastatus)|
+
+<h3 id="listtokens-responseschema">Response Schema</h3>
+
+Status Code **200**
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|*anonymous*|[[Token](#schematoken)]|false|none|[An authorization token]|
+|» countryCode|string|true|none|The country code of the issuing eMSP|
+|» partyId|string|true|none|The party id of the issuing eMSP|
+|» type|string|true|none|The type of token|
+|» uid|string|true|none|The unique token id|
+|» contractId|string|true|none|The contract ID (eMAID) associated with the token (with optional component separators)|
+|» visualNumber|string|false|none|The visual/readable number/identification printed on an RFID card|
+|» issuer|string|true|none|Issuing company, most of the times the name of the company printed on the RFID card, not necessarily the eMSP|
+|» groupId|string|false|none|This id groups a couple of tokens to make two or more tokens work as one|
+|» valid|boolean|true|none|Is this token valid|
+|» languageCode|string|false|none|The preferred language to use encoded as ISO 639-1 language code|
+|» cacheMode|string|true|none|Indicates what type of token caching is allowed|
+|» lastUpdated|string(date-time)|false|none|The date the record was last updated (ignored on create/update)|
+
+#### Enumerated Values
+
+|Property|Value|
+|---|---|
+|type|AD_HOC_USER|
+|type|APP_USER|
+|type|OTHER|
+|type|RFID|
+|cacheMode|ALWAYS|
+|cacheMode|ALLOWED|
+|cacheMode|ALLOWED_OFFLINE|
+|cacheMode|NEVER|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
 ## lookupToken
 
 <a id="opIdlookupToken"></a>

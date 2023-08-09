@@ -111,24 +111,13 @@ func (s *Server) SetToken(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }
 
-func (s *Server) LookupToken(w http.ResponseWriter, r *http.Request, tokenUid string) {
-	tok, err := s.store.LookupToken(r.Context(), tokenUid)
-	if err != nil {
-		_ = render.Render(w, r, ErrInternalError(err))
-		return
-	}
-	if tok == nil {
-		_ = render.Render(w, r, ErrNotFound)
-		return
-	}
-
+func newToken(tok *store.Token) (*Token, error) {
 	lastUpdated, err := time.Parse(time.RFC3339, tok.LastUpdated)
 	if err != nil {
-		_ = render.Render(w, r, ErrInternalError(err))
-		return
+		return nil, err
 	}
 
-	var resp = &Token{
+	return &Token{
 		CountryCode:  tok.CountryCode,
 		PartyId:      tok.PartyId,
 		Type:         TokenType(tok.Type),
@@ -141,8 +130,58 @@ func (s *Server) LookupToken(w http.ResponseWriter, r *http.Request, tokenUid st
 		LanguageCode: tok.LanguageCode,
 		CacheMode:    TokenCacheMode(tok.CacheMode),
 		LastUpdated:  &lastUpdated,
+	}, nil
+}
+
+func (s *Server) LookupToken(w http.ResponseWriter, r *http.Request, tokenUid string) {
+	tok, err := s.store.LookupToken(r.Context(), tokenUid)
+	if err != nil {
+		_ = render.Render(w, r, ErrInternalError(err))
+		return
 	}
+	if tok == nil {
+		_ = render.Render(w, r, ErrNotFound)
+		return
+	}
+
+	resp, err := newToken(tok)
+	if err != nil {
+		_ = render.Render(w, r, ErrInternalError(err))
+		return
+	}
+
 	_ = render.Render(w, r, resp)
+}
+
+func (s *Server) ListTokens(w http.ResponseWriter, r *http.Request, params ListTokensParams) {
+	offset := 0
+	limit := 20
+
+	if params.Offset != nil {
+		offset = *params.Offset
+	}
+	if params.Limit != nil {
+		limit = *params.Limit
+	}
+	if limit > 100 {
+		limit = 100
+	}
+
+	tokens, err := s.store.ListTokens(r.Context(), offset, limit)
+	if err != nil {
+		_ = render.Render(w, r, ErrInternalError(err))
+		return
+	}
+
+	var resp = make([]render.Renderer, len(tokens))
+	for i, tok := range tokens {
+		resp[i], err = newToken(tok)
+		if err != nil {
+			_ = render.Render(w, r, ErrInternalError(err))
+			return
+		}
+	}
+	_ = render.RenderList(w, r, resp)
 }
 
 func (s *Server) UploadCertificate(w http.ResponseWriter, r *http.Request) {

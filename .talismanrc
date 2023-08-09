@@ -26,7 +26,7 @@ fileignoreconfig:
   - filename: manager/api/API.md
     checksum: c111751da44c7310d6b77b76e1a5826c44cce62e47a32eaec564e86064bb1de2
   - filename: manager/api/api.gen.go
-    checksum: 78218831bd13202e02d367253c69baee2b18c8e04f3992df29956e14827e70db
+    checksum: d32fa0bfcbaaf4e6db10c012d3de521922e83418a2121d1fa84cb81cd2277edc
   - filename: manager/api/server.go
     checksum: 22cd986022106ada9fbc8c88d41a96dbedce68e4442fe32f1ae3ac081a2bde0d
   - filename: manager/api/server_test.go
@@ -91,18 +91,12 @@ fileignoreconfig:
     checksum: bc9281581eab4a81329e8c5426a4768361f0aa8022c865b5cfca4b4b85bbaee6
   - filename: manager/schemas/ocpp201/TransactionEventResponse.json
     checksum: 30e812e60ae4c19b31bc91b1214057cb2dca6e346967250d912cd108a44322d2
-  - filename: manager/services/certificate_signer.go
-    checksum: a4bd84783d4f48f9f1c77f69bcdc954fe23a541829c2cc4ed204ed257e972bc6
-  - filename: manager/services/certificate_signer_test.go
-    checksum: 487797450a17f27cf8190d00a85d13096ec4e9e9ee1ab1c7c685f3c8a387280d
   - filename: manager/services/certificate_validation.go
     checksum: c56dba57d1502acbecb680f97f6efbbd42fda3fde3ca5f54e63da883684db610
   - filename: manager/services/certificate_validation_hubject_test.go
     checksum: 6a0f464624416815d5f97cdb9c4f3600c1f0407b466ac4db48b6f6295eb23323
   - filename: manager/services/certificate_validation_test.go
     checksum: 5e207ccc347d453d0352e1dcbc6ca129f9a0b7f1ae8a54469d870845ba046b77
-  - filename: manager/services/ev_certificate_provider.go
-    checksum: 42480a4243292eb9f5c2324cfaf6760df7b35e7a716591c11a1ecb40574f213f
   - filename: manager/services/http_token_hubject_test.go
     checksum: 8c86e20c1bc4a233db56055dde20f62d90fc24e6f4981465cbcb638571cc07db
   - filename: manager/services/root_certificate_provider.go

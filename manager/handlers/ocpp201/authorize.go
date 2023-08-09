@@ -5,7 +5,6 @@ package ocpp201
 import (
 	"context"
 	"errors"
-	"fmt"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
@@ -48,9 +47,6 @@ func (a AuthorizeHandler) HandleCall(ctx context.Context, chargeStationId string
 	var certificateStatus *types.AuthorizeCertificateStatusEnumType
 	if status == types.AuthorizationStatusEnumTypeAccepted {
 		if req.Certificate != nil {
-			if err != nil {
-				return nil, fmt.Errorf("removing root certificate if present: %w", err)
-			}
 			_, err = a.CertificateValidationService.ValidatePEMCertificateChain(ctx, []byte(*req.Certificate), req.IdToken.IdToken)
 			status, certificateStatus = handleCertificateValidationError(err)
 			if err != nil {

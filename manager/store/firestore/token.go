@@ -1,11 +1,14 @@
 package firestore
 
 import (
+	"cloud.google.com/go/firestore"
 	"context"
 	"fmt"
 	"github.com/thoughtworks/maeve-csms/manager/store"
+	"google.golang.org/api/iterator"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"time"
 )
 
 type token struct {
@@ -54,8 +57,12 @@ func (s *Store) LookupToken(ctx context.Context, tokenUid string) (*store.Token,
 		}
 		return nil, fmt.Errorf("lookup token %s: %w", tokenUid, err)
 	}
+	return newToken(snap, tokenUid)
+}
+
+func newToken(snap *firestore.DocumentSnapshot, tokenUid string) (*store.Token, error) {
 	var tok token
-	if err = snap.DataTo(&tok); err != nil {
+	if err := snap.DataTo(&tok); err != nil {
 		return nil, fmt.Errorf("map token: %s: %w", tokenUid, err)
 	}
 	return &store.Token{
@@ -70,5 +77,29 @@ func (s *Store) LookupToken(ctx context.Context, tokenUid string) (*store.Token,
 		Valid:        tok.Valid,
 		LanguageCode: tok.LanguageCode,
 		CacheMode:    tok.CacheMode,
+		LastUpdated:  snap.UpdateTime.Format(time.RFC3339),
 	}, nil
+}
+
+func (s *Store) ListTokens(context context.Context, offset int, limit int) ([]*store.Token, error) {
+	var tokens []*store.Token
+	iter := s.client.Collection("Token").OrderBy("uid", firestore.Asc).Offset(offset).Limit(limit).Documents(context)
+	for {
+		doc, err := iter.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, fmt.Errorf("next token: %w", err)
+		}
+		tok, err := newToken(doc, doc.Ref.ID)
+		if err != nil {
+			return nil, fmt.Errorf("map token: %w", err)
+		}
+		tokens = append(tokens, tok)
+	}
+	if tokens == nil {
+		tokens = make([]*store.Token, 0)
+	}
+	return tokens, nil
 }

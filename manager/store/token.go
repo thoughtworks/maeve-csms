@@ -29,4 +29,5 @@ type Token struct {
 type TokenStore interface {
 	SetToken(ctx context.Context, token *Token) error
 	LookupToken(ctx context.Context, tokenUid string) (*Token, error)
+	ListTokens(context context.Context, offset int, limit int) ([]*Token, error)
 }
