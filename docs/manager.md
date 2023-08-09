@@ -19,15 +19,15 @@ for creating the handler instances and providing them with their dependencies.
 
 All integration points are decoupled from the OCPP handlers and provided to the handler as dependencies. At present 
 the following integration points are used:
-* [services.CertificateSignerService](../manager/services/certificate_signer.go): provides support for signing the TLS
-certificates used by charge stations (for either the V2G or CPO interfaces). Current implementation uses Hubject EST
-and assumes the same certificate will be used for both interfaces.
 * [services.CertificateValidationService](../manager/services/certificate_validation.go): provides support for verifying a
-contract certificate chain based on either receiving the chain as a PEM encoded string or via certificate element
-hashes. Current implementation uses an OCSP server to verify that the certificates have not been revoked.
-* [services.EVCertificateProvider](../manager/services/ev_certificate_provider.go): provides supports for retrieving a contract
-certificate given an ISO-15118-2 get EV certificate request. Current implementation uses the Hubject contract
-certificate pool.
+  contract certificate chain based on either receiving the chain as a PEM encoded string or via certificate element
+  hashes. Current implementation uses an OCSP server to verify that the certificates have not been revoked.
+* [services.ChargeStationCertificateProvider](../manager/services/charge_station_certificate_provider.go): provides support 
+for signing the TLS certificates used by charge stations (for either the V2G or CPO interfaces). Current implementation 
+uses Hubject EST and will only sign the V2G certificate.
+* [services.ContractCertificateProvider](../manager/services/contract_certificate_provider.go): provides supports for 
+retrieving a contract certificate given an ISO-15118-2 get EV certificate request. Current implementation uses an 
+Open Plug&Charge Protocol (OPCP) contract certificate pool.
 * [services.TariffService](../manager/services/tariff.go): provides support for calculating the cost of a transaction. Current
 implementation applies a fixed charge per kWh energy consumed.
 * [store.Engine](../manager/store/engine.go): provides support for persisting various entities. Current implementations
