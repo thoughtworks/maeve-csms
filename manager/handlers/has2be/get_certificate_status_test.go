@@ -4,9 +4,10 @@ import (
 	"context"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	handlers "github.com/thoughtworks/maeve-csms/manager/handlers/has2be"
-	types "github.com/thoughtworks/maeve-csms/manager/ocpp/has2be"
-	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
+	handlersHasToBe "github.com/thoughtworks/maeve-csms/manager/handlers/has2be"
+	handlers201 "github.com/thoughtworks/maeve-csms/manager/handlers/ocpp201"
+	typesHasToBe "github.com/thoughtworks/maeve-csms/manager/ocpp/has2be"
+	types201 "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
 	"github.com/thoughtworks/maeve-csms/manager/services"
 	"testing"
 )
@@ -20,7 +21,7 @@ func (d dummyCertificateValidationService) ValidatePEMCertificateChain(ctx conte
 	return nil, nil
 }
 
-func (d dummyCertificateValidationService) ValidateHashedCertificateChain(ctx context.Context, ocspRequestData []ocpp201.OCSPRequestDataType) (*string, error) {
+func (d dummyCertificateValidationService) ValidateHashedCertificateChain(ctx context.Context, ocspRequestData []types201.OCSPRequestDataType) (*string, error) {
 	switch ocspRequestData[0].SerialNumber {
 	case "invalid-chain":
 		return nil, services.ValidationErrorCertChain
@@ -34,8 +35,8 @@ func (d dummyCertificateValidationService) ValidateHashedCertificateChain(ctx co
 }
 
 func TestGetCertificateStatus(t *testing.T) {
-	req := &types.GetCertificateStatusRequestJson{
-		OcspRequestData: types.OCSPRequestDataType{
+	req := &typesHasToBe.GetCertificateStatusRequestJson{
+		OcspRequestData: typesHasToBe.OCSPRequestDataType{
 			HashAlgorithm:  "SHA256",
 			IssuerKeyHash:  "key-hash",
 			IssuerNameHash: "name-hash",
@@ -43,16 +44,18 @@ func TestGetCertificateStatus(t *testing.T) {
 		},
 	}
 
-	h := handlers.GetCertificateStatusHandler{
-		CertificateValidationService: dummyCertificateValidationService{T: t},
+	h := handlersHasToBe.GetCertificateStatusHandler{
+		Handler201: handlers201.GetCertificateStatusHandler{
+			CertificateValidationService: dummyCertificateValidationService{T: t},
+		},
 	}
 
 	got, err := h.HandleCall(context.Background(), "cs001", req)
 	require.NoError(t, err)
 
 	ocspResult := "ocsp-result"
-	want := &types.GetCertificateStatusResponseJson{
-		Status:     types.GetCertificateStatusEnumTypeAccepted,
+	want := &typesHasToBe.GetCertificateStatusResponseJson{
+		Status:     typesHasToBe.GetCertificateStatusEnumTypeAccepted,
 		OcspResult: &ocspResult,
 	}
 
@@ -60,8 +63,8 @@ func TestGetCertificateStatus(t *testing.T) {
 }
 
 func TestGetCertificateStatusInvalidChain(t *testing.T) {
-	req := &types.GetCertificateStatusRequestJson{
-		OcspRequestData: types.OCSPRequestDataType{
+	req := &typesHasToBe.GetCertificateStatusRequestJson{
+		OcspRequestData: typesHasToBe.OCSPRequestDataType{
 			HashAlgorithm:  "SHA256",
 			IssuerKeyHash:  "key-hash",
 			IssuerNameHash: "name-hash",
@@ -69,23 +72,25 @@ func TestGetCertificateStatusInvalidChain(t *testing.T) {
 		},
 	}
 
-	h := handlers.GetCertificateStatusHandler{
-		CertificateValidationService: dummyCertificateValidationService{T: t},
+	h := handlersHasToBe.GetCertificateStatusHandler{
+		Handler201: handlers201.GetCertificateStatusHandler{
+			CertificateValidationService: dummyCertificateValidationService{T: t},
+		},
 	}
 
 	got, err := h.HandleCall(context.Background(), "cs001", req)
 	require.NoError(t, err)
 
-	want := &types.GetCertificateStatusResponseJson{
-		Status: types.GetCertificateStatusEnumTypeFailed,
+	want := &typesHasToBe.GetCertificateStatusResponseJson{
+		Status: typesHasToBe.GetCertificateStatusEnumTypeFailed,
 	}
 
 	assert.Equal(t, want, got)
 }
 
 func TestGetCertificateStatusRevoked(t *testing.T) {
-	req := &types.GetCertificateStatusRequestJson{
-		OcspRequestData: types.OCSPRequestDataType{
+	req := &typesHasToBe.GetCertificateStatusRequestJson{
+		OcspRequestData: typesHasToBe.OCSPRequestDataType{
 			HashAlgorithm:  "SHA256",
 			IssuerKeyHash:  "key-hash",
 			IssuerNameHash: "name-hash",
@@ -93,16 +98,18 @@ func TestGetCertificateStatusRevoked(t *testing.T) {
 		},
 	}
 
-	h := handlers.GetCertificateStatusHandler{
-		CertificateValidationService: dummyCertificateValidationService{T: t},
+	h := handlersHasToBe.GetCertificateStatusHandler{
+		Handler201: handlers201.GetCertificateStatusHandler{
+			CertificateValidationService: dummyCertificateValidationService{T: t},
+		},
 	}
 
 	got, err := h.HandleCall(context.Background(), "cs001", req)
 	require.NoError(t, err)
 
 	ocspResult := "revoked"
-	want := &types.GetCertificateStatusResponseJson{
-		Status:     types.GetCertificateStatusEnumTypeAccepted,
+	want := &typesHasToBe.GetCertificateStatusResponseJson{
+		Status:     typesHasToBe.GetCertificateStatusEnumTypeAccepted,
 		OcspResult: &ocspResult,
 	}
 

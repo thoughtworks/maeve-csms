@@ -2,28 +2,21 @@ package has2be
 
 import (
 	"context"
-	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/trace"
-
+	handlers201 "github.com/thoughtworks/maeve-csms/manager/handlers/ocpp201"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
-	types "github.com/thoughtworks/maeve-csms/manager/ocpp/has2be"
-	"github.com/thoughtworks/maeve-csms/manager/services"
+	typesHasToBe "github.com/thoughtworks/maeve-csms/manager/ocpp/has2be"
+	types201 "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
 )
 
 type GetCertificateStatusHandler struct {
-	CertificateValidationService services.CertificateValidationService
+	Handler201 handlers201.GetCertificateStatusHandler
 }
 
 func (g GetCertificateStatusHandler) HandleCall(ctx context.Context, chargeStationId string, request ocpp.Request) (ocpp.Response, error) {
-	span := trace.SpanFromContext(ctx)
+	req := request.(*typesHasToBe.GetCertificateStatusRequestJson)
 
-	req := request.(*types.GetCertificateStatusRequestJson)
-
-	span.SetAttributes(attribute.String("cert_status.serial_number", req.OcspRequestData.SerialNumber))
-
-	ocpp201RequestData := ocpp201.OCSPRequestDataType{
-		HashAlgorithm:  ocpp201.HashAlgorithmEnumType(req.OcspRequestData.HashAlgorithm),
+	ocpp201RequestData := types201.OCSPRequestDataType{
+		HashAlgorithm:  types201.HashAlgorithmEnumType(req.OcspRequestData.HashAlgorithm),
 		IssuerKeyHash:  req.OcspRequestData.IssuerKeyHash,
 		IssuerNameHash: req.OcspRequestData.IssuerNameHash,
 		SerialNumber:   req.OcspRequestData.SerialNumber,
@@ -33,19 +26,18 @@ func (g GetCertificateStatusHandler) HandleCall(ctx context.Context, chargeStati
 		ocpp201RequestData.ResponderURL = *req.OcspRequestData.ResponderURL
 	}
 
-	status := types.GetCertificateStatusEnumTypeAccepted
-	ocspResp, err := g.CertificateValidationService.ValidateHashedCertificateChain(ctx, []ocpp201.OCSPRequestDataType{ocpp201RequestData})
+	request201 := &types201.GetCertificateStatusRequestJson{
+		OcspRequestData: ocpp201RequestData,
+	}
+
+	res, err := g.Handler201.HandleCall(ctx, chargeStationId, request201)
 	if err != nil {
-		span.SetAttributes(attribute.String("cert_status.error", err.Error()))
+		return nil, err
 	}
-	if ocspResp == nil {
-		status = types.GetCertificateStatusEnumTypeFailed
-	}
+	res201 := res.(*types201.GetCertificateStatusResponseJson)
 
-	span.SetAttributes(attribute.String("request.status", string(status)))
-
-	return &types.GetCertificateStatusResponseJson{
-		Status:     status,
-		OcspResult: ocspResp,
+	return &typesHasToBe.GetCertificateStatusResponseJson{
+		Status:     typesHasToBe.GetCertificateStatusEnumType(res201.Status),
+		OcspResult: res201.OcspResult,
 	}, nil
 }
