@@ -13,9 +13,9 @@ import (
 
 var calledTimes int
 
-type dummyEvCertificateProvider struct{}
+type dummyContractCertificateProvider struct{}
 
-func (d dummyEvCertificateProvider) ProvideCertificate(_ context.Context, exiRequest string) (services.EvCertificate15118Response, error) {
+func (d dummyContractCertificateProvider) ProvideCertificate(_ context.Context, exiRequest string) (services.EvCertificate15118Response, error) {
 	calledTimes++
 	if exiRequest == "success" {
 		return services.EvCertificate15118Response{
@@ -37,7 +37,7 @@ func TestGet15118EvCertificate(t *testing.T) {
 
 	h := Get15118EvCertificateHandler{
 		Handler201: handlers201.Get15118EvCertificateHandler{
-			EvCertificateProvider: dummyEvCertificateProvider{},
+			ContractCertificateProvider: dummyContractCertificateProvider{},
 		},
 	}
 
