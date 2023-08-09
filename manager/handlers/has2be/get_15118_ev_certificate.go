@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 package has2be
 
 import (
@@ -18,7 +20,7 @@ func (g Get15118EvCertificateHandler) HandleCall(ctx context.Context, _ string, 
 	req201 := types201.Get15118EVCertificateRequestJson{
 		ExiRequest:            req.ExiRequest,
 		Iso15118SchemaVersion: *req.A15118SchemaVersion,
-		// TODO: always assume it's Install not Update?
+		// the only difference for install vs update is in the ExiRequest - so this field is only required for validation
 		Action: types201.CertificateActionEnumTypeInstall,
 	}
 
