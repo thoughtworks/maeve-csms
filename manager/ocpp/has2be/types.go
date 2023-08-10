@@ -6,6 +6,11 @@ const HashAlgorithmEnumTypeSHA256 HashAlgorithmEnumType = "SHA256"
 const HashAlgorithmEnumTypeSHA384 HashAlgorithmEnumType = "SHA384"
 const HashAlgorithmEnumTypeSHA512 HashAlgorithmEnumType = "SHA512"
 
+type CertificateSigningUseEnumType string
+
+const CertificateSigningUseEnumTypeChargingStationCertificate CertificateSigningUseEnumType = "ChargingStationCertificate"
+const CertificateSigningUseEnumTypeV2GCertificate CertificateSigningUseEnumType = "V2GCertificate"
+
 type OCSPRequestDataType struct {
 	// HashAlgorithm corresponds to the JSON schema field "hashAlgorithm".
 	HashAlgorithm HashAlgorithmEnumType `json:"hashAlgorithm" yaml:"hashAlgorithm" mapstructure:"hashAlgorithm"`
