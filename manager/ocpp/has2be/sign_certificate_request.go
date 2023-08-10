@@ -1,10 +1,5 @@
 package has2be
 
-type CertificateSigningUseEnumType string
-
-const CertificateSigningUseEnumTypeChargingStationCertificate CertificateSigningUseEnumType = "ChargingStationCertificate"
-const CertificateSigningUseEnumTypeV2GCertificate CertificateSigningUseEnumType = "V2GCertificate"
-
 type SignCertificateRequestJson struct {
 	// The Charging Station SHALL send the public key in form of a Certificate Signing
 	// Request (CSR) as described in the X.509 standard.
