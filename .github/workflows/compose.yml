@@ -18,3 +18,6 @@ jobs:
           run: docker compose logs
         - name: Smoke test
           run: http -v --ignore-stdin --check-status POST http://localhost:9410/api/v0/cs/cs001 securityProfile:=2
+        - name: Try restart and connect again
+          if: failure()
+          run: docker compose restart lb && http -v --ignore-stdin --check-status POST http://localhost:9410/api/v0/cs/cs001 securityProfile:=2
