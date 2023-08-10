@@ -187,6 +187,17 @@ func NewV16Router(emitter Emitter,
 									},
 								},
 							},
+							"SignCertificate": {
+								NewRequest:     func() ocpp.Request { return new(has2be.SignCertificateRequestJson) },
+								RequestSchema:  "has2be/SignCertificateRequestJson.json",
+								ResponseSchema: "has2be/SignCertificateRequestJson.json",
+								Handler: handlersHasToBe.SignCertificateHandler{
+									Handler201: handlers201.SignCertificateHandler{
+										ChargeStationCertificateProvider: chargeStationCertProvider,
+										CallMaker:                        dataTransferCallMaker,
+									},
+								},
+							},
 						},
 					},
 				},
