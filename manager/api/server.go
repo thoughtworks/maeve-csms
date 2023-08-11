@@ -3,6 +3,7 @@
 package api
 
 import (
+	"github.com/thoughtworks/maeve-csms/manager/ocpi"
 	"net/http"
 	"time"
 
@@ -10,7 +11,6 @@ import (
 	"github.com/go-chi/render"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
 	"github.com/thoughtworks/maeve-csms/manager/store"
-	"golang.org/x/exp/slog"
 	"k8s.io/utils/clock"
 )
 
@@ -18,9 +18,10 @@ type Server struct {
 	store   store.Engine
 	clock   clock.PassiveClock
 	swagger *openapi3.T
+	ocpi    ocpi.Api
 }
 
-func NewServer(engine store.Engine, clock clock.PassiveClock) (*Server, error) {
+func NewServer(engine store.Engine, clock clock.PassiveClock, ocpi ocpi.Api) (*Server, error) {
 	swagger, err := GetSwagger()
 	if err != nil {
 		return nil, err
@@ -28,6 +29,7 @@ func NewServer(engine store.Engine, clock clock.PassiveClock) (*Server, error) {
 	return &Server{
 		store:   engine,
 		clock:   clock,
+		ocpi:    ocpi,
 		swagger: swagger,
 	}, nil
 }
@@ -211,8 +213,6 @@ func (s *Server) DeleteCertificate(w http.ResponseWriter, r *http.Request, certi
 }
 
 func (s *Server) LookupCertificate(w http.ResponseWriter, r *http.Request, certificateHash string) {
-	slog.Info("LookupCertificate", slog.String("certificateHash", certificateHash))
-
 	cert, err := s.store.LookupCertificate(r.Context(), certificateHash)
 	if err != nil {
 		_ = render.Render(w, r, ErrInternalError(err))
@@ -227,4 +227,36 @@ func (s *Server) LookupCertificate(w http.ResponseWriter, r *http.Request, certi
 		Certificate: cert,
 	}
 	_ = render.Render(w, r, resp)
+}
+
+func (s *Server) RegisterParty(w http.ResponseWriter, r *http.Request) {
+	if s.ocpi == nil {
+		_ = render.Render(w, r, ErrNotFound)
+		return
+	}
+
+	req := new(Registration)
+	if err := render.Bind(r, req); err != nil {
+		_ = render.Render(w, r, ErrInvalidRequest(err))
+		return
+	}
+
+	if req.Url != nil {
+		err := s.ocpi.RegisterNewParty(r.Context(), *req.Url, req.Token)
+		if err != nil {
+			_ = render.Render(w, r, ErrInternalError(err))
+			return
+		}
+	} else {
+		// store credentials in database
+		err := s.store.SetRegistrationDetails(r.Context(), req.Token, &store.OcpiRegistration{
+			Status: store.OcpiRegistrationStatusPending,
+		})
+		if err != nil {
+			_ = render.Render(w, r, ErrInternalError(err))
+			return
+		}
+	}
+
+	w.WriteHeader(http.StatusCreated)
 }

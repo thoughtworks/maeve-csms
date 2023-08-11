@@ -7,4 +7,5 @@ type Engine interface {
 	TokenStore
 	TransactionStore
 	CertificateStore
+	OcpiStore
 }

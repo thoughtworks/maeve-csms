@@ -37,6 +37,7 @@ services:
       - "80:80"
       - "443:443"
       - "9410:9410"
+      - "9411:9411"
 
   gateway:
     build:
@@ -104,6 +105,7 @@ services:
         read_only: true
     expose:
       - "9410"
+      - "9411"
     healthcheck:
       test: ["CMD", "/usr/bin/curl", "-s", "--fail", "http://localhost:9410/health"]
       interval: 10s

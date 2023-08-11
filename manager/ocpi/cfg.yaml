@@ -1,0 +1,8 @@
+package: ocpi
+generate:
+  chi-server: true
+  models: true
+  embedded-spec: true
+compatibility:
+  apply-chi-middleware-first-to-last: true
+output: ocpi.gen.go

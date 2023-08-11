@@ -21,7 +21,7 @@ func TestValidationMiddlewareWithInvalidRequest(t *testing.T) {
 	engine := inmemory.NewStore()
 
 	now := time.Now()
-	srv, err := api.NewServer(engine, clockTest.NewFakePassiveClock(now))
+	srv, err := api.NewServer(engine, clockTest.NewFakePassiveClock(now), nil)
 	require.NoError(t, err)
 
 	r := chi.NewRouter()
@@ -45,7 +45,7 @@ func TestValidationMiddlewareWithValidRequest(t *testing.T) {
 	engine := inmemory.NewStore()
 
 	now := time.Now()
-	srv, err := api.NewServer(engine, clockTest.NewFakePassiveClock(now))
+	srv, err := api.NewServer(engine, clockTest.NewFakePassiveClock(now), nil)
 	require.NoError(t, err)
 
 	r := chi.NewRouter()
@@ -86,7 +86,7 @@ func TestValidationMiddlewareWithUnknownMethod(t *testing.T) {
 	engine := inmemory.NewStore()
 
 	now := time.Now()
-	srv, err := api.NewServer(engine, clockTest.NewFakePassiveClock(now))
+	srv, err := api.NewServer(engine, clockTest.NewFakePassiveClock(now), nil)
 	require.NoError(t, err)
 
 	r := chi.NewRouter()

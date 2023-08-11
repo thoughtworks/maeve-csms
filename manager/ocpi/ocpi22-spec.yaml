@@ -1,0 +1,4807 @@
+# SPDX-License-Identifier: CC-BY-ND-4.0
+
+# OCPI 2.2 Specification from https://raw.githubusercontent.com/openchargemap/ocm-docs/master/Model/schema/ocpi-2.2-openapi-spec.yaml
+
+openapi: 3.0.1
+info:
+  title: Open Charge Point Interface (OCPI) 2.2
+  version: '2.2'
+  description: |-
+    The Open Charge Point Interface (OCPI) enables a scalable, automated EV roaming setup between Charge Point Operators and eMobility Service Providers. It supports authorization, charge point information exchange (including live status updates and
+    transaction events), charge detail record exchange, remote charge point commands and the exchange of smart-charging related
+    information between parties.
+
+    This specification document is originally based on https://bitbucket.org/shareandcharge/ocn-node/src/master/examples/openapi-spec.json  [Apache License, Version 2.0]. The OCPI specification itself is licensed as Creative Commons Attribution-NoDerivatives 4.0 International https://creativecommons.org/licenses/by-nd/4.0/legalcode
+  license:
+    url: 'https://creativecommons.org/licenses/by-nd/4.0/legalcode'
+    name: Creative Commons Attribution-NoDerivatives 4.0 International
+servers:
+  - url: 'http://localhost:8080'
+    description: Generated server url
+paths:
+  /ocpi/2.2:
+    get:
+      tags:
+        - versions-controller
+      operationId: getVersion
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponseVersionDetail'
+              examples:
+                example-1:
+                  value:
+                    status_code: 0
+                    status_message: string
+                    data:
+                      version: string
+                      endpoints:
+                        - identifier: string
+                          role: SENDER
+                          url: string
+                    timestamp: string
+  /ocpi/versions:
+    get:
+      tags:
+        - versions-controller
+      operationId: getVersions
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponseListVersion'
+      description: This endpoint lists all the available OCPI versions and the corresponding URLs to where version specific details such as the supported endpoints can be found.
+  /ocpi/sender/2.2/cdrs:
+    get:
+      tags:
+        - cdrs-controller
+      operationId: getCdrsFromDataOwner
+      parameters:
+        - name: authorization
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Request-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Correlation-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: date_from
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: date_to
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponseCDRList'
+  '/ocpi/sender/2.2/cdrs/page/{uid}':
+    get:
+      tags:
+        - cdrs-controller
+      operationId: getCdrPageFromDataOwner
+      parameters:
+        - name: authorization
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Request-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Correlation-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: uid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponseCDRList'
+  '/ocpi/receiver/2.2/cdrs/{cdrID}':
+    get:
+      tags:
+        - cdrs-controller
+      operationId: getClientOwnedCdr
+      parameters:
+        - name: authorization
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Request-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Correlation-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: cdrID
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponseCDR'
+  /ocpi/receiver/2.2/cdrs:
+    post:
+      tags:
+        - cdrs-controller
+      operationId: postClientOwnedCdr
+      parameters:
+        - name: authorization
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Request-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Correlation-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CDR'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponseUnit'
+  '/ocpi/2.2/sender/chargingprofiles/result/{uid}':
+    post:
+      tags:
+        - charging-profiles-controller
+      operationId: postGenericChargingProfileResult
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Request-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Correlation-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: uid
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenericChargingProfileResult'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponseUnit'
+  '/ocpi/2.2/sender/chargingprofiles/{sessionId}':
+    put:
+      tags:
+        - charging-profiles-controller
+      operationId: putSenderChargingProfile
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Request-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Correlation-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActiveChargingProfile'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponseUnit'
+  '/ocpi/2.2/receiver/chargingprofiles/{sessionId}':
+    get:
+      tags:
+        - charging-profiles-controller
+      operationId: getReceiverChargingProfile
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Request-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Correlation-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: duration
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: response_url
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponseChargingProfileResponse'
+    put:
+      tags:
+        - charging-profiles-controller
+      operationId: putReceiverChargingProfile
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Request-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Correlation-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetChargingProfile'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponseChargingProfileResponse'
+    delete:
+      tags:
+        - charging-profiles-controller
+      operationId: deleteReceiverChargingProfile
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Request-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Correlation-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: response_url
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponseChargingProfileResponse'
+  '/ocpi/sender/2.2/commands/{command}/{uid}':
+    post:
+      tags:
+        - commands-controller
+      operationId: postAsyncResponse
+      parameters:
+        - name: authorization
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Request-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Correlation-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: command
+          in: path
+          required: true
+          schema:
+            type: string
+            enum:
+              - CANCEL_RESERVATION
+              - RESERVE_NOW
+              - START_SESSION
+              - STOP_SESSION
+              - UNLOCK_CONNECTOR
+        - name: uid
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandResult'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponseUnit'
+  /ocpi/receiver/2.2/commands/CANCEL_RESERVATION:
+    post:
+      tags:
+        - commands-controller
+      operationId: postCancelReservation
+      parameters:
+        - name: authorization
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Request-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Correlation-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CancelReservation'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponseCommandResponse'
+  /ocpi/receiver/2.2/commands/RESERVE_NOW:
+    post:
+      tags:
+        - commands-controller
+      operationId: postReserveNow
+      parameters:
+        - name: authorization
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Request-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Correlation-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReserveNow'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponseCommandResponse'
+  /ocpi/receiver/2.2/commands/START_SESSION:
+    post:
+      tags:
+        - commands-controller
+      operationId: postStartSession
+      parameters:
+        - name: authorization
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Request-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Correlation-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartSession'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponseCommandResponse'
+  /ocpi/receiver/2.2/commands/STOP_SESSION:
+    post:
+      tags:
+        - commands-controller
+      operationId: postStopSession
+      parameters:
+        - name: authorization
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Request-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Correlation-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StopSession'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponseCommandResponse'
+  /ocpi/receiver/2.2/commands/UNLOCK_CONNECTOR:
+    post:
+      tags:
+        - commands-controller
+      operationId: postUnlockConnector
+      parameters:
+        - name: authorization
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Request-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Correlation-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UnlockConnector'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponseCommandResponse'
+  /ocpi/2.2/credentials:
+    get:
+      tags:
+        - credentials-controller
+      operationId: getCredentials
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponseCredentials'
+    put:
+      tags:
+        - credentials-controller
+      operationId: putCredentials
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Credentials'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponseCredentials'
+    post:
+      tags:
+        - credentials-controller
+      operationId: postCredentials
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Credentials'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponseCredentials'
+    delete:
+      tags:
+        - credentials-controller
+      operationId: deleteCredentials
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponse'
+  /ocpi/sender/2.2/locations:
+    get:
+      tags:
+        - locations-controller
+      operationId: getLocationListFromDataOwner
+      parameters:
+        - name: authorization
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Request-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Correlation-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: date_from
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: date_to
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponseLocationList'
+  '/ocpi/sender/2.2/locations/page/{uid}':
+    get:
+      tags:
+        - locations-controller
+      operationId: getLocationPageFromDataOwner
+      parameters:
+        - name: authorization
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Request-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Correlation-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: uid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponseLocationList'
+  '/ocpi/sender/2.2/locations/{locationID}':
+    get:
+      tags:
+        - locations-controller
+      operationId: getLocationObjectFromDataOwner
+      parameters:
+        - name: authorization
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Request-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Correlation-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: locationID
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponseLocation'
+  '/ocpi/sender/2.2/locations/{locationID}/{evseUID}':
+    get:
+      tags:
+        - locations-controller
+      operationId: getEvseObjectFromDataOwner
+      parameters:
+        - name: authorization
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Request-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Correlation-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: locationID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: evseUID
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponseEvse'
+  '/ocpi/sender/2.2/locations/{locationID}/{evseUID}/{connectorID}':
+    get:
+      tags:
+        - locations-controller
+      operationId: getConnectorObjectFromDataOwner
+      parameters:
+        - name: authorization
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Request-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Correlation-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: locationID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: evseUID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: connectorID
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponseConnector'
+  '/ocpi/receiver/2.2/locations/{countryCode}/{partyID}/{locationID}':
+    get:
+      tags:
+        - locations-controller
+      operationId: getClientOwnedLocation
+      parameters:
+        - name: authorization
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Request-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Correlation-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: countryCode
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: partyID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: locationID
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponseLocation'
+    put:
+      tags:
+        - locations-controller
+      operationId: putClientOwnedLocation
+      parameters:
+        - name: authorization
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Request-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Correlation-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: countryCode
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: partyID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: locationID
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Location'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponseUnit'
+    patch:
+      tags:
+        - locations-controller
+      operationId: patchClientOwnedLocation
+      parameters:
+        - name: authorization
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Request-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Correlation-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: countryCode
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: partyID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: locationID
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties:
+                type: object
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponseUnit'
+  '/ocpi/receiver/2.2/locations/{countryCode}/{partyID}/{locationID}/{evseUID}':
+    get:
+      tags:
+        - locations-controller
+      operationId: getClientOwnedEvse
+      parameters:
+        - name: authorization
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Request-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Correlation-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: countryCode
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: partyID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: locationID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: evseUID
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponseEvse'
+    put:
+      tags:
+        - locations-controller
+      operationId: putClientOwnedEvse
+      parameters:
+        - name: authorization
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Request-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Correlation-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: countryCode
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: partyID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: locationID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: evseUID
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Evse'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponseUnit'
+    patch:
+      tags:
+        - locations-controller
+      operationId: patchClientOwnedEvse
+      parameters:
+        - name: authorization
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Request-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Correlation-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: countryCode
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: partyID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: locationID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: evseUID
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties:
+                type: object
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponseUnit'
+  '/ocpi/receiver/2.2/locations/{countryCode}/{partyID}/{locationID}/{evseUID}/{connectorID}':
+    get:
+      tags:
+        - locations-controller
+      operationId: getClientOwnedConnector
+      parameters:
+        - name: authorization
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Request-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Correlation-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: countryCode
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: partyID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: locationID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: evseUID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: connectorID
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponseConnector'
+    put:
+      tags:
+        - locations-controller
+      operationId: putClientOwnedConnector
+      parameters:
+        - name: authorization
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Request-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Correlation-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: countryCode
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: partyID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: locationID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: evseUID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: connectorID
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Connector'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponseUnit'
+    patch:
+      tags:
+        - locations-controller
+      operationId: patchClientOwnedConnector
+      parameters:
+        - name: authorization
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Request-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Correlation-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: countryCode
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: partyID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: locationID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: evseUID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: connectorID
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties:
+                type: object
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponseUnit'
+  /ocpi/sender/2.2/sessions:
+    get:
+      tags:
+        - sessions-controller
+      operationId: getSessionsFromDataOwner
+      parameters:
+        - name: authorization
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Request-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Correlation-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: date_from
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: date_to
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponseSessionList'
+  '/ocpi/sender/2.2/sessions/page/{uid}':
+    get:
+      tags:
+        - sessions-controller
+      operationId: getSessionsPageFromDataOwner
+      parameters:
+        - name: authorization
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Request-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Correlation-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: uid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponseSessionList'
+  '/ocpi/sender/2.2/sessions/{sessionID}/charging_preferences':
+    put:
+      tags:
+        - sessions-controller
+      operationId: putChargingPreferences
+      parameters:
+        - name: authorization
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Request-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Correlation-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: sessionID
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChargingPreferences'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponseChargingPreferencesResponse'
+  '/ocpi/receiver/2.2/sessions/{countryCode}/{partyID}/{sessionID}':
+    get:
+      tags:
+        - sessions-controller
+      operationId: getClientOwnedSession
+      parameters:
+        - name: authorization
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Request-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Correlation-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: countryCode
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: partyID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: sessionID
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponseSession'
+    put:
+      tags:
+        - sessions-controller
+      operationId: putClientOwnedSession
+      parameters:
+        - name: authorization
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Request-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Correlation-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: countryCode
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: partyID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: sessionID
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Session'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponseUnit'
+    patch:
+      tags:
+        - sessions-controller
+      operationId: patchClientOwnedSession
+      parameters:
+        - name: authorization
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Request-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Correlation-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: countryCode
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: partyID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: sessionID
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties:
+                type: object
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponseUnit'
+  '/ocpi/receiver/2.2/tariffs/{countryCode}/{partyID}/{tariffID}':
+    get:
+      tags:
+        - tariffs-controller
+      operationId: getClientOwnedTariff
+      parameters:
+        - name: authorization
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Request-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Correlation-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: countryCode
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: partyID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: tariffID
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponseTariff'
+    put:
+      tags:
+        - tariffs-controller
+      operationId: putClientOwnedTariff
+      parameters:
+        - name: authorization
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Request-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Correlation-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: countryCode
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: partyID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: tariffID
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Tariff'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponseUnit'
+    delete:
+      tags:
+        - tariffs-controller
+      operationId: deleteClientOwnedTariff
+      parameters:
+        - name: authorization
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Request-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Correlation-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: countryCode
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: partyID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: tariffID
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponseUnit'
+  /ocpi/sender/2.2/tariffs:
+    get:
+      tags:
+        - tariffs-controller
+      operationId: getTariffsFromDataOwner
+      parameters:
+        - name: authorization
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Request-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Correlation-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: date_from
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: date_to
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponseTariffList'
+  '/ocpi/sender/2.2/tariffs/page/{uid}':
+    get:
+      tags:
+        - tariffs-controller
+      operationId: getTariffsPageFromDataOwner
+      parameters:
+        - name: authorization
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Request-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Correlation-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: uid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponseTariffList'
+  /ocpi/sender/2.2/tokens:
+    get:
+      tags:
+        - tokens-controller
+      operationId: getTokensFromDataOwner
+      parameters:
+        - name: authorization
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Request-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Correlation-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: date_from
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: date_to
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponseTokenList'
+  '/ocpi/sender/2.2/tokens/page/{uid}':
+    get:
+      tags:
+        - tokens-controller
+      operationId: getTokensPageFromDataOwner
+      parameters:
+        - name: authorization
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Request-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Correlation-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: uid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponseTokenList'
+  '/ocpi/sender/2.2/tokens/{tokenUID}/authorize':
+    post:
+      tags:
+        - tokens-controller
+      operationId: postRealTimeTokenAuthorization
+      parameters:
+        - name: authorization
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Request-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Correlation-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: tokenUID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: type
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - AD_HOC_USER
+              - APP_USER
+              - OTHER
+              - RFID
+            default: RFID
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LocationReferences'
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponseAuthorizationInfo'
+  '/ocpi/receiver/2.2/tokens/{countryCode}/{partyID}/{tokenUID}':
+    get:
+      tags:
+        - tokens-controller
+      operationId: getClientOwnedToken
+      parameters:
+        - name: authorization
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Request-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Correlation-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: countryCode
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: partyID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: tokenUID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: type
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - AD_HOC_USER
+              - APP_USER
+              - OTHER
+              - RFID
+            default: RFID
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponseToken'
+    put:
+      tags:
+        - tokens-controller
+      operationId: putClientOwnedToken
+      parameters:
+        - name: authorization
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Request-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Correlation-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: countryCode
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: partyID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: tokenUID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: type
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - AD_HOC_USER
+              - APP_USER
+              - OTHER
+              - RFID
+            default: RFID
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Token'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponseUnit'
+    patch:
+      tags:
+        - tokens-controller
+      operationId: patchClientOwnedToken
+      parameters:
+        - name: authorization
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Request-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Correlation-ID
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-from-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-country-code
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: OCPI-to-party-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: countryCode
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: partyID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: tokenUID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: type
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - AD_HOC_USER
+              - APP_USER
+              - OTHER
+              - RFID
+            default: RFID
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties:
+                type: object
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/OcpiResponseUnit'
+components:
+  schemas:
+    BasicRole:
+      required:
+        - country_code
+        - party_id
+      type: object
+      properties:
+        party_id:
+          type: string
+        country_code:
+          type: string
+      x-examples:
+        example-1:
+          party_id: string
+          country_code: string
+    OcpiResponseObject:
+      type: object
+      properties:
+        data:
+          type: object
+        status_code:
+          type: integer
+          format: int32
+        status_message:
+          type: string
+        timestamp:
+          type: string
+      required:
+        - status_code
+        - timestamp
+    Endpoint:
+      required:
+        - identifier
+        - role
+        - url
+      type: object
+      properties:
+        identifier:
+          type: string
+        role:
+          type: string
+          enum:
+            - SENDER
+            - RECEIVER
+        url:
+          type: string
+    OcpiResponseVersionDetail:
+      required:
+        - status_code
+        - timestamp
+      type: object
+      properties:
+        status_code:
+          type: integer
+          format: int32
+        status_message:
+          type: string
+        data:
+          $ref: '#/components/schemas/VersionDetail'
+        timestamp:
+          type: string
+    VersionDetail:
+      required:
+        - endpoints
+        - version
+      type: object
+      properties:
+        version:
+          type: string
+        endpoints:
+          type: array
+          items:
+            $ref: '#/components/schemas/Endpoint'
+      x-examples:
+        example-1:
+          version: string
+          endpoints:
+            - identifier: string
+              role: SENDER
+              url: string
+    OcpiResponseListVersion:
+      type: object
+      properties:
+        status_code:
+          type: integer
+          format: int32
+        status_message:
+          type: string
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Version'
+        timestamp:
+          type: string
+      required:
+        - status_code
+        - timestamp
+    Version:
+      required:
+        - url
+        - version
+      type: object
+      properties:
+        version:
+          type: string
+        url:
+          type: string
+    CDR:
+      required:
+        - auth_method
+        - cdr_location
+        - cdr_token
+        - charging_periods
+        - country_code
+        - currency
+        - end_date_time
+        - id
+        - last_updated
+        - party_id
+        - start_date_time
+        - total_cost
+        - total_energy
+        - total_time
+      type: object
+      properties:
+        country_code:
+          type: string
+        party_id:
+          type: string
+        id:
+          type: string
+        start_date_time:
+          type: string
+        end_date_time:
+          type: string
+        session_id:
+          type: string
+        cdr_token:
+          $ref: '#/components/schemas/CdrToken'
+        auth_method:
+          type: string
+          enum:
+            - AUTH_REQUEST
+            - COMMAND
+            - WHITELIST
+        authorization_reference:
+          type: string
+        cdr_location:
+          $ref: '#/components/schemas/CdrLocation'
+        meter_id:
+          type: string
+        currency:
+          type: string
+        tariffs:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tariff'
+        charging_periods:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChargingPeriod'
+        signed_data:
+          $ref: '#/components/schemas/SignedData'
+        total_cost:
+          $ref: '#/components/schemas/Price'
+        total_fixed_cost:
+          $ref: '#/components/schemas/Price'
+        total_energy:
+          type: number
+          format: float
+        total_energy_cost:
+          $ref: '#/components/schemas/Price'
+        total_time:
+          type: number
+          format: float
+        total_time_cost:
+          $ref: '#/components/schemas/Price'
+        total_parking_time:
+          type: number
+          format: float
+        total_parking_cost:
+          $ref: '#/components/schemas/Price'
+        total_reservation_cost:
+          $ref: '#/components/schemas/Price'
+        remark:
+          type: string
+        invoice_reference_id:
+          type: string
+        credit:
+          type: boolean
+        credit_reference_id:
+          type: string
+        last_updated:
+          type: string
+    CdrDimension:
+      required:
+        - type
+        - volume
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - CURRENT
+            - ENERGY
+            - ENERGY_EXPORT
+            - ENERGY_IMPORT
+            - MAX_CURRENT
+            - MIN_CURRENT
+            - MAX_POWER
+            - MIN_POWER
+            - PARKING_TIME
+            - POWER
+            - RESERVATION_TIME
+            - STATE_OF_CHARGE
+            - TIME
+        volume:
+          type: number
+          format: float
+    CdrLocation:
+      required:
+        - address
+        - city
+        - connector_format
+        - connector_id
+        - connector_power_type
+        - connector_standard
+        - coordinates
+        - country
+        - evse_id
+        - evse_uid
+        - id
+        - postal_code
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        address:
+          type: string
+        city:
+          type: string
+        postal_code:
+          type: string
+        country:
+          type: string
+        coordinates:
+          $ref: '#/components/schemas/GeoLocation'
+        evse_uid:
+          type: string
+        evse_id:
+          type: string
+        connector_id:
+          type: string
+        connector_standard:
+          type: string
+          enum:
+            - CHADEMO
+            - DOMESTIC_A
+            - DOMESTIC_B
+            - DOMESTIC_C
+            - DOMESTIC_D
+            - DOMESTIC_E
+            - DOMESTIC_F
+            - DOMESTIC_G
+            - DOMESTIC_H
+            - DOMESTIC_I
+            - DOMESTIC_J
+            - DOMESTIC_K
+            - DOMESTIC_L
+            - IEC_60309_2_single_16
+            - IEC_60309_2_three_16
+            - IEC_60309_2_three_32
+            - IEC_60309_2_three_64
+            - IEC_62196_T1
+            - IEC_62196_T1_COMBO
+            - IEC_62196_T2
+            - IEC_62196_T2_COMBO
+            - IEC_62196_T3A
+            - IEC_62196_T3C
+            - PANTOGRAPH_BOTTOM_UP
+            - PANTOGRAPH_TOP_DOWN
+            - TESLA_R
+            - TESLA_S
+        connector_format:
+          type: string
+          enum:
+            - SOCKET
+            - CABLE
+        connector_power_type:
+          type: string
+          enum:
+            - AC_1_PHASE
+            - AC_3_PHASE
+            - DC
+    CdrToken:
+      required:
+        - contract_id
+        - type
+        - uid
+      type: object
+      properties:
+        uid:
+          type: string
+        type:
+          type: string
+          enum:
+            - AD_HOC_USER
+            - APP_USER
+            - OTHER
+            - RFID
+        contract_id:
+          type: string
+    ChargingPeriod:
+      required:
+        - dimensions
+        - start_date_time
+      type: object
+      properties:
+        start_date_time:
+          type: string
+        dimensions:
+          type: array
+          items:
+            $ref: '#/components/schemas/CdrDimension'
+        tariff_id:
+          type: string
+    DisplayText:
+      required:
+        - language
+        - text
+      type: object
+      properties:
+        language:
+          type: string
+        text:
+          type: string
+    EnergyMix:
+      required:
+        - is_green_energy
+      type: object
+      properties:
+        is_green_energy:
+          type: boolean
+        energy_sources:
+          type: array
+          items:
+            $ref: '#/components/schemas/EnergySource'
+        environ_impact:
+          type: array
+          items:
+            $ref: '#/components/schemas/EnvironmentalImpact'
+        supplier_name:
+          type: string
+        energy_product_name:
+          type: string
+    EnergySource:
+      required:
+        - percentage
+        - source
+      type: object
+      properties:
+        source:
+          type: string
+          enum:
+            - NUCLEAR
+            - GENERAL_FOSSIL
+            - COAL
+            - GAS
+            - GENERAL_GREEN
+            - SOLAR
+            - WIND
+            - WATER
+        percentage:
+          type: number
+          format: float
+    EnvironmentalImpact:
+      required:
+        - amount
+        - category
+      type: object
+      properties:
+        category:
+          type: string
+          enum:
+            - NUCLEAR_WASTE
+            - CARBON_DIOXIDE
+        amount:
+          type: number
+          format: float
+    GeoLocation:
+      required:
+        - latitude
+        - longitude
+      type: object
+      properties:
+        latitude:
+          type: string
+        longitude:
+          type: string
+    OcpiResponseCDRList:
+      type: object
+      properties:
+        status_code:
+          type: integer
+          format: int32
+        status_message:
+          type: string
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/CDR'
+        timestamp:
+          type: string
+      required:
+        - status_code
+        - timestamp
+    Price:
+      required:
+        - excl_vat
+        - incl_vat
+      type: object
+      properties:
+        excl_vat:
+          type: number
+          format: float
+        incl_vat:
+          type: number
+          format: float
+    PriceComponent:
+      required:
+        - price
+        - step_size
+        - type
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - ENERGY
+            - FLAT
+            - PARKING_TIME
+            - TIME
+        price:
+          type: number
+          format: float
+        vat:
+          type: number
+          format: float
+        step_size:
+          type: integer
+          format: int32
+    SignedData:
+      required:
+        - encoding_method
+        - signed_values
+        - url
+      type: object
+      properties:
+        encoding_method:
+          type: string
+        encoding_method_version:
+          type: integer
+          format: int32
+        public_key:
+          type: string
+        signed_values:
+          type: array
+          items:
+            $ref: '#/components/schemas/SignedValue'
+        url:
+          type: string
+    SignedValue:
+      required:
+        - nature
+        - plain_data
+        - signed_data
+      type: object
+      properties:
+        nature:
+          type: string
+        plain_data:
+          type: string
+        signed_data:
+          type: string
+    Tariff:
+      required:
+        - country_code
+        - currency
+        - elements
+        - id
+        - last_updated
+        - party_id
+      type: object
+      properties:
+        country_code:
+          type: string
+        party_id:
+          type: string
+        id:
+          type: string
+        currency:
+          type: string
+        type:
+          type: string
+          enum:
+            - AD_HOC_PAYMENT
+            - PROFILE_CHEAP
+            - PROFILE_FAST
+            - PROFILE_GREEN
+            - REGULAR
+        tariff_alt_text:
+          type: array
+          items:
+            $ref: '#/components/schemas/DisplayText'
+        tariff_alt_url:
+          type: string
+        min_price:
+          $ref: '#/components/schemas/Price'
+        max_price:
+          $ref: '#/components/schemas/Price'
+        elements:
+          type: array
+          items:
+            $ref: '#/components/schemas/TariffElement'
+        start_date_time:
+          type: string
+        end_date_time:
+          type: string
+        energy_mix:
+          $ref: '#/components/schemas/EnergyMix'
+        last_updated:
+          type: string
+    TariffElement:
+      required:
+        - price_components
+      type: object
+      properties:
+        price_components:
+          type: array
+          items:
+            $ref: '#/components/schemas/PriceComponent'
+        restrictions:
+          $ref: '#/components/schemas/TariffRestrictions'
+    TariffRestrictions:
+      type: object
+      properties:
+        start_time:
+          type: string
+        end_time:
+          type: string
+        start_date:
+          type: string
+        end_date:
+          type: string
+        min_kwh:
+          type: number
+          format: float
+        max_kwh:
+          type: number
+          format: float
+        min_current:
+          type: number
+          format: float
+        max_current:
+          type: number
+          format: float
+        min_power:
+          type: number
+          format: float
+        max_power:
+          type: number
+          format: float
+        min_duration:
+          type: integer
+          format: int32
+        max_duration:
+          type: integer
+          format: int32
+        day_of_week:
+          type: array
+          items:
+            type: string
+            enum:
+              - MONDAY
+              - TUESDAY
+              - WEDNESDAY
+              - THURSDAY
+              - FRIDAY
+              - SATURDAY
+              - SUNDAY
+        reservation:
+          type: string
+          enum:
+            - RESERVATION
+            - RESERVATION_EXPIRES
+    OcpiResponseCDR:
+      type: object
+      properties:
+        status_code:
+          type: integer
+          format: int32
+        status_message:
+          type: string
+        data:
+          $ref: '#/components/schemas/CDR'
+        timestamp:
+          type: string
+      required:
+        - status_code
+        - timestamp
+    OcpiResponseUnit:
+      type: object
+      properties:
+        status_code:
+          type: integer
+          format: int32
+        status_message:
+          type: string
+        data:
+          $ref: '#/components/schemas/Unit'
+        timestamp:
+          type: string
+      required:
+        - status_code
+        - timestamp
+    Unit:
+      type: object
+      x-examples:
+        example-1: {}
+    ActiveChargingProfile:
+      required:
+        - charging_profile
+        - start_date_time
+      type: object
+      properties:
+        start_date_time:
+          type: string
+        charging_profile:
+          $ref: '#/components/schemas/ChargingProfile'
+    ChargingProfile:
+      required:
+        - charging_rate_unit
+      type: object
+      properties:
+        start_date_time:
+          type: string
+        duration:
+          type: integer
+          format: int32
+        charging_rate_unit:
+          type: string
+          enum:
+            - W
+            - A
+        min_charging_rate:
+          type: number
+          format: float
+        charging_profile_period:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChargingProfilePeriod'
+    ChargingProfilePeriod:
+      required:
+        - limit
+        - start_period
+      type: object
+      properties:
+        start_period:
+          type: integer
+          format: int32
+        limit:
+          type: number
+          format: float
+    GenericChargingProfileResult:
+      required:
+        - result
+      type: object
+      properties:
+        result:
+          type: string
+          enum:
+            - ACCEPTED
+            - REJECTED
+            - UNKNOWN
+        profile:
+          $ref: '#/components/schemas/ActiveChargingProfile'
+    ChargingProfileResponse:
+      required:
+        - result
+        - timeout
+      type: object
+      properties:
+        result:
+          type: string
+          enum:
+            - ACCEPTED
+            - NOT_SUPPORTED
+            - REJECTED
+            - TOO_OFTEN
+            - UNKNOWN_SESSION
+        timeout:
+          type: integer
+          format: int32
+    OcpiResponseChargingProfileResponse:
+      type: object
+      properties:
+        status_code:
+          type: integer
+          format: int32
+        status_message:
+          type: string
+        data:
+          $ref: '#/components/schemas/ChargingProfileResponse'
+        timestamp:
+          type: string
+      required:
+        - status_code
+        - timestamp
+    SetChargingProfile:
+      required:
+        - charging_profile
+        - response_url
+      type: object
+      properties:
+        charging_profile:
+          $ref: '#/components/schemas/ChargingProfile'
+        response_url:
+          type: string
+    CommandResult:
+      required:
+        - result
+      type: object
+      properties:
+        result:
+          type: string
+          enum:
+            - ACCEPTED
+            - CANCELED_RESERVATION
+            - EVSE_OCCUPIED
+            - EVSE_INOPERATIVE
+            - FAILED
+            - NOT_SUPPORTED
+            - REJECTED
+            - TIMEOUT
+            - UNKNOWN_RESERVATION
+        message:
+          $ref: '#/components/schemas/DisplayText'
+    CancelReservation:
+      required:
+        - reservation_id
+        - response_url
+      type: object
+      properties:
+        response_url:
+          type: string
+        reservation_id:
+          type: string
+    CommandResponse:
+      required:
+        - result
+        - timeout
+      type: object
+      properties:
+        result:
+          type: string
+          enum:
+            - NOT_SUPPORTED
+            - REJECTED
+            - ACCEPTED
+            - UNKNOWN_SESSION
+        timeout:
+          type: integer
+          format: int32
+        message:
+          $ref: '#/components/schemas/DisplayText'
+    OcpiResponseCommandResponse:
+      type: object
+      properties:
+        status_code:
+          type: integer
+          format: int32
+        status_message:
+          type: string
+        data:
+          $ref: '#/components/schemas/CommandResponse'
+        timestamp:
+          type: string
+      required:
+        - status_code
+        - timestamp
+    EnergyContract:
+      required:
+        - supplier_name
+      type: object
+      properties:
+        supplier_name:
+          type: string
+        contract_id:
+          type: string
+    ReserveNow:
+      required:
+        - expiry_date
+        - location_id
+        - reservation_id
+        - response_url
+        - token
+      type: object
+      properties:
+        response_url:
+          type: string
+        token:
+          $ref: '#/components/schemas/Token'
+        expiry_date:
+          type: string
+        reservation_id:
+          type: string
+        location_id:
+          type: string
+        evse_uid:
+          type: string
+        authorization_reference:
+          type: string
+    Token:
+      required:
+        - contract_id
+        - country_code
+        - issuer
+        - last_updated
+        - party_id
+        - type
+        - uid
+        - valid
+        - whitelist
+      type: object
+      properties:
+        country_code:
+          type: string
+        party_id:
+          type: string
+        uid:
+          type: string
+        type:
+          type: string
+          enum:
+            - AD_HOC_USER
+            - APP_USER
+            - OTHER
+            - RFID
+        contract_id:
+          type: string
+        visual_number:
+          type: string
+        issuer:
+          type: string
+        group_id:
+          type: string
+        valid:
+          type: boolean
+        whitelist:
+          type: string
+          enum:
+            - ALWAYS
+            - ALLOWED
+            - ALLOWED_OFFLINE
+            - NEVER
+        language:
+          type: string
+        default_profile_type:
+          type: string
+          enum:
+            - CHEAP
+            - FAST
+            - GREEN
+            - REGULAR
+        energy_contract:
+          $ref: '#/components/schemas/EnergyContract'
+        last_updated:
+          type: string
+    StartSession:
+      required:
+        - location_id
+        - response_url
+        - token
+      type: object
+      properties:
+        response_url:
+          type: string
+        token:
+          $ref: '#/components/schemas/Token'
+        location_id:
+          type: string
+        evse_uid:
+          type: string
+        authorization_reference:
+          type: string
+    StopSession:
+      required:
+        - response_url
+        - session_id
+      type: object
+      properties:
+        response_url:
+          type: string
+        session_id:
+          type: string
+    UnlockConnector:
+      required:
+        - connector_id
+        - evse_uid
+        - location_id
+        - response_url
+      type: object
+      properties:
+        response_url:
+          type: string
+        location_id:
+          type: string
+        evse_uid:
+          type: string
+        connector_id:
+          type: string
+    BusinessDetails:
+      required:
+        - name
+      type: object
+      properties:
+        name:
+          type: string
+        website:
+          type: string
+        logo:
+          $ref: '#/components/schemas/Image'
+    Credentials:
+      required:
+        - roles
+        - token
+        - url
+      type: object
+      properties:
+        token:
+          type: string
+        url:
+          type: string
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/CredentialsRole'
+    CredentialsRole:
+      required:
+        - business_details
+        - country_code
+        - party_id
+        - role
+      type: object
+      properties:
+        role:
+          type: string
+          enum:
+            - CPO
+            - EMSP
+            - HUB
+            - NAP
+            - NSP
+            - OTHER
+            - SCSP
+        business_details:
+          $ref: '#/components/schemas/BusinessDetails'
+        party_id:
+          type: string
+        country_code:
+          type: string
+    Image:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+        thumbnail:
+          type: string
+          format: uri
+          nullable: true
+        category:
+          type: string
+          enum:
+            - CHARGER
+            - ENTRANCE
+            - LOCATION
+            - NETWORK
+            - OPERATOR
+            - OTHER
+            - OWNER
+        type:
+          type: string
+        width:
+          type: integer
+          format: int32
+          nullable: true
+        height:
+          type: integer
+          format: int32
+          nullable: true
+      required:
+        - url
+        - category
+        - type
+    OcpiResponseCredentials:
+      type: object
+      properties:
+        status_code:
+          type: integer
+          format: int32
+        status_message:
+          type: string
+        data:
+          $ref: '#/components/schemas/Credentials'
+        timestamp:
+          type: string
+      required:
+        - status_code
+        - timestamp
+    OcpiResponse:
+      type: object
+      properties:
+        status_code:
+          type: integer
+          format: int32
+        status_message:
+          type: string
+        data:
+          type: object
+        timestamp:
+          type: string
+      required:
+        - status_code
+        - timestamp
+    AdditionalGeoLocation:
+      required:
+        - latitude
+        - longitude
+      type: object
+      properties:
+        latitude:
+          type: string
+        longitude:
+          type: string
+        name:
+          $ref: '#/components/schemas/DisplayText'
+    Connector:
+      required:
+        - format
+        - id
+        - last_updated
+        - max_amperage
+        - max_voltage
+        - power_type
+        - standard
+      type: object
+      properties:
+        id:
+          type: string
+        standard:
+          type: string
+          enum:
+            - CHADEMO
+            - CHAOJI
+            - DOMESTIC_A
+            - DOMESTIC_B
+            - DOMESTIC_C
+            - DOMESTIC_D
+            - DOMESTIC_E
+            - DOMESTIC_F
+            - DOMESTIC_G
+            - DOMESTIC_H
+            - DOMESTIC_I
+            - DOMESTIC_J
+            - DOMESTIC_K
+            - DOMESTIC_L
+            - GBT_AC
+            - GBT_DC
+            - IEC_60309_2_single_16
+            - IEC_60309_2_three_16
+            - IEC_60309_2_three_32
+            - IEC_60309_2_three_64
+            - IEC_62196_T1
+            - IEC_62196_T1_COMBO
+            - IEC_62196_T2
+            - IEC_62196_T2_COMBO
+            - IEC_62196_T3A
+            - IEC_62196_T3C
+            - NEMA_5_20
+            - NEMA_6_30
+            - NEMA_6_50
+            - NEMA_10_30
+            - NEMA_10_50
+            - NEMA_14_30
+            - NEMA_14_50
+            - PANTOGRAPH_BOTTOM_UP
+            - PANTOGRAPH_TOP_DOWN
+            - TESLA_R
+            - TESLA_S
+            - UNKNOWN
+        format:
+          type: string
+          enum:
+            - SOCKET
+            - CABLE
+        power_type:
+          type: string
+          enum:
+            - AC_1_PHASE
+            - AC_3_PHASE
+            - DC
+        max_voltage:
+          type: integer
+          format: int32
+        max_amperage:
+          type: integer
+          format: int32
+        max_electric_power:
+          type: integer
+          format: int32
+        tariff_ids:
+          type: array
+          items:
+            type: string
+        terms_and_conditions:
+          type: string
+        last_updated:
+          type: string
+    Evse:
+      type: object
+      properties:
+        uid:
+          type: string
+          description: |-
+            Uniquely identifies the EVSE within the CPOs platform (and
+            suboperator platforms).
+        evse_id:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum:
+            - AVAILABLE
+            - BLOCKED
+            - CHARGING
+            - INOPERATIVE
+            - OUTOFORDER
+            - PLANNED
+            - REMOVED
+            - RESERVED
+            - UNKNOWN
+        status_schedule:
+          type: array
+          items:
+            $ref: '#/components/schemas/StatusSchedule'
+        capabilities:
+          type: array
+          items:
+            type: string
+            enum:
+              - CHARGING_PROFILE_CAPABLE
+              - CHARGING_PREFERENCES_CAPABLE
+              - CHIP_CARD_SUPPORT
+              - CONTACTLESS_CARD_SUPPORT
+              - CREDIT_CARD_PAYABLE
+              - DEBIT_CARD_PAYABLE
+              - PED_TERMINAL
+              - REMOTE_START_STOP_CAPABLE
+              - RESERVABLE
+              - RFID_READER
+              - TOKEN_GROUP_CAPABLE
+              - UNLOCK_CAPABLE
+        connectors:
+          type: array
+          items:
+            $ref: '#/components/schemas/Connector'
+        floor_level:
+          type: string
+        coordinates:
+          $ref: '#/components/schemas/GeoLocation'
+        physical_reference:
+          type: string
+        directions:
+          type: array
+          items:
+            $ref: '#/components/schemas/DisplayText'
+        parking_restrictions:
+          type: array
+          items:
+            type: string
+            enum:
+              - EV_ONLY
+              - PLUGGED
+              - DISABLED
+              - CUSTOMERS
+              - MOTORCYCLES
+        images:
+          type: array
+          items:
+            $ref: '#/components/schemas/Image'
+        last_updated:
+          type: string
+      required:
+        - uid
+        - status
+        - connectors
+        - last_updated
+    ExceptionalPeriod:
+      required:
+        - period_begin
+        - period_end
+      type: object
+      properties:
+        period_begin:
+          type: string
+        period_end:
+          type: string
+    Hours:
+      required:
+        - twentyfourseven
+      type: object
+      properties:
+        twentyfourseven:
+          type: boolean
+        regular_hours:
+          $ref: '#/components/schemas/RegularHours'
+        exceptional_openings:
+          $ref: '#/components/schemas/ExceptionalPeriod'
+        exceptional_closings:
+          $ref: '#/components/schemas/ExceptionalPeriod'
+    Location:
+      type: object
+      properties:
+        country_code:
+          type: string
+        party_id:
+          type: string
+        id:
+          type: string
+        publish:
+          type: boolean
+        publish_allowed_to:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublishTokenType'
+        name:
+          type: string
+          nullable: true
+        address:
+          type: string
+        city:
+          type: string
+        postal_code:
+          type: string
+          nullable: true
+        state:
+          type: string
+          nullable: true
+        country:
+          type: string
+        coordinates:
+          $ref: '#/components/schemas/GeoLocation'
+        related_locations:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdditionalGeoLocation'
+        parking_type:
+          type: string
+          enum:
+            - ALONG_MOTORWAY
+            - PARKING_GARAGE
+            - PARKING_LOT
+            - ON_DRIVEWAY
+            - ON_STREET
+            - UNDERGROUND_GARAGE
+          nullable: true
+        evses:
+          type: array
+          items:
+            $ref: '#/components/schemas/Evse'
+        directions:
+          type: array
+          items:
+            $ref: '#/components/schemas/DisplayText'
+        operator:
+          $ref: '#/components/schemas/BusinessDetails'
+        suboperator:
+          $ref: '#/components/schemas/BusinessDetails'
+        owner:
+          $ref: '#/components/schemas/BusinessDetails'
+        facilities:
+          type: array
+          items:
+            type: string
+            enum:
+              - HOTEL
+              - RESTAURANT
+              - CAFE
+              - MALL
+              - SUPERMARKET
+              - SPORT
+              - RECREATION_AREA
+              - NATURE
+              - MUSEUM
+              - BIKE_SHARING
+              - BUS_STOP
+              - TAXI_STAND
+              - TRAM_STOP
+              - METRO_STATION
+              - TRAIN_STATION
+              - AIRPORT
+              - PARKING_LOT
+              - CARPOOL_PARKING
+              - FUEL_STATION
+              - WIFI
+        time_zone:
+          type: string
+        opening_times:
+          $ref: '#/components/schemas/Hours'
+        charging_when_closed:
+          type: string
+        images:
+          type: array
+          items:
+            $ref: '#/components/schemas/Image'
+        energy_mix:
+          $ref: '#/components/schemas/EnergyMix'
+        last_updated:
+          type: string
+      required:
+        - country_code
+        - party_id
+        - id
+        - publish
+        - address
+        - city
+        - country
+        - coordinates
+        - last_updated
+    OcpiResponseLocationList:
+      type: object
+      properties:
+        status_code:
+          type: integer
+          format: int32
+        status_message:
+          type: string
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Location'
+        timestamp:
+          type: string
+      required:
+        - status_code
+        - timestamp
+    PublishTokenType:
+      type: object
+      properties:
+        uid:
+          type: string
+        type:
+          type: string
+          enum:
+            - AD_HOC_USER
+            - APP_USER
+            - OTHER
+            - RFID
+        visual_number:
+          type: string
+        issuer:
+          type: string
+        'group_id ':
+          type: string
+    RegularHours:
+      required:
+        - period_begin
+        - period_end
+        - weekday
+      type: object
+      properties:
+        weekday:
+          type: integer
+          format: int32
+        period_begin:
+          type: string
+        period_end:
+          type: string
+    StatusSchedule:
+      required:
+        - period_begin
+        - status
+      type: object
+      properties:
+        period_begin:
+          type: string
+        period_end:
+          type: string
+        status:
+          type: string
+          enum:
+            - AVAILABLE
+            - BLOCKED
+            - CHARGING
+            - INOPERATIVE
+            - OUTOFORDER
+            - PLANNED
+            - REMOVED
+            - RESERVED
+            - UNKNOWN
+    OcpiResponseLocation:
+      type: object
+      properties:
+        status_code:
+          type: integer
+          format: int32
+        status_message:
+          type: string
+        data:
+          $ref: '#/components/schemas/Location'
+        timestamp:
+          type: string
+      required:
+        - status_code
+        - timestamp
+    OcpiResponseEvse:
+      type: object
+      properties:
+        status_code:
+          type: integer
+          format: int32
+        status_message:
+          type: string
+        data:
+          $ref: '#/components/schemas/Evse'
+        timestamp:
+          type: string
+      required:
+        - status_code
+        - timestamp
+    OcpiResponseConnector:
+      type: object
+      properties:
+        status_code:
+          type: integer
+          format: int32
+        status_message:
+          type: string
+        data:
+          $ref: '#/components/schemas/Connector'
+        timestamp:
+          type: string
+      required:
+        - status_code
+        - timestamp
+    OcpiResponseSessionList:
+      type: object
+      properties:
+        status_code:
+          type: integer
+          format: int32
+        status_message:
+          type: string
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Session'
+        timestamp:
+          type: string
+      required:
+        - status_code
+        - timestamp
+    Session:
+      required:
+        - auth_method
+        - cdr_token
+        - connector_id
+        - country_code
+        - currency
+        - evse_uid
+        - id
+        - kwh
+        - last_updated
+        - location_id
+        - party_id
+        - start_date_time
+        - status
+      type: object
+      properties:
+        country_code:
+          type: string
+        party_id:
+          type: string
+        id:
+          type: string
+        start_date_time:
+          type: string
+        end_date_time:
+          type: string
+        kwh:
+          type: number
+          format: float
+        cdr_token:
+          $ref: '#/components/schemas/CdrToken'
+        auth_method:
+          type: string
+          enum:
+            - AUTH_REQUEST
+            - COMMAND
+            - WHITELIST
+        authorization_reference:
+          type: string
+        location_id:
+          type: string
+        evse_uid:
+          type: string
+        connector_id:
+          type: string
+        meter_id:
+          type: string
+        currency:
+          type: string
+        charging_periods:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChargingPeriod'
+        total_cost:
+          $ref: '#/components/schemas/Price'
+        status:
+          type: string
+          enum:
+            - ACTIVE
+            - COMPLETED
+            - INVALID
+            - PENDING
+            - RESERVATION
+        last_updated:
+          type: string
+    ChargingPreferences:
+      required:
+        - profile_type
+      type: object
+      properties:
+        profile_type:
+          type: string
+          enum:
+            - CHEAP
+            - FAST
+            - GREEN
+            - REGULAR
+        departure_time:
+          type: string
+        energy_need:
+          type: number
+          format: float
+        discharge_allowed:
+          type: boolean
+    OcpiResponseChargingPreferencesResponse:
+      type: object
+      properties:
+        status_code:
+          type: integer
+          format: int32
+        status_message:
+          type: string
+        data:
+          type: string
+          enum:
+            - ACCEPTED
+            - DEPARTURE_REQUIRED
+            - ENERGY_NEED_REQUIRED
+            - NOT_POSSIBLE
+            - PROFILE_TYPE_NOT_SUPPORTED
+        timestamp:
+          type: string
+      required:
+        - status_code
+        - timestamp
+    OcpiResponseSession:
+      type: object
+      properties:
+        status_code:
+          type: integer
+          format: int32
+        status_message:
+          type: string
+        data:
+          $ref: '#/components/schemas/Session'
+        timestamp:
+          type: string
+      required:
+        - status_code
+        - timestamp
+    OcpiResponseTariffList:
+      type: object
+      properties:
+        status_code:
+          type: integer
+          format: int32
+        status_message:
+          type: string
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tariff'
+        timestamp:
+          type: string
+      required:
+        - status_code
+        - timestamp
+    OcpiResponseTariff:
+      type: object
+      properties:
+        status_code:
+          type: integer
+          format: int32
+        status_message:
+          type: string
+        data:
+          $ref: '#/components/schemas/Tariff'
+        timestamp:
+          type: string
+      required:
+        - status_code
+        - timestamp
+    OcpiResponseTokenList:
+      type: object
+      properties:
+        status_code:
+          type: integer
+          format: int32
+        status_message:
+          type: string
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Token'
+        timestamp:
+          type: string
+      required:
+        - status_code
+        - timestamp
+    LocationReferences:
+      required:
+        - location_id
+      type: object
+      properties:
+        location_id:
+          type: string
+        evse_uids:
+          type: array
+          items:
+            type: string
+        connector_ids:
+          type: array
+          items:
+            type: string
+    AuthorizationInfo:
+      required:
+        - allowed
+        - token
+      type: object
+      properties:
+        allowed:
+          type: string
+          enum:
+            - ALLOWED
+            - BLOCKED
+            - EXPIRED
+            - NO_CREDIT
+            - NOT_ALLOWED
+        token:
+          $ref: '#/components/schemas/Token'
+        location:
+          $ref: '#/components/schemas/LocationReferences'
+        authorization_reference:
+          type: string
+        info:
+          $ref: '#/components/schemas/DisplayText'
+    OcpiResponseAuthorizationInfo:
+      type: object
+      properties:
+        status_code:
+          type: integer
+          format: int32
+        status_message:
+          type: string
+        data:
+          $ref: '#/components/schemas/AuthorizationInfo'
+        timestamp:
+          type: string
+      required:
+        - status_code
+        - timestamp
+    OcpiResponseToken:
+      type: object
+      properties:
+        status_code:
+          type: integer
+          format: int32
+        status_message:
+          type: string
+        data:
+          $ref: '#/components/schemas/Token'
+        timestamp:
+          type: string
+      required:
+        - status_code
+        - timestamp
+  securitySchemes:
+    token:
+      type: http
+      scheme: bearer
+security:
+  - token: []

@@ -7,6 +7,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"github.com/subnova/slog-exporter/slogtrace"
+	"github.com/thoughtworks/maeve-csms/manager/ocpi"
 	"github.com/thoughtworks/maeve-csms/manager/services"
 	"github.com/thoughtworks/maeve-csms/manager/store"
 	"github.com/thoughtworks/maeve-csms/manager/store/firestore"
@@ -51,6 +52,7 @@ type Config struct {
 	ContractCertProviderService      services.ContractCertificateProvider
 	ChargeStationCertProviderService services.ChargeStationCertificateProvider
 	TariffService                    services.TariffService
+	OcpiApi                          ocpi.Api
 }
 
 func Configure(ctx context.Context, cfg *BaseConfig) (c *Config, err error) {
@@ -136,7 +138,33 @@ func Configure(ctx context.Context, cfg *BaseConfig) (c *Config, err error) {
 		return nil, err
 	}
 
+	if cfg.Ocpi != nil {
+		c.OcpiApi, err = getOcpiApi(cfg.Ocpi, c.Storage, httpClient)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return
+}
+
+func getOcpiApi(o *OcpiConfig, engine store.Engine, httpClient *http.Client) (ocpi.Api, error) {
+	if o.Addr == "" {
+		return nil, fmt.Errorf("ocpi addr is required")
+	}
+	if o.ExternalURL == "" {
+		return nil, fmt.Errorf("ocpi external url is required")
+	}
+	if o.PartyId == "" {
+		return nil, fmt.Errorf("ocpi party id is required")
+	}
+	if o.CountryCode == "" {
+		return nil, fmt.Errorf("ocpi country code is required")
+	}
+
+	api := ocpi.NewOCPI(engine, httpClient, o.CountryCode, o.PartyId)
+	api.SetExternalUrl(o.ExternalURL)
+	return api, nil
 }
 
 func getHttpClient(keylogFile string) (*http.Client, error) {

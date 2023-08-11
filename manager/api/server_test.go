@@ -309,7 +309,7 @@ func setupServer(t *testing.T) (*httptest.Server, *chi.Mux, store.Engine, clock.
 
 	now := time.Now().UTC()
 	c := clockTest.NewFakePassiveClock(now)
-	srv, err := api.NewServer(engine, c)
+	srv, err := api.NewServer(engine, c, nil)
 	require.NoError(t, err)
 
 	r := chi.NewRouter()

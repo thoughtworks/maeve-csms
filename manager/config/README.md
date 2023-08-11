@@ -152,7 +152,6 @@ There are several implementation of HttpAuthService:
 | Key      | Type   | Description                                          |
 |----------|--------|------------------------------------------------------|
 | variable | string | Name of the environment variable                     |
-| ttl      | string | The duration for which the token is valid, e.g. "1h" |
 
 #### Fixed token auth service
 
