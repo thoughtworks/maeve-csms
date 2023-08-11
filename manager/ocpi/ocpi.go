@@ -17,6 +17,8 @@ type Api interface {
 	GetVersions(ctx context.Context) ([]Version, error)
 	GetVersion(ctx context.Context) (VersionDetail, error)
 	SetCredentials(ctx context.Context, token string, credentials Credentials) error
+	SetToken(ctx context.Context, token Token) error
+	GetToken(ctx context.Context, countryCode string, partyID string, tokenUID string) (*Token, error)
 }
 
 type OCPI struct {
@@ -57,6 +59,11 @@ func (o *OCPI) GetVersion(context.Context) (VersionDetail, error) {
 				Role:       RECEIVER,
 				Url:        fmt.Sprintf("%s/ocpi/2.2/credentials", o.externalUrl),
 			},
+			{
+				Identifier: "tokens",
+				Role:       RECEIVER,
+				Url:        fmt.Sprintf("%s/ocpi/receiver/2.2/tokens/", o.externalUrl),
+			},
 		},
 		Version: "2.2",
 	}, nil
@@ -82,24 +89,67 @@ func (o *OCPI) SetCredentials(ctx context.Context, token string, credentials Cre
 	}
 
 	if reg != nil && reg.Status == store.OcpiRegistrationStatusPending {
-		// delete old token
-		err := o.store.DeleteRegistrationDetails(ctx, token)
-		if err != nil {
-			return err
-		}
-		// store new token
-		err = o.store.SetRegistrationDetails(ctx, credentials.Token, &store.OcpiRegistration{
-			Status: store.OcpiRegistrationStatusRegistered,
-		})
-		if err != nil {
-			return err
-		}
 		// register new party
 		err = o.RegisterNewParty(ctx, credentials.Url, credentials.Token)
 		if err != nil {
 			return err
 		}
+		// delete old token
+		err := o.store.DeleteRegistrationDetails(ctx, token)
+		if err != nil {
+			return err
+		}
+	}
+
+	// store new token
+	err = o.store.SetRegistrationDetails(ctx, credentials.Token, &store.OcpiRegistration{
+		Status: store.OcpiRegistrationStatusRegistered,
+	})
+	if err != nil {
+		return err
 	}
 
 	return nil
+}
+
+func (o *OCPI) GetToken(ctx context.Context, countryCode string, partyID string, tokenUID string) (*Token, error) {
+	tok, err := o.store.LookupToken(ctx, tokenUID)
+	if err != nil {
+		return nil, err
+	}
+	if tok.CountryCode != countryCode || tok.PartyId != partyID {
+		return nil, nil
+	}
+	return &Token{
+		ContractId:   tok.ContractId,
+		CountryCode:  tok.CountryCode,
+		GroupId:      tok.GroupId,
+		Issuer:       tok.Issuer,
+		Language:     tok.LanguageCode,
+		LastUpdated:  tok.LastUpdated,
+		PartyId:      tok.PartyId,
+		Type:         TokenType(tok.Type),
+		Uid:          tok.Uid,
+		Valid:        tok.Valid,
+		VisualNumber: tok.VisualNumber,
+		Whitelist:    TokenWhitelist(tok.CacheMode),
+	}, nil
+}
+
+func (o *OCPI) SetToken(ctx context.Context, token Token) error {
+	tok := &store.Token{
+		CountryCode:  token.CountryCode,
+		PartyId:      token.PartyId,
+		Type:         string(token.Type),
+		Uid:          token.Uid,
+		ContractId:   token.ContractId,
+		VisualNumber: token.VisualNumber,
+		Issuer:       token.Issuer,
+		GroupId:      token.GroupId,
+		Valid:        token.Valid,
+		LanguageCode: token.Language,
+		CacheMode:    string(token.Whitelist),
+	}
+
+	return o.store.SetToken(ctx, tok)
 }

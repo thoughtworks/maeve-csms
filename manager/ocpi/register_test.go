@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 package ocpi_test
 
 import (
@@ -59,4 +61,24 @@ func TestRegistration(t *testing.T) {
 	assert.Equal(t, "TWS", receiverPartyDetails.PartyId)
 	assert.Equal(t, receiverServer.URL+"/ocpi/versions", receiverPartyDetails.Url)
 	assert.Len(t, receiverPartyDetails.Token, 64)
+
+	// check initial registration details have been removed
+	senderTokenAReg, err := senderStore.GetRegistrationDetails(context.Background(), tokenA)
+	require.NoError(t, err)
+	assert.Nil(t, senderTokenAReg)
+
+	receiverTokenAReg, err := receiverStore.GetRegistrationDetails(context.Background(), tokenA)
+	require.NoError(t, err)
+	assert.Nil(t, receiverTokenAReg)
+
+	// token status
+	receiverTokenBReg, err := receiverStore.GetRegistrationDetails(context.Background(), senderPartyDetails.Token)
+	require.NoError(t, err)
+	require.NotNil(t, receiverTokenBReg)
+	assert.Equal(t, store.OcpiRegistrationStatusRegistered, receiverTokenBReg.Status)
+
+	senderTokenCReg, err := senderStore.GetRegistrationDetails(context.Background(), receiverPartyDetails.Token)
+	require.NoError(t, err)
+	require.NotNil(t, senderTokenCReg)
+	assert.Equal(t, store.OcpiRegistrationStatusRegistered, senderTokenCReg.Status)
 }

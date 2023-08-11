@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 package ocpi
 
 import (
@@ -14,6 +16,14 @@ import (
 )
 
 func (o *OCPI) RegisterNewParty(ctx context.Context, url, token string) error {
+	reg, err := o.store.GetRegistrationDetails(ctx, token)
+	if err != nil {
+		return err
+	}
+	if reg != nil && reg.Status == store.OcpiRegistrationStatusRegistered {
+		return errors.New("already registered")
+	}
+
 	versions, err := o.getVersions(ctx, url, token)
 	if err != nil {
 		return err

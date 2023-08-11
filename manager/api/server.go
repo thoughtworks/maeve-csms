@@ -249,8 +249,13 @@ func (s *Server) RegisterParty(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		// store credentials in database
+		status := store.OcpiRegistrationStatusPending
+		if req.Status != nil && *req.Status == "REGISTERED" {
+			status = store.OcpiRegistrationStatusRegistered
+		}
+
 		err := s.store.SetRegistrationDetails(r.Context(), req.Token, &store.OcpiRegistration{
-			Status: store.OcpiRegistrationStatusPending,
+			Status: status,
 		})
 		if err != nil {
 			_ = render.Render(w, r, ErrInternalError(err))

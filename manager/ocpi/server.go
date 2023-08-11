@@ -1,6 +1,9 @@
+// SPDX-License-Identifier: Apache-2.0
+
 package ocpi
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/go-chi/render"
 	"k8s.io/utils/clock"
@@ -19,6 +22,8 @@ func NewServer(ocpi Api, clock clock.PassiveClock) (*Server, error) {
 		clock: clock,
 	}, nil
 }
+
+// VERSIONS
 
 func (s *Server) GetVersions(w http.ResponseWriter, r *http.Request, params GetVersionsParams) {
 	versions, err := s.ocpi.GetVersions(r.Context())
@@ -57,6 +62,8 @@ func (s *Server) GetVersion(w http.ResponseWriter, r *http.Request, params GetVe
 	})
 }
 
+// CREDENTIALS
+
 func (s *Server) PostCredentials(w http.ResponseWriter, r *http.Request, params PostCredentialsParams) {
 	creds := new(Credentials)
 	if err := render.Bind(r, creds); err != nil {
@@ -77,6 +84,108 @@ func (s *Server) PostCredentials(w http.ResponseWriter, r *http.Request, params 
 	}
 
 	w.WriteHeader(http.StatusCreated)
+}
+
+// TOKEN RECEIVER
+
+func (s *Server) GetClientOwnedToken(w http.ResponseWriter, r *http.Request, countryCode string, partyID string, tokenUID string, params GetClientOwnedTokenParams) {
+	token, err := s.ocpi.GetToken(r.Context(), countryCode, partyID, tokenUID)
+	if err != nil {
+		_ = render.Render(w, r, ErrInternalError(err))
+		return
+	}
+
+	_ = render.Render(w, r, OcpiResponseToken{
+		StatusCode:    StatusSuccess,
+		StatusMessage: &StatusSuccessMessage,
+		Timestamp:     s.clock.Now().Format(time.RFC3339),
+		Data:          token,
+	})
+}
+
+func (s *Server) PutClientOwnedToken(w http.ResponseWriter, r *http.Request, countryCode string, partyID string, tokenUID string, params PutClientOwnedTokenParams) {
+	tok := new(Token)
+	if err := render.Bind(r, tok); err != nil {
+		_ = render.Render(w, r, ErrInvalidRequest(err))
+		return
+	}
+
+	if tok.CountryCode != countryCode {
+		_ = render.Render(w, r, ErrInvalidRequest(fmt.Errorf("token country code mismatch")))
+		return
+	}
+	if tok.PartyId != partyID {
+		_ = render.Render(w, r, ErrInvalidRequest(fmt.Errorf("token party id mismatch")))
+		return
+	}
+	if tok.Uid != tokenUID {
+		_ = render.Render(w, r, ErrInvalidRequest(fmt.Errorf("token uid mismatch")))
+		return
+	}
+
+	err := s.ocpi.SetToken(r.Context(), *tok)
+	if err != nil {
+		_ = render.Render(w, r, OcpiResponseListVersion{
+			StatusCode: StatusGenericServerFailure,
+			Timestamp:  s.clock.Now().Format(time.RFC3339),
+		})
+	}
+}
+
+func (s *Server) PatchClientOwnedToken(w http.ResponseWriter, r *http.Request, countryCode string, partyID string, tokenUID string, params PatchClientOwnedTokenParams) {
+	var patch map[string]any
+	err := json.NewDecoder(r.Body).Decode(&patch)
+	if err != nil {
+		_ = render.Render(w, r, ErrInvalidRequest(err))
+		return
+	}
+
+	tok, err := s.ocpi.GetToken(r.Context(), countryCode, partyID, tokenUID)
+	if err != nil {
+		_ = render.Render(w, r, ErrInternalError(err))
+		return
+	}
+	if tok == nil {
+		_ = render.Render(w, r, ErrNotFound)
+		return
+	}
+
+	for k, v := range patch {
+		switch k {
+		case "contract_id":
+			contractID := v.(string)
+			tok.ContractId = contractID
+		case "group_id":
+			groupID := v.(string)
+			tok.GroupId = &groupID
+		case "issuer":
+			issuer := v.(string)
+			tok.Issuer = issuer
+		case "language":
+			language := v.(string)
+			tok.Language = &language
+		case "type":
+			typ := v.(TokenType)
+			tok.Type = typ
+		case "valid":
+			valid := v.(bool)
+			tok.Valid = valid
+		case "visual_number":
+			visualNumber := v.(string)
+			tok.VisualNumber = &visualNumber
+		case "whitelist":
+			whitelist := v.(TokenWhitelist)
+			tok.Whitelist = whitelist
+		default:
+			_ = render.Render(w, r, ErrInvalidRequest(fmt.Errorf("unknown field %s", k)))
+		}
+	}
+
+	err = s.ocpi.SetToken(r.Context(), *tok)
+	if err != nil {
+		_ = render.Render(w, r, ErrInternalError(err))
+		return
+	}
 }
 
 func (s *Server) DeleteCredentials(w http.ResponseWriter, r *http.Request, params DeleteCredentialsParams) {
@@ -196,18 +305,6 @@ func (s *Server) GetClientOwnedTariff(w http.ResponseWriter, r *http.Request, co
 }
 
 func (s *Server) PutClientOwnedTariff(w http.ResponseWriter, r *http.Request, countryCode string, partyID string, tariffID string, params PutClientOwnedTariffParams) {
-	w.WriteHeader(http.StatusNotImplemented)
-}
-
-func (s *Server) GetClientOwnedToken(w http.ResponseWriter, r *http.Request, countryCode string, partyID string, tokenUID string, params GetClientOwnedTokenParams) {
-	w.WriteHeader(http.StatusNotImplemented)
-}
-
-func (s *Server) PatchClientOwnedToken(w http.ResponseWriter, r *http.Request, countryCode string, partyID string, tokenUID string, params PatchClientOwnedTokenParams) {
-	w.WriteHeader(http.StatusNotImplemented)
-}
-
-func (s *Server) PutClientOwnedToken(w http.ResponseWriter, r *http.Request, countryCode string, partyID string, tokenUID string, params PutClientOwnedTokenParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 

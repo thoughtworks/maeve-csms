@@ -389,6 +389,16 @@ components:
           type: "string"
           format: "uri"
           description: "The URL of the eMSP versions endpoint. If provided the CSMS will act as the sender of the versions request."
+        status:
+          type: "string"
+          enum:
+            - "PENDING"
+            - "REGISTERED"
+          description: |
+            The status of the registration request. If the request is marked as `REGISTERED` then the token will be allowed to
+            be used to access all endpoints avoiding the need for the OCPI registration process. If the request is marked as 
+            `PENDING` then the token will only be allowed to access the `/ocpi/versions`, `/ocpi/2.2` and `/ocpi/2.2/credentials`
+            endpoints.
       required:
         - token
 
