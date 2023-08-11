@@ -16,8 +16,6 @@ jobs:
         - name: Dump docker container logs on failure
           if: failure()
           run: docker compose logs
+        - run: docker network list
         - name: Smoke test
           run: http -v --ignore-stdin --check-status POST http://localhost:9410/api/v0/cs/cs001 securityProfile:=2
-        - name: Try restart and connect again
-          if: failure()
-          run: docker compose restart lb && http -v --ignore-stdin --check-status POST http://localhost:9410/api/v0/cs/cs001 securityProfile:=2

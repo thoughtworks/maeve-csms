@@ -1,6 +1,5 @@
 networks:
-  default:
-    name: maeve-csms
+  maeve-network:
     enable_ipv6: true
     ipam:
       config:
