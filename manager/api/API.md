@@ -440,6 +440,56 @@ of the DER bytes.
 This operation does not require authentication
 </aside>
 
+## registerParty
+
+<a id="opIdregisterParty"></a>
+
+`POST /register`
+
+*Registers an OCPI party with the CSMS*
+
+Registers an OCPI party with the CSMS. Depending on the configuration provided the CSMS will
+either initiate a registration with the party or the party will wait for the party to initiate 
+a registration with the CSMS.
+
+> Body parameter
+
+```json
+{
+  "token": "string",
+  "url": "http://example.com",
+  "status": "PENDING"
+}
+```
+
+<h3 id="registerparty-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|[Registration](#schemaregistration)|true|none|
+
+> Example responses
+
+> default Response
+
+```json
+{
+  "status": "string",
+  "error": "string"
+}
+```
+
+<h3 id="registerparty-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|201|[Created](https://tools.ietf.org/html/rfc7231#section-6.3.2)|Created|None|
+|default|Default|Unexpected error|[Status](#schemastatus)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
 # Schemas
 
 <h2 id="tocS_ChargeStationAuth">ChargeStationAuth</h2>
@@ -568,4 +618,37 @@ A client certificate
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
 |certificate|string|true|none|The PEM encoded certificate with newlines replaced by `\n`|
+
+<h2 id="tocS_Registration">Registration</h2>
+<!-- backwards compatibility -->
+<a id="schemaregistration"></a>
+<a id="schema_Registration"></a>
+<a id="tocSregistration"></a>
+<a id="tocsregistration"></a>
+
+```json
+{
+  "token": "string",
+  "url": "http://example.com",
+  "status": "PENDING"
+}
+
+```
+
+Defines the initial connection details for the OCPI registration process
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|token|string|true|none|The token to use for communicating with the eMSP (CREDENTIALS_TOKEN_A).|
+|url|string(uri)|false|none|The URL of the eMSP versions endpoint. If provided the CSMS will act as the sender of the versions request.|
+|status|string|false|none|The status of the registration request. If the request is marked as `REGISTERED` then the token will be allowed to<br>be used to access all endpoints avoiding the need for the OCPI registration process. If the request is marked as <br>`PENDING` then the token will only be allowed to access the `/ocpi/versions`, `/ocpi/2.2` and `/ocpi/2.2/credentials`<br>endpoints.|
+
+#### Enumerated Values
+
+|Property|Value|
+|---|---|
+|status|PENDING|
+|status|REGISTERED|
 
