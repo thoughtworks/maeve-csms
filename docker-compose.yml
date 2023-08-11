@@ -26,17 +26,11 @@ services:
       retries: 3
 
   lb:
-    image: envoyproxy/envoy:v1.26-latest
-    command: ["-c", "/config/envoy.yaml"]
+    image: caddy:latest
     volumes:
-      - type: bind
-        source: ./config/envoy
-        target: /config
-        read_only: true
+      - ./Caddyfile:/etc/caddy/Caddyfile
     ports:
       - "80:80"
-      - "443:443"
-      - "9410:9410"
 
   gateway:
     build:

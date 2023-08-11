@@ -1,0 +1,23 @@
+name: Bring up service to check if it can run
+
+on: push
+
+jobs:
+    docker-compose:
+        runs-on: ubuntu-latest
+        steps:
+        - run: sudo snap install --edge httpie
+        - uses: actions/checkout@v3
+        - name: Docker Compose setup
+          run: |
+            (cd config/certificates && make)
+            chmod -R a+r config/certificates # gateway needs this for csms.key
+            docker compose up --wait --detach --quiet-pull
+        - name: Dump docker container logs on failure
+          if: failure()
+          run: docker compose logs
+        - name: Smoke test
+          run: http -v --ignore-stdin --check-status POST http://localhost/api/v0/cs/cs001 securityProfile:=2
+        - name: Dump docker container logs on failure
+          if: failure()
+          run: docker compose logs

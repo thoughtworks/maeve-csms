@@ -1,0 +1,16 @@
+:80 {
+	log {
+	output stderr
+	format console
+	}
+
+	# Websockets goto gateway
+	@websockets {
+	header Connection *Upgrade*
+	header Upgrade    websocket
+	}
+	reverse_proxy @websockets gateway:9310
+
+	# Else goto manager
+	reverse_proxy manager:9410
+}
