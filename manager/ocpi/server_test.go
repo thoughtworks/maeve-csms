@@ -1,6 +1,7 @@
 package ocpi_test
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"github.com/go-chi/chi/v5"
@@ -13,6 +14,7 @@ import (
 	fakeclock "k8s.io/utils/clock/testing"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 )
@@ -155,4 +157,107 @@ func TestServerGetClientOwnedToken(t *testing.T) {
 	assert.Regexp(t, `^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$`, got.Data.LastUpdated)
 	got.Data.LastUpdated = ""
 	assert.Equal(t, want, got)
+}
+
+func TestServerPutClientOwnedToken(t *testing.T) {
+	handler, engine, _ := setupHandler(t)
+
+	tok := ocpi.Token{
+		ContractId:  "GBTWKTWTW000018",
+		CountryCode: "GB",
+		Issuer:      "Thoughtworks",
+		PartyId:     "TWK",
+		Type:        "RFID",
+		Uid:         "DEADBEEF",
+		Valid:       true,
+		Whitelist:   "ALWAYS",
+	}
+	b, err := json.Marshal(tok)
+	require.NoError(t, err)
+
+	req := httptest.NewRequest(http.MethodPut, "/ocpi/receiver/2.2/tokens/GB/TWK/DEADBEEF", bytes.NewReader(b))
+	req.Header.Set("Authorization", "Token 123")
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Request-ID", "123")
+	req.Header.Set("X-Correlation-ID", "123")
+	req.Header.Set("OCPI-from-country-code", "GB")
+	req.Header.Set("OCPI-from-party-id", "TWK")
+	req.Header.Set("OCPI-to-country-code", "GB")
+	req.Header.Set("OCPI-to-party-id", "TWK")
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+	resp := w.Result()
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	want := &store.Token{
+		CountryCode: "GB",
+		PartyId:     "TWK",
+		Type:        "RFID",
+		Uid:         "DEADBEEF",
+		ContractId:  "GBTWKTWTW000018",
+		Issuer:      "Thoughtworks",
+		Valid:       true,
+		CacheMode:   "ALWAYS",
+	}
+
+	got, err := engine.LookupToken(context.Background(), "DEADBEEF")
+	require.NoError(t, err)
+	got.LastUpdated = ""
+	assert.Equal(t, want, got)
+}
+
+func TestServerPatchClientOwnedToken(t *testing.T) {
+	handler, engine, _ := setupHandler(t)
+
+	err := engine.SetToken(context.Background(), &store.Token{
+		CountryCode: "GB",
+		PartyId:     "TWK",
+		Type:        "RFID",
+		Uid:         "DEADBEEF",
+		ContractId:  "GBTWKTWTW000018",
+		Issuer:      "Thoughtworks",
+		Valid:       true,
+		CacheMode:   "ALWAYS",
+	})
+	require.NoError(t, err)
+
+	req := httptest.NewRequest(http.MethodPatch, "/ocpi/receiver/2.2/tokens/GB/TWK/DEADBEEF",
+		strings.NewReader(`{
+			"contract_id": "GBTWKTWTW000025",
+			"issuer": "TW",
+			"valid": false,
+			"whitelist": "NEVER"
+		}`))
+	req.Header.Set("Authorization", "Token 123")
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Request-ID", "123")
+	req.Header.Set("X-Correlation-ID", "123")
+	req.Header.Set("OCPI-from-country-code", "GB")
+	req.Header.Set("OCPI-from-party-id", "TWK")
+	req.Header.Set("OCPI-to-country-code", "GB")
+	req.Header.Set("OCPI-to-party-id", "TWK")
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+	resp := w.Result()
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	want := &store.Token{
+		CountryCode: "GB",
+		PartyId:     "TWK",
+		Type:        "RFID",
+		Uid:         "DEADBEEF",
+		ContractId:  "GBTWKTWTW000025",
+		Issuer:      "TW",
+		Valid:       false,
+		CacheMode:   "NEVER",
+	}
+
+	got, err := engine.LookupToken(context.Background(), "DEADBEEF")
+	require.NoError(t, err)
+	got.LastUpdated = ""
+	assert.Equal(t, want, got)
+
+	b, err := io.ReadAll(resp.Body)
+	require.NoError(t, err)
+	t.Logf("%s", string(b))
 }

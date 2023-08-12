@@ -165,8 +165,8 @@ func (s *Server) PatchClientOwnedToken(w http.ResponseWriter, r *http.Request, c
 			language := v.(string)
 			tok.Language = &language
 		case "type":
-			typ := v.(TokenType)
-			tok.Type = typ
+			typ := v.(string)
+			tok.Type = TokenType(typ)
 		case "valid":
 			valid := v.(bool)
 			tok.Valid = valid
@@ -174,8 +174,8 @@ func (s *Server) PatchClientOwnedToken(w http.ResponseWriter, r *http.Request, c
 			visualNumber := v.(string)
 			tok.VisualNumber = &visualNumber
 		case "whitelist":
-			whitelist := v.(TokenWhitelist)
-			tok.Whitelist = whitelist
+			whitelist := v.(string)
+			tok.Whitelist = TokenWhitelist(whitelist)
 		default:
 			_ = render.Render(w, r, ErrInvalidRequest(fmt.Errorf("unknown field %s", k)))
 		}
