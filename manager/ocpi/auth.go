@@ -11,7 +11,7 @@ import (
 	"regexp"
 )
 
-var authzHeaderRegexp = regexp.MustCompile(`^Token (.*)$`)
+var authzHeaderRegexp = regexp.MustCompile(`(?i)^Token (.*)$`)
 
 func NewTokenAuthenticationFunc(engine store.Engine) openapi3filter.AuthenticationFunc {
 	return func(ctx context.Context, input *openapi3filter.AuthenticationInput) error {
