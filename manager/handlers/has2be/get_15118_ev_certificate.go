@@ -4,14 +4,14 @@ package has2be
 
 import (
 	"context"
-	handlers201 "github.com/thoughtworks/maeve-csms/manager/handlers/ocpp201"
+	"github.com/thoughtworks/maeve-csms/manager/handlers"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
 	typesHasToBe "github.com/thoughtworks/maeve-csms/manager/ocpp/has2be"
 	types201 "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
 )
 
 type Get15118EvCertificateHandler struct {
-	Handler201 handlers201.Get15118EvCertificateHandler
+	Handler201 handlers.CallHandler
 }
 
 func (g Get15118EvCertificateHandler) HandleCall(ctx context.Context, _ string, request ocpp.Request) (ocpp.Response, error) {

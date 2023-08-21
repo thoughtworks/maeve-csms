@@ -6,7 +6,8 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/pem"
-	handlers201 "github.com/thoughtworks/maeve-csms/manager/handlers/ocpp201"
+
+	"github.com/thoughtworks/maeve-csms/manager/handlers"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
 	typesHasToBe "github.com/thoughtworks/maeve-csms/manager/ocpp/has2be"
 	types201 "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
@@ -15,7 +16,7 @@ import (
 )
 
 type SignCertificateHandler struct {
-	Handler201 handlers201.SignCertificateHandler
+	Handler201 handlers.CallHandler
 }
 
 func (s SignCertificateHandler) HandleCall(ctx context.Context, chargeStationId string, request ocpp.Request) (ocpp.Response, error) {
@@ -24,6 +25,7 @@ func (s SignCertificateHandler) HandleCall(ctx context.Context, chargeStationId 
 	req := request.(*typesHasToBe.SignCertificateRequestJson)
 
 	csr, inputFormat, err := normalizeCsrEncoding(req.Csr)
+
 	if err != nil {
 		return nil, err
 	}
@@ -53,16 +55,18 @@ func (s SignCertificateHandler) HandleCall(ctx context.Context, chargeStationId 
 
 func normalizeCsrEncoding(csr string) (string, string, error) {
 	if pemDecoded, _ := pem.Decode([]byte(csr)); pemDecoded == nil {
-		base64Decoded, err := base64.StdEncoding.DecodeString(csr)
+		// not PEM encoded, assume base64-encoded DER
+		der, err := base64.StdEncoding.DecodeString(csr)
 		if err != nil {
 			return "", "", err
 		}
 		pemBlock := pem.Block{
 			Type:  "CERTIFICATE REQUEST",
-			Bytes: base64Decoded,
+			Bytes: der,
 		}
 		csr = string(pem.EncodeToMemory(&pemBlock))
 		return csr, "base64", nil
 	}
+
 	return csr, "pem", nil
 }
