@@ -60,6 +60,7 @@ func TestCertificateValidationServiceWithHubjectCertificateHashes(t *testing.T) 
 			httpClient),
 		BaseURL:    "https://open.plugncharge-test.hubject.com",
 		ISOVersion: services.ISO15118V2,
+		HttpClient: httpClient,
 	}
 
 	csr := createCertificateSigningRequest(t)

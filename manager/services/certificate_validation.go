@@ -11,13 +11,12 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"io"
-	"math/big"
-	"net/http"
-
 	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
 	"golang.org/x/crypto/ocsp"
 	"golang.org/x/exp/slog"
+	"io"
+	"math/big"
+	"net/http"
 )
 
 // OCSPError is an error returned by the OCSP server in response to a check
@@ -274,6 +273,9 @@ func (o *OnlineCertificateValidationService) attemptOCSPCheck(ctx context.Contex
 	if err != nil {
 		return nil, fmt.Errorf("new request: %w", err)
 	}
+
+	req.Header.Add("Content-Type", "application/ocsp-request")
+	req.Header.Add("Accept", "application/ocsp-response")
 
 	resp, err := o.HttpClient.Do(req)
 	if err != nil {
