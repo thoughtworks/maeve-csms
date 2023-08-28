@@ -49,6 +49,10 @@ func NewV16Router(emitter Emitter,
 				VendorId:  "org.openchargealliance.iso15118pnc",
 				MessageId: "CertificateSigned",
 			},
+			reflect.TypeOf(&has2be.CertificateSignedRequestJson{}): {
+				VendorId:  "iso15118",
+				MessageId: "CertificateSigned",
+			},
 		},
 	}
 
