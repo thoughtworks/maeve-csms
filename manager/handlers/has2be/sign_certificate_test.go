@@ -18,7 +18,7 @@ type spy201SignCertificateHandler struct {
 	RecordedCsr *string
 }
 
-func (d spy201SignCertificateHandler) HandleCall(ctx context.Context, chargeStationId string, request ocpp.Request) (ocpp.Response, error) {
+func (d *spy201SignCertificateHandler) HandleCall(_ context.Context, _ string, request ocpp.Request) (ocpp.Response, error) {
 	d.recordReceivedCsr(request.(*types201.SignCertificateRequestJson).Csr)
 	return &types201.SignCertificateResponseJson{
 		Status: types201.GenericStatusEnumTypeAccepted,
@@ -45,7 +45,7 @@ func TestPassesPEMEncodedCsrOnAsIs(t *testing.T) {
 		RecordedCsr: &csrRecorder,
 	}
 	handler := handlersHasToBe.SignCertificateHandler{
-		Handler201: spy201Handler,
+		Handler201: &spy201Handler,
 	}
 	req := &typesHasToBe.SignCertificateRequestJson{
 		Csr: pemEncodedCsr,
@@ -67,7 +67,7 @@ func TestDecodesBase64EncodedDERAndReencodesAsPEM(t *testing.T) {
 		RecordedCsr: &csrRecorder,
 	}
 	handler := handlersHasToBe.SignCertificateHandler{
-		Handler201: spy201Handler,
+		Handler201: &spy201Handler,
 	}
 	req := &typesHasToBe.SignCertificateRequestJson{
 		Csr: base64.StdEncoding.EncodeToString(csrBytes),
