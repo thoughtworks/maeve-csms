@@ -14,7 +14,7 @@ type Get15118EvCertificateHandler struct {
 	Handler201 handlers.CallHandler
 }
 
-func (g Get15118EvCertificateHandler) HandleCall(ctx context.Context, _ string, request ocpp.Request) (ocpp.Response, error) {
+func (g Get15118EvCertificateHandler) HandleCall(ctx context.Context, chargeStationId string, request ocpp.Request) (ocpp.Response, error) {
 	req := request.(*typesHasToBe.Get15118EVCertificateRequestJson)
 
 	req201 := types201.Get15118EVCertificateRequestJson{
@@ -24,7 +24,7 @@ func (g Get15118EvCertificateHandler) HandleCall(ctx context.Context, _ string, 
 		Action: types201.CertificateActionEnumTypeInstall,
 	}
 
-	res, err := g.Handler201.HandleCall(ctx, "", &req201)
+	res, err := g.Handler201.HandleCall(ctx, chargeStationId, &req201)
 	if err != nil {
 		return nil, err
 	}

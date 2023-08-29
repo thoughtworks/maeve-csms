@@ -18,6 +18,7 @@ type BaseConfig struct {
 	ContractCertProvider      ContractCertProviderConfig      `mapstructure:"contract_cert_provider" toml:"contract_cert_provider"`
 	ChargeStationCertProvider ChargeStationCertProviderConfig `mapstructure:"charge_station_cert_provider" toml:"charge_station_cert_provider"`
 	TariffService             TariffServiceConfig             `mapstructure:"tariff_service" toml:"tariff_service"`
+	Ocpi                      *OcpiConfig                     `mapstructure:"ocpi,omitempty" toml:"ocpi,omitempty"`
 }
 
 var DefaultConfig = BaseConfig{

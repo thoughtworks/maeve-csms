@@ -1,0 +1,72 @@
+// SPDX-License-Identifier: Apache-2.0
+
+package firestore
+
+import (
+	"context"
+	"fmt"
+	"github.com/thoughtworks/maeve-csms/manager/store"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+)
+
+func (s *Store) SetRegistrationDetails(ctx context.Context, token string, registration *store.OcpiRegistration) error {
+	regRef := s.client.Doc(fmt.Sprintf("OcpiRegistration/%s", token))
+	_, err := regRef.Set(ctx, registration)
+	if err != nil {
+		return fmt.Errorf("setting registration: %s: %w", token, err)
+	}
+	return nil
+}
+
+func (s *Store) GetRegistrationDetails(ctx context.Context, token string) (*store.OcpiRegistration, error) {
+	regRef := s.client.Doc(fmt.Sprintf("OcpiRegistration/%s", token))
+	snap, err := regRef.Get(ctx)
+	if err != nil {
+		if status.Code(err) == codes.NotFound {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("lookup registration %s: %w", token, err)
+	}
+	var registration store.OcpiRegistration
+	err = snap.DataTo(&registration)
+	if err != nil {
+		return nil, fmt.Errorf("map registration %s: %w", token, err)
+	}
+	return &registration, nil
+}
+
+func (s *Store) DeleteRegistrationDetails(ctx context.Context, token string) error {
+	regRef := s.client.Doc(fmt.Sprintf("OcpiRegistration/%s", token))
+	_, err := regRef.Delete(ctx)
+	if err != nil {
+		return fmt.Errorf("delete registration %s: %w", token, err)
+	}
+	return nil
+}
+
+func (s *Store) SetPartyDetails(ctx context.Context, partyDetails *store.OcpiParty) error {
+	partyRef := s.client.Doc(fmt.Sprintf("OcpiParty/%s/Id/%s:%s", partyDetails.Role, partyDetails.CountryCode, partyDetails.PartyId))
+	_, err := partyRef.Set(ctx, partyDetails)
+	if err != nil {
+		return fmt.Errorf("setting party %s/%s:%s: %w", partyDetails.Role, partyDetails.CountryCode, partyDetails.PartyId, err)
+	}
+	return nil
+}
+
+func (s *Store) GetPartyDetails(ctx context.Context, role, countryCode, partyId string) (*store.OcpiParty, error) {
+	partyRef := s.client.Doc(fmt.Sprintf("OcpiParty/%s/Id/%s:%s", role, countryCode, partyId))
+	snap, err := partyRef.Get(ctx)
+	if err != nil {
+		if status.Code(err) == codes.NotFound {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("lookup party details %s/%s:%s: %w", role, countryCode, partyId, err)
+	}
+	var registration store.OcpiParty
+	err = snap.DataTo(&registration)
+	if err != nil {
+		return nil, fmt.Errorf("map party details %s/%s:%s: %w", role, countryCode, partyId, err)
+	}
+	return &registration, nil
+}

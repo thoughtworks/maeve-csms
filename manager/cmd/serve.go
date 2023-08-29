@@ -10,6 +10,7 @@ import (
 	"github.com/thoughtworks/maeve-csms/manager/server"
 	"go.opentelemetry.io/otel"
 	"golang.org/x/exp/slog"
+	"k8s.io/utils/clock"
 )
 
 var (
@@ -44,7 +45,7 @@ the gateway and send appropriate responses.`,
 
 		tracer := otel.Tracer("manager")
 
-		apiServer := server.New("api", cfg.Api.Addr, nil, server.NewApiHandler(settings.Storage))
+		apiServer := server.New("api", cfg.Api.Addr, nil, server.NewApiHandler(settings.Storage, settings.OcpiApi))
 
 		mqttHandler := mqtt.NewHandler(
 			mqtt.WithMqttBrokerUrls(settings.Mqtt.Urls),
@@ -61,6 +62,11 @@ the gateway and send appropriate responses.`,
 		errCh := make(chan error, 1)
 		apiServer.Start(errCh)
 		mqttHandler.Connect(errCh)
+
+		if settings.OcpiApi != nil {
+			ocpiServer := server.New("ocpi", cfg.Ocpi.Addr, nil, server.NewOcpiHandler(settings.Storage, clock.RealClock{}, settings.OcpiApi))
+			ocpiServer.Start(errCh)
+		}
 
 		err = <-errCh
 		return err

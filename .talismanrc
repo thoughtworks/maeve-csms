@@ -6,7 +6,7 @@ fileignoreconfig:
   - filename: README.md
     checksum: 31e36953a79714f038a16dc3c36365434aea5237bbb5b7b3fdc4276e92edc82e
   - filename: config/envoy/envoy.yaml
-    checksum: 90b8cf1a728636d65356a9d0041cc853024f5847e903ad093a0e032279b29429
+    checksum: ecc0939110080350677a0b99d71d47f4cfb341cbcc2dedd212a52b8e350311d4
   - filename: config/manager/config.toml
     checksum: 103e08cb1d9507cbeb377f4212606e52375d2f77c079aaad7465873ebb5fdd98
   - filename: docker-compose.yml
@@ -26,11 +26,13 @@ fileignoreconfig:
   - filename: manager/api/API.md
     checksum: c111751da44c7310d6b77b76e1a5826c44cce62e47a32eaec564e86064bb1de2
   - filename: manager/api/api.gen.go
-    checksum: d32fa0bfcbaaf4e6db10c012d3de521922e83418a2121d1fa84cb81cd2277edc
+    checksum: fb9c6cf09f7864a32c38e40fb8a8598d3c6bd5c406245c6b31666c2ccb1f9e24
   - filename: manager/api/server.go
-    checksum: 22cd986022106ada9fbc8c88d41a96dbedce68e4442fe32f1ae3ac081a2bde0d
+    checksum: 98cbd1df522ea428f7e669c01721f3070133062378a4f2e4b167d55eaa8d079b
   - filename: manager/api/server_test.go
     checksum: 297c27a0f612af86cfdce543d5e4a21e60e70f4eb48b57d3c833257bb1b05647
+  - filename: manager/cmd/auth_generate_credential.go
+    checksum: 7503d0819ff60f03c7b6d82f7acc3be1b95579763f1e3d52775a539fca75d785
   - filename: manager/cmd/serve.go
     checksum: 7b5688335f7ad1b5339fc7cc8deaf08e10f42e03cbe086810d2bd70567f923c5
   - filename: manager/config/base_config_test.go
@@ -63,6 +65,12 @@ fileignoreconfig:
     checksum: 9660c626538042009cebcba874730e4222c115fdf24c9dba12c5d4601c69b613
   - filename: manager/mqtt/router.go
     checksum: 880513a5d3f0070619c4890b5aab9fcf10650afc79550a83c1ad9a986c7e7367
+  - filename: manager/ocpi/ocpi.gen.go
+    checksum: 6ca663b1e4f6ecaef87f6fadaacdebcc905ac236adf704ac9278d25e605d940d
+  - filename: manager/ocpi/register.go
+    checksum: 50b33545ae6af5356024ac1e454d20f4550a61c23ffd380c7e8b10dbe403812d
+  - filename: manager/ocpi/server.go
+    checksum: 67cefb85bb20fd6ebbc1587c2726472ead79d4277404f65b4ef7c218d3f9eb13
   - filename: manager/ocpp/emaid_test.go
     checksum: 9a7e7aa8c3e8c2ea5ea2ad070d4fc734c086fc796bc06148d6db891a413ed4af
   - filename: manager/ocpp/has2be/authorize_request.go
@@ -101,6 +109,8 @@ fileignoreconfig:
     checksum: bc9281581eab4a81329e8c5426a4768361f0aa8022c865b5cfca4b4b85bbaee6
   - filename: manager/schemas/ocpp201/TransactionEventResponse.json
     checksum: 30e812e60ae4c19b31bc91b1214057cb2dca6e346967250d912cd108a44322d2
+  - filename: manager/server/ocpi.go
+    checksum: 3678a916dbab5a3bc0384c088cafbf9720081df0d8bd7478d17ae3098c6b9af8
   - filename: manager/services/certificate_validation.go
     checksum: c56dba57d1502acbecb680f97f6efbbd42fda3fde3ca5f54e63da883684db610
   - filename: manager/services/certificate_validation_hubject_test.go

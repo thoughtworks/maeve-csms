@@ -24,6 +24,8 @@ type Store struct {
 	tokens            map[string]*store.Token
 	transactions      map[string]*store.Transaction
 	certificates      map[string]string
+	registrations     map[string]*store.OcpiRegistration
+	partyDetails      map[string]*store.OcpiParty
 }
 
 func NewStore() *Store {
@@ -32,6 +34,8 @@ func NewStore() *Store {
 		tokens:            make(map[string]*store.Token),
 		transactions:      make(map[string]*store.Transaction),
 		certificates:      make(map[string]string),
+		registrations:     make(map[string]*store.OcpiRegistration),
+		partyDetails:      make(map[string]*store.OcpiParty),
 	}
 }
 
@@ -230,4 +234,48 @@ func (s *Store) DeleteCertificate(_ context.Context, certificateHash string) err
 	delete(s.certificates, certificateHash)
 
 	return nil
+}
+
+func (s *Store) SetRegistrationDetails(_ context.Context, token string, registration *store.OcpiRegistration) error {
+	s.Lock()
+	defer s.Unlock()
+
+	s.registrations[token] = registration
+
+	return nil
+}
+
+func (s *Store) GetRegistrationDetails(_ context.Context, token string) (*store.OcpiRegistration, error) {
+	s.Lock()
+	defer s.Unlock()
+	return s.registrations[token], nil
+}
+
+func (s *Store) DeleteRegistrationDetails(_ context.Context, token string) error {
+	s.Lock()
+	defer s.Unlock()
+
+	delete(s.registrations, token)
+
+	return nil
+}
+
+func (s *Store) SetPartyDetails(_ context.Context, partyDetails *store.OcpiParty) error {
+	s.Lock()
+	defer s.Unlock()
+
+	recordId := fmt.Sprintf("%s:%s:%s", partyDetails.Role, partyDetails.CountryCode, partyDetails.PartyId)
+
+	s.partyDetails[recordId] = partyDetails
+
+	return nil
+}
+
+func (s *Store) GetPartyDetails(_ context.Context, role, countryCode, partyId string) (*store.OcpiParty, error) {
+	s.Lock()
+	defer s.Unlock()
+
+	recordId := fmt.Sprintf("%s:%s:%s", role, countryCode, partyId)
+
+	return s.partyDetails[recordId], nil
 }

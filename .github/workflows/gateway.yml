@@ -32,7 +32,7 @@ jobs:
     - name: Run Gosec Security Scanner
       run: |
         go install github.com/securego/gosec/v2/cmd/gosec@latest
-        gosec ./...
+        gosec -exclude-generated ./...
     - name: Test & Coverage
       run: | 
         go test ./... -coverprofile=coverage.out

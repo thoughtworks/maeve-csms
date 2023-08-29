@@ -13,7 +13,7 @@ import (
 
 type CertificateSignedResultHandler struct{}
 
-func (c CertificateSignedResultHandler) HandleCallResult(ctx context.Context, chargeStationId string, request ocpp.Request, response ocpp.Response, state any) error {
+func (c CertificateSignedResultHandler) HandleCallResult(ctx context.Context, _ string, _ ocpp.Request, response ocpp.Response, _ any) error {
 	span := trace.SpanFromContext(ctx)
 
 	resp := response.(*has2be.CertificateSignedResponseJson)

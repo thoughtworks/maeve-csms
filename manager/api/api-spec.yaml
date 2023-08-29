@@ -245,6 +245,29 @@ paths:
             "application/json":
               schema:
                 $ref: "#/components/schemas/Status"
+  /register:
+    post:
+      summary: "Registers an OCPI party with the CSMS"
+      description: |
+        Registers an OCPI party with the CSMS. Depending on the configuration provided the CSMS will
+        either initiate a registration with the party or the party will wait for the party to initiate 
+        a registration with the CSMS.
+      operationId: "registerParty"
+      requestBody:
+        required: true
+        content:
+          "application/json":
+            schema:
+              $ref: "#/components/schemas/Registration"
+      responses:
+        "201":
+          description: "Created"
+        default:
+          description: "Unexpected error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Status"
 components:
   schemas:
     ChargeStationAuth:
@@ -354,3 +377,32 @@ components:
         certificate:
           type: "string"
           description: "The PEM encoded certificate with newlines replaced by `\\n`"
+    Registration:
+      type: "object"
+      description: "Defines the initial connection details for the OCPI registration process"
+      properties:
+        token:
+          type: "string"
+          maxLength: 64
+          description: "The token to use for communicating with the eMSP (CREDENTIALS_TOKEN_A)."
+        url:
+          type: "string"
+          format: "uri"
+          description: "The URL of the eMSP versions endpoint. If provided the CSMS will act as the sender of the versions request."
+        status:
+          type: "string"
+          enum:
+            - "PENDING"
+            - "REGISTERED"
+          description: |
+            The status of the registration request. If the request is marked as `REGISTERED` then the token will be allowed to
+            be used to access all endpoints avoiding the need for the OCPI registration process. If the request is marked as 
+            `PENDING` then the token will only be allowed to access the `/ocpi/versions`, `/ocpi/2.2` and `/ocpi/2.2/credentials`
+            endpoints.
+      required:
+        - token
+
+
+
+
+
