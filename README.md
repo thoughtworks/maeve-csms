@@ -22,13 +22,14 @@ MaEVe is implemented in Go 1.20. Learn more about MaEVe and its existing compone
 ## Pre-requisites
 
 MaEVe runs in a set of Docker containers. This means you need to have `docker`, `docker-compose` and a docker daemon (e.g. docker desktop, `colima` or `rancher`) installed and running.
+Scripts that fetch various tokens use `jq`. Make sure you have it installed.
 
 ## Getting started
 
 To get the system up and running:
 
 1. `(cd config/certificates && make)`
-2. Run the [./scripts/run.sh](./scripts/run.sh) script with the same token to run all the required components - again, don't forget the quotes around the token
+2. Run the [./scripts/run.sh](./scripts/run.sh) script
 
 Charge stations can connect to the CSMS using:
 * `ws://localhost/ws/<cs-id>`
@@ -40,15 +41,13 @@ For TLS, the charge station should use a certificate provisioned using the
 [Hubject CPO EST service](https://hubject.stoplight.io/docs/open-plugncharge/486f0b8b3ded4-simple-enroll-iso-15118-2-and-iso-15118-20).
 
 A charge station must first be registered with the CSMS before it can be used. This can be done using the
-[manager API](./manager/api/API.md). e.g. for unsecured transport with basic auth use:
+[manager API](./manager/api/API.md). e.g. for TLS with client certificate, use:
 
 ```shell
-$ cd manager
-$ ENC_PASSWORD=$(go run main.go auth encode-password <password> | cur -d' ' -f2)
-$ curl http://localhost:9410/api/v0/cs/<cs-id> -H 'content-type: application/json' -d '{"securityProfile":0,"base64SHA256Password":"'$ENC_PASSWORD'"}'
+$ curl http://localhost:9410/api/v0/cs/<cs-id> -H 'content-type: application/json' -d '{"securityProfile":2}'
 ```
 
-Tokens must also be registered with the CSMS before they can be used. This can also be done using the
+Tokens, which identify a payment method for a non-contract charge, must also be registered with the CSMS before they can be used. This can also be done using the
 [manager API](./manager/api/API.md). e.g.:
 
 ```shell
@@ -64,6 +63,13 @@ $ curl http://localhost:9410/api/v0/token -H 'content-type: application/json' -d
 }'
 ```
 
+## Troubleshooting
+
+Docker compose doesn't always rebuild the docker images which can cause all kinds of errors. If in doubt, force a rebuild by `docker-compose build` before launching containers.
+
+`java.io.IOException: keystore password was incorrect`
+This error results from incompatibility between java version and openssl; try upgrading your java version.
+
 ## Configuration
 
 The gateway is configured through command-line flags. The available flags can be viewed using the `-h` flag. 
@@ -78,3 +84,5 @@ Learn more about how to contribute on this project through [Contributing](./CONT
 
 ## License
 MaEVe is [Apache licensed](./LICENSE).
+
+
