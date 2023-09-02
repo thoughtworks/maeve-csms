@@ -31,3 +31,7 @@ func (t Certificate) Render(w http.ResponseWriter, r *http.Request) error {
 func (r Registration) Bind(req *http.Request) error {
 	return nil
 }
+
+func (r Location) Bind(req *http.Request) error {
+	return nil
+}

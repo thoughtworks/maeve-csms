@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/thoughtworks/maeve-csms/manager/store"
+	"google.golang.org/api/iterator"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -69,4 +70,27 @@ func (s *Store) GetPartyDetails(ctx context.Context, role, countryCode, partyId 
 		return nil, fmt.Errorf("map party details %s/%s:%s: %w", role, countryCode, partyId, err)
 	}
 	return &registration, nil
+}
+
+func (s *Store) ListPartyDetailsForRole(context context.Context, role string) ([]*store.OcpiParty, error) {
+	var parties []*store.OcpiParty
+	iter := s.client.Collection(fmt.Sprintf("OcpiParty/%s/Id", role)).Documents(context)
+	for {
+		doc, err := iter.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, fmt.Errorf("next ocpiParty: %w", err)
+		}
+		var party store.OcpiParty
+		if err = doc.DataTo(&party); err != nil {
+			return nil, fmt.Errorf("map ocpiParty: %w", err)
+		}
+		parties = append(parties, &party)
+	}
+	if parties == nil {
+		parties = make([]*store.OcpiParty, 0)
+	}
+	return parties, nil
 }

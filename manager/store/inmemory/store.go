@@ -26,6 +26,7 @@ type Store struct {
 	certificates      map[string]string
 	registrations     map[string]*store.OcpiRegistration
 	partyDetails      map[string]*store.OcpiParty
+	locations         map[string]*store.Location
 }
 
 func NewStore() *Store {
@@ -36,6 +37,7 @@ func NewStore() *Store {
 		certificates:      make(map[string]string),
 		registrations:     make(map[string]*store.OcpiRegistration),
 		partyDetails:      make(map[string]*store.OcpiParty),
+		locations:         make(map[string]*store.Location),
 	}
 }
 
@@ -278,4 +280,52 @@ func (s *Store) GetPartyDetails(_ context.Context, role, countryCode, partyId st
 	recordId := fmt.Sprintf("%s:%s:%s", role, countryCode, partyId)
 
 	return s.partyDetails[recordId], nil
+}
+
+func (s *Store) ListPartyDetailsForRole(_ context.Context, role string) ([]*store.OcpiParty, error) {
+	s.Lock()
+	defer s.Unlock()
+	var parties []*store.OcpiParty
+	for _, party := range s.partyDetails {
+		if party.Role == role {
+			parties = append(parties, party)
+		}
+	}
+	if parties == nil {
+		parties = make([]*store.OcpiParty, 0)
+	}
+	return parties, nil
+}
+
+func (s *Store) SetLocation(_ context.Context, location *store.Location) error {
+	s.Lock()
+	defer s.Unlock()
+
+	s.locations[location.Id] = location
+
+	return nil
+}
+
+func (s *Store) LookupLocation(_ context.Context, locationId string) (*store.Location, error) {
+	s.Lock()
+	defer s.Unlock()
+
+	return s.locations[locationId], nil
+}
+
+func (s *Store) ListLocations(context context.Context, offset int, limit int) ([]*store.Location, error) {
+	s.Lock()
+	defer s.Unlock()
+	var locations []*store.Location
+	count := 0
+	for _, location := range s.locations {
+		if count >= offset && count < offset+limit {
+			locations = append(locations, location)
+		}
+		count++
+	}
+	if locations == nil {
+		locations = make([]*store.Location, 0)
+	}
+	return locations, nil
 }

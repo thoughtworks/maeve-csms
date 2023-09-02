@@ -41,7 +41,7 @@ func NewApiHandler(engine store.Engine, ocpi ocpi.Api) http.Handler {
 
 	logger := middleware.RequestLogger(logFormatter{})
 
-	r.Use(middleware.Recoverer, secureMiddleware.Handler, cors.Default().Handler, api.ValidationMiddleware)
+	r.Use(middleware.Recoverer, secureMiddleware.Handler, cors.Default().Handler, api.ValidationMiddleware, api.CorrelationIDMiddleware)
 	r.Get("/health", health)
 	r.Get("/transactions", transactions(engine))
 	r.Handle("/metrics", promhttp.Handler())

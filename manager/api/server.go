@@ -265,3 +265,43 @@ func (s *Server) RegisterParty(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 }
+
+func (s *Server) RegisterLocation(w http.ResponseWriter, r *http.Request, locationId string) {
+	if s.ocpi == nil {
+		_ = render.Render(w, r, ErrNotFound)
+		return
+	}
+
+	req := new(Location)
+	if err := render.Bind(r, req); err != nil {
+		_ = render.Render(w, r, ErrInvalidRequest(err))
+		return
+	}
+
+	err := s.store.SetLocation(r.Context(), &store.Location{
+		Address: req.Address,
+		City:    req.City,
+		Coordinates: store.GeoLocation{
+			Latitude:  req.Coordinates.Latitude,
+			Longitude: req.Coordinates.Longitude,
+		},
+		Country:     req.Country,
+		Evses:       nil,
+		Id:          locationId,
+		Name:        req.Name,
+		ParkingType: (*string)(req.ParkingType),
+		PostalCode:  req.PostalCode,
+	})
+	if err != nil {
+		_ = render.Render(w, r, ErrInternalError(err))
+		return
+	}
+
+	err = s.ocpi.PushLocation(r.Context(), ocpi.Location{Id: "loc001"})
+	if err != nil {
+		_ = render.Render(w, r, ErrInternalError(err))
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+}

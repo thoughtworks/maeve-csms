@@ -27,6 +27,8 @@ fileignoreconfig:
     checksum: c111751da44c7310d6b77b76e1a5826c44cce62e47a32eaec564e86064bb1de2
   - filename: manager/api/api.gen.go
     checksum: fb9c6cf09f7864a32c38e40fb8a8598d3c6bd5c406245c6b31666c2ccb1f9e24
+  - filename: manager/api/api.gen.go
+    checksum: 711dafa8a64745b56d1848e74e67a96e97c6abe99a927f8783023b42abf46f69
   - filename: manager/api/server.go
     checksum: 98cbd1df522ea428f7e669c01721f3070133062378a4f2e4b167d55eaa8d079b
   - filename: manager/api/server_test.go
@@ -65,8 +67,12 @@ fileignoreconfig:
     checksum: 9660c626538042009cebcba874730e4222c115fdf24c9dba12c5d4601c69b613
   - filename: manager/mqtt/router.go
     checksum: 880513a5d3f0070619c4890b5aab9fcf10650afc79550a83c1ad9a986c7e7367
+  - filename: manager/ocpi/correlation.go
+    checksum: b875df588159233dd77aacdfe0683ce0f1da9a0e17f7b8eb41d1ecc3d1a58a38
   - filename: manager/ocpi/ocpi.gen.go
     checksum: 6ca663b1e4f6ecaef87f6fadaacdebcc905ac236adf704ac9278d25e605d940d
+  - filename: manager/ocpi/ocpi_test.go
+    checksum: ac4e27bfbc80f24ba3cce33b612dfda93ff3eb7b0c339ca7494a54630e0a53af
   - filename: manager/ocpi/register.go
     checksum: 50b33545ae6af5356024ac1e454d20f4550a61c23ffd380c7e8b10dbe403812d
   - filename: manager/ocpi/server.go

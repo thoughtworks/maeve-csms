@@ -6,6 +6,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/rs/cors"
+	"github.com/thoughtworks/maeve-csms/manager/api"
 	"github.com/thoughtworks/maeve-csms/manager/ocpi"
 	"github.com/thoughtworks/maeve-csms/manager/store"
 	"github.com/unrolled/secure"
@@ -41,7 +42,7 @@ func NewOcpiHandler(engine store.Engine, clock clock.PassiveClock, ocpiApi ocpi.
 		panic(err)
 	}
 	swagger.Servers = nil
-	r.Use(middleware.Recoverer, secureMiddleware.Handler, cors.Default().Handler, logger)
+	r.Use(middleware.Recoverer, secureMiddleware.Handler, cors.Default().Handler, logger, api.CorrelationIDMiddleware)
 	r.Get("/openapi.json", getOcpiSwaggerJson)
 	r.With(oapimiddleware.OapiRequestValidatorWithOptions(swagger, &oapimiddleware.Options{
 		Options: openapi3filter.Options{

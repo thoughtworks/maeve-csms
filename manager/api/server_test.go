@@ -19,6 +19,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/thoughtworks/maeve-csms/manager/api"
+	"github.com/thoughtworks/maeve-csms/manager/ocpi"
 	"github.com/thoughtworks/maeve-csms/manager/store"
 	"github.com/thoughtworks/maeve-csms/manager/store/inmemory"
 	"io"
@@ -304,12 +305,56 @@ func TestLookupCertificate(t *testing.T) {
 	assert.JSONEq(t, fmt.Sprintf(`{"certificate":"%s"}`, strings.Replace(string(pemCert), "\n", "\\n", -1)), string(b))
 }
 
+func TestRegisterLocation(t *testing.T) {
+	server, r, engine, _ := setupServer(t)
+	defer server.Close()
+
+	req := httptest.NewRequest(http.MethodPost, "/location/loc001", strings.NewReader(`{
+  "name": "Gent Zuid",
+  "address": "F.Rooseveltlaan 3A",
+  "city": "Gent",
+  "postal_code": "9000",
+  "country": "BEL",
+  "coordinates": {
+    "latitude": "51.047599",
+    "longitude": "3.729944"
+  },
+  "parking_type": "ON_STREET"
+}`))
+	req.Header.Set("content-type", "application/json")
+	rr := httptest.NewRecorder()
+	r.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusCreated, rr.Result().StatusCode)
+	b, err := io.ReadAll(rr.Result().Body)
+	require.NoError(t, err)
+	assert.Equal(t, "", string(b))
+
+	want := &store.Location{
+		Address: "F.Rooseveltlaan 3A",
+		City:    "Gent",
+		Coordinates: store.GeoLocation{
+			Latitude:  "51.047599",
+			Longitude: "3.729944",
+		},
+		Country:     "BEL",
+		Id:          "loc001",
+		Name:        strPointer("Gent Zuid"),
+		ParkingType: strPointer("ON_STREET"),
+		PostalCode:  strPointer("9000"),
+	}
+	got, err := engine.LookupLocation(context.Background(), "loc001")
+	require.NoError(t, err)
+	assert.Equal(t, want, got)
+}
+
 func setupServer(t *testing.T) (*httptest.Server, *chi.Mux, store.Engine, clock.PassiveClock) {
 	engine := inmemory.NewStore()
+	ocpiApi := ocpi.NewOCPI(engine, nil, "GB", "TWK")
 
 	now := time.Now().UTC()
 	c := clockTest.NewFakePassiveClock(now)
-	srv, err := api.NewServer(engine, c, nil)
+	srv, err := api.NewServer(engine, c, ocpiApi)
 	require.NoError(t, err)
 
 	r := chi.NewRouter()
@@ -357,4 +402,8 @@ func getCertificateHash(cert *x509.Certificate) string {
 	hash := sha256.Sum256(cert.Raw)
 	b64Hash := base64.RawURLEncoding.EncodeToString(hash[:])
 	return b64Hash
+}
+
+func strPointer(s string) *string {
+	return &s
 }
