@@ -29,9 +29,9 @@ func TestSetAndLookupLocation(t *testing.T) {
 		},
 		Country:     "BEL",
 		Id:          "loc001",
-		Name:        strPointer("Gent Zuid"),
-		ParkingType: strPointer("ON_STREET"),
-		PostalCode:  strPointer("9000"),
+		Name:        "Gent Zuid",
+		ParkingType: "ON_STREET",
+		PostalCode:  "9000",
 	}
 	err = locationStore.SetLocation(ctx, want)
 	require.NoError(t, err)
@@ -53,7 +53,7 @@ func TestListLocations(t *testing.T) {
 	locations := make([]*store.Location, 20)
 	for i := 0; i < 20; i++ {
 		locations[i] = &store.Location{
-			Address: "Randomlaan 3A",
+			Address: "Randomstreet 3A",
 			City:    "Randomtown",
 			Coordinates: store.GeoLocation{
 				Latitude:  fmt.Sprintf("%f", rand.Float32()*90),
@@ -61,9 +61,9 @@ func TestListLocations(t *testing.T) {
 			},
 			Country:     "RAND",
 			Id:          fmt.Sprintf("loc%03d", i),
-			Name:        strPointer("Random Location"),
-			ParkingType: strPointer("ON_STREET"),
-			PostalCode:  strPointer("12345"),
+			Name:        "Random Location",
+			ParkingType: "ON_STREET",
+			PostalCode:  "12345",
 		}
 	}
 

@@ -14,13 +14,15 @@ type Connector struct {
 	MaxVoltage  int32
 	PowerType   string
 	Standard    string
+	LastUpdated string
 }
 
 type Evse struct {
-	Connectors []Connector
-	EvseId     *string
-	Status     string
-	Uid        string
+	Connectors  []Connector
+	EvseId      *string
+	Status      string
+	Uid         string
+	LastUpdated string
 }
 
 type Location struct {
@@ -31,9 +33,9 @@ type Location struct {
 	Evses       *[]Evse
 	Id          string
 	LastUpdated string
-	Name        *string
-	ParkingType *string
-	PostalCode  *string
+	Name        string
+	ParkingType string
+	PostalCode  string
 }
 
 type LocationStore interface {

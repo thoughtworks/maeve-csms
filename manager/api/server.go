@@ -278,6 +278,36 @@ func (s *Server) RegisterLocation(w http.ResponseWriter, r *http.Request, locati
 		return
 	}
 
+	now := s.clock.Now()
+
+	var numEvses int
+	if req.Evses != nil {
+		numEvses = len(*req.Evses)
+	}
+	storeEvses := make([]store.Evse, numEvses)
+	if numEvses != 0 {
+		for i, reqEvse := range *req.Evses {
+			storeConnectors := make([]store.Connector, len(reqEvse.Connectors))
+			for j, reqConnector := range reqEvse.Connectors {
+				storeConnectors[j] = store.Connector{
+					Id:          reqConnector.Id,
+					Format:      string(reqConnector.Format),
+					PowerType:   string(reqConnector.PowerType),
+					Standard:    string(reqConnector.Standard),
+					MaxVoltage:  reqConnector.MaxVoltage,
+					MaxAmperage: reqConnector.MaxAmperage,
+					LastUpdated: now.Format(time.RFC3339),
+				}
+				storeEvses[i] = store.Evse{
+					Connectors:  storeConnectors,
+					EvseId:      reqEvse.EvseId,
+					Status:      string(reqEvse.Status),
+					Uid:         reqEvse.Uid,
+					LastUpdated: now.Format(time.RFC3339),
+				}
+			}
+		}
+	}
 	err := s.store.SetLocation(r.Context(), &store.Location{
 		Address: req.Address,
 		City:    req.City,
@@ -286,18 +316,72 @@ func (s *Server) RegisterLocation(w http.ResponseWriter, r *http.Request, locati
 			Longitude: req.Coordinates.Longitude,
 		},
 		Country:     req.Country,
-		Evses:       nil,
+		Evses:       &storeEvses,
 		Id:          locationId,
-		Name:        req.Name,
-		ParkingType: (*string)(req.ParkingType),
-		PostalCode:  req.PostalCode,
+		Name:        *req.Name,
+		ParkingType: string(*req.ParkingType),
+		PostalCode:  *req.PostalCode,
 	})
 	if err != nil {
 		_ = render.Render(w, r, ErrInternalError(err))
 		return
 	}
 
-	err = s.ocpi.PushLocation(r.Context(), ocpi.Location{Id: "loc001"})
+	ocpiEvses := make([]ocpi.Evse, numEvses)
+	if numEvses != 0 {
+		for i, reqEvse := range *req.Evses {
+			ocpiConnectors := make([]ocpi.Connector, len(reqEvse.Connectors))
+			for j, reqConnector := range reqEvse.Connectors {
+				ocpiConnectors[j] = ocpi.Connector{
+					Id:          reqConnector.Id,
+					Format:      ocpi.ConnectorFormat(reqConnector.Format),
+					PowerType:   ocpi.ConnectorPowerType(reqConnector.PowerType),
+					Standard:    ocpi.ConnectorStandard(reqConnector.Standard),
+					MaxVoltage:  reqConnector.MaxVoltage,
+					MaxAmperage: reqConnector.MaxAmperage,
+					LastUpdated: now.Format(time.RFC3339),
+				}
+				ocpiEvses[i] = ocpi.Evse{
+					Connectors:  ocpiConnectors,
+					EvseId:      reqEvse.EvseId,
+					Status:      ocpi.EvseStatus(reqEvse.Status),
+					Uid:         reqEvse.Uid,
+					LastUpdated: now.Format(time.RFC3339),
+				}
+			}
+		}
+	}
+	err = s.ocpi.PushLocation(r.Context(), ocpi.Location{
+		Address:            req.Address,
+		ChargingWhenClosed: nil, // TODO: add to request body schema but make optional
+		City:               req.City,
+		Coordinates: ocpi.GeoLocation{
+			Latitude:  req.Coordinates.Latitude,
+			Longitude: req.Coordinates.Longitude,
+		},
+		Country:          req.Country,
+		CountryCode:      req.CountryCode,
+		Directions:       nil, // TODO: add to request body schema but make optional
+		EnergyMix:        nil, // TODO: add to request body schema but make optional
+		Evses:            &ocpiEvses,
+		Facilities:       nil, // TODO: add to request body schema but make optional
+		Id:               locationId,
+		Images:           nil, // TODO: add to request body schema but make optional
+		LastUpdated:      now.Format(time.RFC3339),
+		Name:             req.Name,
+		OpeningTimes:     nil, // TODO: add to request body schema but make optional
+		Operator:         nil, // TODO: add to request body schema but make optional
+		Owner:            nil, // TODO: add to request body schema but make optional
+		ParkingType:      (*ocpi.LocationParkingType)(req.ParkingType),
+		PartyId:          req.PartyId,
+		PostalCode:       req.PostalCode,
+		Publish:          true,
+		PublishAllowedTo: nil, // TODO: add to request body schema but make optional
+		RelatedLocations: nil, // TODO: add to request body schema but make optional
+		State:            nil, // TODO: add to request body schema but make optional
+		Suboperator:      nil, // TODO: add to request body schema but make optional
+		TimeZone:         nil, // TODO: add to request body schema but make optional
+	})
 	if err != nil {
 		_ = render.Render(w, r, ErrInternalError(err))
 		return

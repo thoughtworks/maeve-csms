@@ -313,8 +313,10 @@ func TestRegisterLocation(t *testing.T) {
   "name": "Gent Zuid",
   "address": "F.Rooseveltlaan 3A",
   "city": "Gent",
+  "party_id": "TWK",
   "postal_code": "9000",
   "country": "BEL",
+  "country_code": "BEL",
   "coordinates": {
     "latitude": "51.047599",
     "longitude": "3.729944"
@@ -338,10 +340,11 @@ func TestRegisterLocation(t *testing.T) {
 			Longitude: "3.729944",
 		},
 		Country:     "BEL",
+		Evses:       &[]store.Evse{},
 		Id:          "loc001",
-		Name:        strPointer("Gent Zuid"),
-		ParkingType: strPointer("ON_STREET"),
-		PostalCode:  strPointer("9000"),
+		Name:        "Gent Zuid",
+		ParkingType: "ON_STREET",
+		PostalCode:  "9000",
 	}
 	got, err := engine.LookupLocation(context.Background(), "loc001")
 	require.NoError(t, err)
@@ -402,8 +405,4 @@ func getCertificateHash(cert *x509.Certificate) string {
 	hash := sha256.Sum256(cert.Raw)
 	b64Hash := base64.RawURLEncoding.EncodeToString(hash[:])
 	return b64Hash
-}
-
-func strPointer(s string) *string {
-	return &s
 }

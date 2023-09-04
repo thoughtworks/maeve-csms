@@ -435,11 +435,12 @@ components:
       type: "object"
       description: "A charge station location"
       required:
-        - "name"
         - "address"
         - "city"
         - "country"
+        - "country_code"
         - "coordinates"
+        - "party_id"
       properties:
         country_code:
           type: string
@@ -473,6 +474,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Evse'
+          nullable: true
     GeoLocation:
       required:
         - latitude
