@@ -174,6 +174,9 @@ func ensureDefaults(handler *WebsocketHandler) {
 }
 
 func (s *WebsocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	slog.Info("websocket connection received", "path", r.URL.Path, "method", r.Method)
+	slog.Info("processing connection", "uri", r.RequestURI)
+
 	newCtx, span := s.tracer.Start(r.Context(), "GET /ws/{id}", trace.WithSpanKind(trace.SpanKindServer),
 		trace.WithAttributes(
 			semconv.HTTPScheme(getScheme(r)),
