@@ -123,7 +123,7 @@ func TestSetToken(t *testing.T) {
 	assert.Equal(t, want, got)
 }
 
-func TestPushLocationUpdate(t *testing.T) {
+func TestPushLocation(t *testing.T) {
 	engine := inmemory.NewStore()
 	ocpiApi := ocpi.NewOCPI(engine, http.DefaultClient, "GB", "TWK")
 
