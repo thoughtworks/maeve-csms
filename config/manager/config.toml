@@ -6,7 +6,7 @@ urls = ["mqtt://mqtt:1883"]
 
 [ocpi]
 addr = ":9411"
-external_url = "http://localhost:9411"
+external_url = "http://host.docker.internal:9411"
 country_code = "GB"
 party_id = "TWK"
 
