@@ -6,12 +6,14 @@ import (
 	"context"
 	"fmt"
 	"github.com/thoughtworks/maeve-csms/manager/store"
+	"golang.org/x/exp/slog"
 	"google.golang.org/api/iterator"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 func (s *Store) SetRegistrationDetails(ctx context.Context, token string, registration *store.OcpiRegistration) error {
+	slog.Info("setting registration", "token", token, "status", registration.Status)
 	regRef := s.client.Doc(fmt.Sprintf("OcpiRegistration/%s", token))
 	_, err := regRef.Set(ctx, registration)
 	if err != nil {
@@ -21,6 +23,7 @@ func (s *Store) SetRegistrationDetails(ctx context.Context, token string, regist
 }
 
 func (s *Store) GetRegistrationDetails(ctx context.Context, token string) (*store.OcpiRegistration, error) {
+	slog.Info("checking registration", "token", token)
 	regRef := s.client.Doc(fmt.Sprintf("OcpiRegistration/%s", token))
 	snap, err := regRef.Get(ctx)
 	if err != nil {
@@ -31,6 +34,7 @@ func (s *Store) GetRegistrationDetails(ctx context.Context, token string) (*stor
 	}
 	var registration store.OcpiRegistration
 	err = snap.DataTo(&registration)
+	slog.Info("found registration", "status", registration.Status)
 	if err != nil {
 		return nil, fmt.Errorf("map registration %s: %w", token, err)
 	}

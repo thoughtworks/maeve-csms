@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/thoughtworks/maeve-csms/manager/store"
+	"golang.org/x/exp/slog"
 	"io"
 	"math/big"
 	"net/http"
@@ -17,10 +18,12 @@ import (
 
 func (o *OCPI) RegisterNewParty(ctx context.Context, url, token string) error {
 	reg, err := o.store.GetRegistrationDetails(ctx, token)
+	slog.Info("registering", "reg", reg)
 	if err != nil {
 		return err
 	}
 	if reg != nil && reg.Status == store.OcpiRegistrationStatusRegistered {
+		slog.Error("already registered", "token", token)
 		return errors.New("already registered")
 	}
 

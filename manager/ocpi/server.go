@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/go-chi/render"
+	"golang.org/x/exp/slog"
 	"k8s.io/utils/clock"
 	"net/http"
 	"time"
@@ -79,6 +80,7 @@ func (s *Server) PostCredentials(w http.ResponseWriter, r *http.Request, params 
 
 	err := s.ocpi.SetCredentials(r.Context(), matches[1], *creds)
 	if err != nil {
+		slog.Error("Error setting credentials", "err", err)
 		_ = render.Render(w, r, ErrInternalError(err))
 		return
 	}
