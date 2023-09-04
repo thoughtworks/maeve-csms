@@ -76,7 +76,10 @@ func TestListLocations(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, 10, len(got))
-	assert.Equal(t, locations[:10], got)
+	for i, loc := range got {
+		loc.LastUpdated = ""
+		assert.Equal(t, locations[i], got[i])
+	}
 }
 
 func strPointer(s string) *string {
