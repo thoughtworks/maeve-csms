@@ -249,6 +249,7 @@ func (s *WebsocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	wsConn, err := websocket.Accept(w, r, &websocket.AcceptOptions{Subprotocols: []string{"ocpp2.0.1", "ocpp1.6"}})
 	if err != nil {
+		span.SetAttributes(attribute.String("websocket.accept_failure_reason", err.Error()))
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
