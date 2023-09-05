@@ -239,7 +239,12 @@ func (s *Server) PostReserveNow(w http.ResponseWriter, r *http.Request, params P
 }
 
 func (s *Server) PostStartSession(w http.ResponseWriter, r *http.Request, params PostStartSessionParams) {
-	w.WriteHeader(http.StatusNotImplemented)
+	_ = render.Render(w, r, OcpiResponseCommandResponse{
+		StatusCode:    StatusSuccess,
+		StatusMessage: &StatusSuccessMessage,
+		Timestamp:     s.clock.Now().Format(time.RFC3339),
+		Data:          &CommandResponse{Result: "ACCEPTED"},
+	})
 }
 
 func (s *Server) PostStopSession(w http.ResponseWriter, r *http.Request, params PostStopSessionParams) {

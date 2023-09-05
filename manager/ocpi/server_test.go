@@ -261,3 +261,58 @@ func TestServerPatchClientOwnedToken(t *testing.T) {
 	require.NoError(t, err)
 	t.Logf("%s", string(b))
 }
+
+func TestPostStartSession(t *testing.T) {
+	handler, engine, _ := setupHandler(t)
+
+	err := engine.SetToken(context.Background(), &store.Token{
+		CountryCode: "GB",
+		PartyId:     "TWK",
+		Type:        "RFID",
+		Uid:         "DEADBEEF",
+		ContractId:  "GBTWKTWTW000018",
+		Issuer:      "Thoughtworks",
+		Valid:       true,
+		CacheMode:   "ALWAYS",
+	})
+	require.NoError(t, err)
+
+	req := httptest.NewRequest(http.MethodPost, "/ocpi/receiver/2.2/commands/START_SESSION",
+		strings.NewReader(`{
+			"response_url": "https://example.com/ocpi/receiver/2.2/commands/START_SESSION/12345",
+			"evse_uid": "12345",
+			"token": {	
+				"type": "APP_USER",
+				"uid": "DEADBEEF",
+				"whitelist": "NEVER",
+				"country_code": "GB",
+				"party_id": "TWK",
+				"contract_id": "GBTWKTWTW000018",
+				"issuer": "Thoughtworks"
+				"valid": true
+			},
+			"location_id": "loc001",
+			"evse_uid": "3256",
+			"authorization_reference": "56789"
+		}`))
+	req.Header.Set("Authorization", "Token 123")
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Request-ID", "123")
+	req.Header.Set("X-Correlation-ID", "123")
+	req.Header.Set("OCPI-from-country-code", "GB")
+	req.Header.Set("OCPI-from-party-id", "TWK")
+	req.Header.Set("OCPI-to-country-code", "GB")
+	req.Header.Set("OCPI-to-party-id", "TWK")
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+	resp := w.Result()
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	b, err := io.ReadAll(resp.Body)
+	require.NoError(t, err)
+	var ocpiResponseCommandResponse ocpi.OcpiResponseCommandResponse
+	json.Unmarshal(b, &ocpiResponseCommandResponse)
+	assert.Equal(t, ocpi.StatusSuccess, ocpiResponseCommandResponse.StatusCode)
+	assert.Equal(t, ocpi.CommandResponseResultACCEPTED, ocpiResponseCommandResponse.Data.Result)
+	t.Logf("%s", string(b))
+}

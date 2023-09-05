@@ -4,6 +4,10 @@ package ocpi
 
 import "net/http"
 
+func (OcpiResponseCommandResponse) Render(http.ResponseWriter, *http.Request) error {
+	return nil
+}
+
 func (OcpiResponseListVersion) Render(http.ResponseWriter, *http.Request) error {
 	return nil
 }
