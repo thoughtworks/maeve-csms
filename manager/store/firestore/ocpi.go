@@ -23,18 +23,15 @@ func (s *Store) SetRegistrationDetails(ctx context.Context, token string, regist
 }
 
 func (s *Store) GetRegistrationDetails(ctx context.Context, token string) (*store.OcpiRegistration, error) {
-	slog.Info("checking registration", "token", token)
 	regRef := s.client.Doc(fmt.Sprintf("OcpiRegistration/%s", token))
 	snap, err := regRef.Get(ctx)
 	if err != nil {
 		if status.Code(err) == codes.NotFound {
 			return nil, nil
 		}
-		return nil, fmt.Errorf("lookup registration %s: %w", token, err)
 	}
 	var registration store.OcpiRegistration
 	err = snap.DataTo(&registration)
-	slog.Info("found registration", "status", registration.Status)
 	if err != nil {
 		return nil, fmt.Errorf("map registration %s: %w", token, err)
 	}
