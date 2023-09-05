@@ -352,35 +352,22 @@ func (s *Server) RegisterLocation(w http.ResponseWriter, r *http.Request, locati
 		}
 	}
 	err = s.ocpi.PushLocation(r.Context(), ocpi.Location{
-		Address:            req.Address,
-		ChargingWhenClosed: nil, // TODO: add to request body schema but make optional
-		City:               req.City,
+		Address: req.Address,
+		City:    req.City,
 		Coordinates: ocpi.GeoLocation{
 			Latitude:  req.Coordinates.Latitude,
 			Longitude: req.Coordinates.Longitude,
 		},
-		Country:          req.Country,
-		CountryCode:      req.CountryCode,
-		Directions:       nil, // TODO: add to request body schema but make optional
-		EnergyMix:        nil, // TODO: add to request body schema but make optional
-		Evses:            &ocpiEvses,
-		Facilities:       nil, // TODO: add to request body schema but make optional
-		Id:               locationId,
-		Images:           nil, // TODO: add to request body schema but make optional
-		LastUpdated:      now.Format(time.RFC3339),
-		Name:             req.Name,
-		OpeningTimes:     nil, // TODO: add to request body schema but make optional
-		Operator:         nil, // TODO: add to request body schema but make optional
-		Owner:            nil, // TODO: add to request body schema but make optional
-		ParkingType:      (*ocpi.LocationParkingType)(req.ParkingType),
-		PartyId:          req.PartyId,
-		PostalCode:       req.PostalCode,
-		Publish:          true,
-		PublishAllowedTo: nil, // TODO: add to request body schema but make optional
-		RelatedLocations: nil, // TODO: add to request body schema but make optional
-		State:            nil, // TODO: add to request body schema but make optional
-		Suboperator:      nil, // TODO: add to request body schema but make optional
-		TimeZone:         nil, // TODO: add to request body schema but make optional
+		Country:     req.Country,
+		CountryCode: req.CountryCode,
+		Evses:       &ocpiEvses,
+		Id:          locationId,
+		LastUpdated: now.Format(time.RFC3339),
+		Name:        req.Name,
+		ParkingType: (*ocpi.LocationParkingType)(req.ParkingType),
+		PartyId:     req.PartyId,
+		PostalCode:  req.PostalCode,
+		Publish:     true,
 	})
 	if err != nil {
 		_ = render.Render(w, r, ErrInternalError(err))
