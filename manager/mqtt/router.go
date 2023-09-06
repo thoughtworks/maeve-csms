@@ -105,6 +105,7 @@ func NewV16Router(emitter Emitter,
 				ResponseSchema: "ocpp16/StopTransactionResponse.json",
 				Handler: handlers16.StopTransactionHandler{
 					Clock:            clk,
+					TokenStore:       tokenStore,
 					TransactionStore: transactionStore,
 				},
 			},
