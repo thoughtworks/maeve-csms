@@ -83,10 +83,8 @@ the gateway and send appropriate responses.`,
 				KeepAlive:         uint16(settings.Mqtt.KeepAliveInterval.Round(time.Second).Seconds()),
 				ConnectRetryDelay: settings.Mqtt.ConnectRetryDelay,
 				OnConnectionUp: func(manager *autopaho.ConnectionManager, connack *paho.Connack) {
-					slog.Info("mqtt setup")
 					v16Emitter = mqtt.NewMqttEmitter(mqttConn, settings.Mqtt.Prefix, "ocpp1.6", tracer)
 					readyCh <- struct{}{}
-					slog.Info("mqtt setup done")
 				},
 				ClientConfig: paho.ClientConfig{
 					ClientID: fmt.Sprintf("%s-%s", "manager", randSeq(5)),
@@ -98,7 +96,6 @@ the gateway and send appropriate responses.`,
 				return err
 			}
 
-			slog.Info("wait for set up to be done or timeout")
 			select {
 			case <-ctx.Done():
 				slog.Error("timed out waiting for mqtt connection setup")

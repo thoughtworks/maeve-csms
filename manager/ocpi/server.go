@@ -5,6 +5,7 @@ package ocpi
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/go-chi/render"
 	"github.com/thoughtworks/maeve-csms/manager/mqtt"
@@ -12,6 +13,8 @@ import (
 	"golang.org/x/exp/slog"
 	"k8s.io/utils/clock"
 	"net/http"
+	"regexp"
+	"strconv"
 	"time"
 )
 
@@ -253,21 +256,36 @@ func (s *Server) PostStartSession(w http.ResponseWriter, r *http.Request, params
 		return
 	}
 	var chargeStationId string
-	if startSession.EvseUid == nil {
-		chargeStationId = "cs001"
+	if startSession.EvseUid == nil || startSession.ConnectorId == nil {
+		_ = render.Render(w, r, ErrInvalidRequest(errors.New("CSMS does not support start session commands without evse_uid and connector_id")))
+		return
 	} else {
-		// TODO: parse chargeStationId from the EVSE ID in request
-		chargeStationId = "cs001"
+		// TODO: this needs to become a service with a configurable pattern
+		extractedChargeStationId, err := extractChargeStationId(*startSession.EvseUid)
+		if err != nil {
+			slog.Error("error extracting charge station id", "err", err)
+			_ = render.Render(w, r, ErrInvalidRequest(err))
+			return
+		}
+		chargeStationId = extractedChargeStationId
 	}
-	connectorId := 1
-	token := startSession.Token.Uid
+	// We need to store the token because the StartSession handler currently expects the idTag it receives in the store
+	err := s.ocpi.SetToken(context.Background(), startSession.Token)
+	if err != nil {
+		_ = render.Render(w, r, ErrInvalidRequest(err))
+		return
+	}
+	connectorId, err := strconv.Atoi(*startSession.ConnectorId)
+	if err != nil {
+		_ = render.Render(w, r, ErrInvalidRequest(err))
+		return
+	}
 	remoteStartTransactionReq := ocpp16.RemoteStartTransactionJson{
 		ConnectorId: &connectorId,
-		IdTag:       token,
+		IdTag:       startSession.Token.Uid,
 	}
-	slog.Info("send mqtt message call maker")
 	commandResponse := CommandResponse{Result: CommandResponseResultACCEPTED}
-	err := s.v16CallMaker.Send(context.Background(), chargeStationId, &remoteStartTransactionReq)
+	err = s.v16CallMaker.Send(context.Background(), chargeStationId, &remoteStartTransactionReq)
 	if err != nil {
 		slog.Error("error sending mqtt message", "err", err)
 		commandResponse = CommandResponse{Result: CommandResponseResultREJECTED}
@@ -410,4 +428,16 @@ func (s *Server) GetTokensPageFromDataOwner(w http.ResponseWriter, r *http.Reque
 
 func (s *Server) PostRealTimeTokenAuthorization(w http.ResponseWriter, r *http.Request, tokenUID string, params PostRealTimeTokenAuthorizationParams) {
 	w.WriteHeader(http.StatusNotImplemented)
+}
+
+func extractChargeStationId(evseId string) (string, error) {
+	pattern := `^[a-zA-Z]{2}\*[a-zA-Z0-9]{3}\*([a-zA-Z0-9]+)(-[a-zA-Z0-9]+)?$`
+	regex := regexp.MustCompile(pattern)
+	match := regex.FindStringSubmatch(evseId)
+	if len(match) >= 2 {
+		chargePointID := match[1]
+		return chargePointID, nil
+	} else {
+		return "", fmt.Errorf("invalid EVSE ID format, could not extract charge point ID: %s", evseId)
+	}
 }

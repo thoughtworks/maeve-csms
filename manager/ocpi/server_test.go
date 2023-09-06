@@ -285,7 +285,8 @@ func TestPostStartSession(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/ocpi/receiver/2.2/commands/START_SESSION",
 		strings.NewReader(`{
 			"response_url": "https://example.com/ocpi/receiver/2.2/commands/START_SESSION/12345",
-			"evse_uid": "12345",
+			"evse_uid": "BE*BEC*E041503001-2",
+			"connector_id": "2",
 			"token": {	
 				"type": "APP_USER",
 				"uid": "DEADBEEF",
@@ -297,7 +298,6 @@ func TestPostStartSession(t *testing.T) {
 				"valid": true
 			},
 			"location_id": "loc001",
-			"evse_uid": "3256",
 			"authorization_reference": "56789"
 		}`))
 	req.Header.Set("Authorization", "Token 123")
