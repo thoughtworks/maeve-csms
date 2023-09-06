@@ -272,9 +272,7 @@ paths:
     post:
       summary: "Registers a location with the CSMS"
       description: |
-        Registers  location party with the CSMS. Depending on the configuration provided the CSMS will
-        either initiate a registration with the party or the party will wait for the party to initiate 
-        a registration with the CSMS.
+        Registers a location with the CSMS.
       operationId: "registerLocation"
       parameters:
         - name: "locationId"
