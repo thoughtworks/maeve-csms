@@ -22,7 +22,7 @@ func TestRegistration(t *testing.T) {
 	// setup sender
 	senderStore := inmemory.NewStore()
 	senderOcpiApi := ocpi.NewOCPI(senderStore, http.DefaultClient, "GB", "TWK")
-	senderHandler := server.NewOcpiHandler(senderStore, clock.RealClock{}, senderOcpiApi)
+	senderHandler := server.NewOcpiHandler(senderStore, clock.RealClock{}, senderOcpiApi, newNoopV16CallMaker())
 	senderServer := httptest.NewServer(senderHandler)
 	senderOcpiApi.SetExternalUrl(senderServer.URL)
 	defer senderServer.Close()
@@ -34,7 +34,7 @@ func TestRegistration(t *testing.T) {
 	})
 	require.NoError(t, err)
 	receiverOcpiApi := ocpi.NewOCPI(receiverStore, http.DefaultClient, "GB", "TWS")
-	receiverHandler := server.NewOcpiHandler(receiverStore, clock.RealClock{}, receiverOcpiApi)
+	receiverHandler := server.NewOcpiHandler(receiverStore, clock.RealClock{}, receiverOcpiApi, newNoopV16CallMaker())
 	receiverServer := httptest.NewServer(receiverHandler)
 	receiverOcpiApi.SetExternalUrl(receiverServer.URL)
 	defer receiverServer.Close()

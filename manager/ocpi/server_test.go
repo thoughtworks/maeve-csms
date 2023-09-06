@@ -7,13 +7,16 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/thoughtworks/maeve-csms/manager/mqtt"
 	"github.com/thoughtworks/maeve-csms/manager/ocpi"
+	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp16"
 	"github.com/thoughtworks/maeve-csms/manager/store"
 	"github.com/thoughtworks/maeve-csms/manager/store/inmemory"
 	"io"
 	fakeclock "k8s.io/utils/clock/testing"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -25,9 +28,11 @@ func setupHandler(t *testing.T) (http.Handler, store.Engine, time.Time) {
 		Status: store.OcpiRegistrationStatusRegistered,
 	})
 	require.NoError(t, err)
+
 	ocpiApi := ocpi.NewOCPI(engine, http.DefaultClient, "GB", "TWK")
+	v16CallMaker := newNoopV16CallMaker()
 	now := time.Now().UTC()
-	server, err := ocpi.NewServer(ocpiApi, fakeclock.NewFakePassiveClock(now))
+	server, err := ocpi.NewServer(ocpiApi, fakeclock.NewFakePassiveClock(now), v16CallMaker)
 	require.NoError(t, err)
 
 	r := chi.NewRouter()
@@ -288,7 +293,7 @@ func TestPostStartSession(t *testing.T) {
 				"country_code": "GB",
 				"party_id": "TWK",
 				"contract_id": "GBTWKTWTW000018",
-				"issuer": "Thoughtworks"
+				"issuer": "Thoughtworks",
 				"valid": true
 			},
 			"location_id": "loc001",
@@ -313,6 +318,18 @@ func TestPostStartSession(t *testing.T) {
 	var ocpiResponseCommandResponse ocpi.OcpiResponseCommandResponse
 	json.Unmarshal(b, &ocpiResponseCommandResponse)
 	assert.Equal(t, ocpi.StatusSuccess, ocpiResponseCommandResponse.StatusCode)
-	assert.Equal(t, ocpi.CommandResponseResultACCEPTED, ocpiResponseCommandResponse.Data.Result)
 	t.Logf("%s", string(b))
+	require.NotNilf(t, ocpiResponseCommandResponse.Data, "ocpiResponseCommandResponse.Data should not be nil")
+	assert.Equal(t, ocpi.CommandResponseResultACCEPTED, ocpiResponseCommandResponse.Data.Result)
+}
+
+func newNoopV16CallMaker() mqtt.BasicCallMaker {
+	return mqtt.BasicCallMaker{
+		E: mqtt.EmitterFunc(func(ctx context.Context, chargeStationId string, message *mqtt.Message) error {
+			return nil
+		}),
+		Actions: map[reflect.Type]string{
+			reflect.TypeOf(&ocpp16.RemoteStartTransactionJson{}): "RemoteStartTransaction",
+		},
+	}
 }

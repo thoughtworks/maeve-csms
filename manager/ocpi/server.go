@@ -3,9 +3,12 @@
 package ocpi
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/go-chi/render"
+	"github.com/thoughtworks/maeve-csms/manager/mqtt"
+	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp16"
 	"golang.org/x/exp/slog"
 	"k8s.io/utils/clock"
 	"net/http"
@@ -13,14 +16,16 @@ import (
 )
 
 type Server struct {
-	ocpi  Api
-	clock clock.PassiveClock
+	ocpi         Api
+	clock        clock.PassiveClock
+	v16CallMaker mqtt.BasicCallMaker
 }
 
-func NewServer(ocpi Api, clock clock.PassiveClock) (*Server, error) {
+func NewServer(ocpi Api, clock clock.PassiveClock, v16CallMaker mqtt.BasicCallMaker) (*Server, error) {
 	return &Server{
-		ocpi:  ocpi,
-		clock: clock,
+		ocpi:         ocpi,
+		clock:        clock,
+		v16CallMaker: v16CallMaker,
 	}, nil
 }
 
@@ -239,11 +244,39 @@ func (s *Server) PostReserveNow(w http.ResponseWriter, r *http.Request, params P
 }
 
 func (s *Server) PostStartSession(w http.ResponseWriter, r *http.Request, params PostStartSessionParams) {
+	// TODO: the following code supports OCPP 1.6 only, but we need to support 2.0 as well
+	// need to store OCPP protocol version for charge points on first connection
+	// need to create two handlers, one for 1.6 and one for 2.0, and call the right one based on the protocol version
+	startSession := new(StartSession)
+	if err := render.Bind(r, startSession); err != nil {
+		_ = render.Render(w, r, ErrInvalidRequest(err))
+		return
+	}
+	var chargeStationId string
+	if startSession.EvseUid == nil {
+		chargeStationId = "cs001"
+	} else {
+		// TODO: parse chargeStationId from the EVSE ID in request
+		chargeStationId = "cs001"
+	}
+	connectorId := 1
+	token := startSession.Token.Uid
+	remoteStartTransactionReq := ocpp16.RemoteStartTransactionJson{
+		ConnectorId: &connectorId,
+		IdTag:       token,
+	}
+	slog.Info("send mqtt message call maker")
+	commandResponse := CommandResponse{Result: CommandResponseResultACCEPTED}
+	err := s.v16CallMaker.Send(context.Background(), chargeStationId, &remoteStartTransactionReq)
+	if err != nil {
+		slog.Error("error sending mqtt message", "err", err)
+		commandResponse = CommandResponse{Result: CommandResponseResultREJECTED}
+	}
 	_ = render.Render(w, r, OcpiResponseCommandResponse{
 		StatusCode:    StatusSuccess,
 		StatusMessage: &StatusSuccessMessage,
 		Timestamp:     s.clock.Now().Format(time.RFC3339),
-		Data:          &CommandResponse{Result: "ACCEPTED"},
+		Data:          &commandResponse,
 	})
 }
 
