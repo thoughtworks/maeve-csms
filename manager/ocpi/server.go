@@ -431,7 +431,7 @@ func (s *Server) PostRealTimeTokenAuthorization(w http.ResponseWriter, r *http.R
 }
 
 func extractChargeStationId(evseId string) (string, error) {
-	pattern := `^[a-zA-Z]{2}\*[a-zA-Z0-9]{3}\*([a-zA-Z0-9]+)(-[a-zA-Z0-9]+)?$`
+	pattern := `^[a-zA-Z]{5}E([a-zA-Z0-9]+)?$`
 	regex := regexp.MustCompile(pattern)
 	match := regex.FindStringSubmatch(evseId)
 	if len(match) >= 2 {

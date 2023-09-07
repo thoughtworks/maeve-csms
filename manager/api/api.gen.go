@@ -34,57 +34,44 @@ const (
 
 // Defines values for ConnectorStandard.
 const (
-	ConnectorStandardCHADEMO            ConnectorStandard = "CHADEMO"
-	ConnectorStandardCHAOJI             ConnectorStandard = "CHAOJI"
-	ConnectorStandardDOMESTICA          ConnectorStandard = "DOMESTIC_A"
-	ConnectorStandardDOMESTICB          ConnectorStandard = "DOMESTIC_B"
-	ConnectorStandardDOMESTICC          ConnectorStandard = "DOMESTIC_C"
-	ConnectorStandardDOMESTICD          ConnectorStandard = "DOMESTIC_D"
-	ConnectorStandardDOMESTICE          ConnectorStandard = "DOMESTIC_E"
-	ConnectorStandardDOMESTICF          ConnectorStandard = "DOMESTIC_F"
-	ConnectorStandardDOMESTICG          ConnectorStandard = "DOMESTIC_G"
-	ConnectorStandardDOMESTICH          ConnectorStandard = "DOMESTIC_H"
-	ConnectorStandardDOMESTICI          ConnectorStandard = "DOMESTIC_I"
-	ConnectorStandardDOMESTICJ          ConnectorStandard = "DOMESTIC_J"
-	ConnectorStandardDOMESTICK          ConnectorStandard = "DOMESTIC_K"
-	ConnectorStandardDOMESTICL          ConnectorStandard = "DOMESTIC_L"
-	ConnectorStandardGBTAC              ConnectorStandard = "GBT_AC"
-	ConnectorStandardGBTDC              ConnectorStandard = "GBT_DC"
-	ConnectorStandardIEC603092Single16  ConnectorStandard = "IEC_60309_2_single_16"
-	ConnectorStandardIEC603092Three16   ConnectorStandard = "IEC_60309_2_three_16"
-	ConnectorStandardIEC603092Three32   ConnectorStandard = "IEC_60309_2_three_32"
-	ConnectorStandardIEC603092Three64   ConnectorStandard = "IEC_60309_2_three_64"
-	ConnectorStandardIEC62196T1         ConnectorStandard = "IEC_62196_T1"
-	ConnectorStandardIEC62196T1COMBO    ConnectorStandard = "IEC_62196_T1_COMBO"
-	ConnectorStandardIEC62196T2         ConnectorStandard = "IEC_62196_T2"
-	ConnectorStandardIEC62196T2COMBO    ConnectorStandard = "IEC_62196_T2_COMBO"
-	ConnectorStandardIEC62196T3A        ConnectorStandard = "IEC_62196_T3A"
-	ConnectorStandardIEC62196T3C        ConnectorStandard = "IEC_62196_T3C"
-	ConnectorStandardNEMA1030           ConnectorStandard = "NEMA_10_30"
-	ConnectorStandardNEMA1050           ConnectorStandard = "NEMA_10_50"
-	ConnectorStandardNEMA1430           ConnectorStandard = "NEMA_14_30"
-	ConnectorStandardNEMA1450           ConnectorStandard = "NEMA_14_50"
-	ConnectorStandardNEMA520            ConnectorStandard = "NEMA_5_20"
-	ConnectorStandardNEMA630            ConnectorStandard = "NEMA_6_30"
-	ConnectorStandardNEMA650            ConnectorStandard = "NEMA_6_50"
-	ConnectorStandardPANTOGRAPHBOTTOMUP ConnectorStandard = "PANTOGRAPH_BOTTOM_UP"
-	ConnectorStandardPANTOGRAPHTOPDOWN  ConnectorStandard = "PANTOGRAPH_TOP_DOWN"
-	ConnectorStandardTESLAR             ConnectorStandard = "TESLA_R"
-	ConnectorStandardTESLAS             ConnectorStandard = "TESLA_S"
-	ConnectorStandardUNKNOWN            ConnectorStandard = "UNKNOWN"
-)
-
-// Defines values for EvseStatus.
-const (
-	EvseStatusAVAILABLE   EvseStatus = "AVAILABLE"
-	EvseStatusBLOCKED     EvseStatus = "BLOCKED"
-	EvseStatusCHARGING    EvseStatus = "CHARGING"
-	EvseStatusINOPERATIVE EvseStatus = "INOPERATIVE"
-	EvseStatusOUTOFORDER  EvseStatus = "OUTOFORDER"
-	EvseStatusPLANNED     EvseStatus = "PLANNED"
-	EvseStatusREMOVED     EvseStatus = "REMOVED"
-	EvseStatusRESERVED    EvseStatus = "RESERVED"
-	EvseStatusUNKNOWN     EvseStatus = "UNKNOWN"
+	CHADEMO            ConnectorStandard = "CHADEMO"
+	CHAOJI             ConnectorStandard = "CHAOJI"
+	DOMESTICA          ConnectorStandard = "DOMESTIC_A"
+	DOMESTICB          ConnectorStandard = "DOMESTIC_B"
+	DOMESTICC          ConnectorStandard = "DOMESTIC_C"
+	DOMESTICD          ConnectorStandard = "DOMESTIC_D"
+	DOMESTICE          ConnectorStandard = "DOMESTIC_E"
+	DOMESTICF          ConnectorStandard = "DOMESTIC_F"
+	DOMESTICG          ConnectorStandard = "DOMESTIC_G"
+	DOMESTICH          ConnectorStandard = "DOMESTIC_H"
+	DOMESTICI          ConnectorStandard = "DOMESTIC_I"
+	DOMESTICJ          ConnectorStandard = "DOMESTIC_J"
+	DOMESTICK          ConnectorStandard = "DOMESTIC_K"
+	DOMESTICL          ConnectorStandard = "DOMESTIC_L"
+	GBTAC              ConnectorStandard = "GBT_AC"
+	GBTDC              ConnectorStandard = "GBT_DC"
+	IEC603092Single16  ConnectorStandard = "IEC_60309_2_single_16"
+	IEC603092Three16   ConnectorStandard = "IEC_60309_2_three_16"
+	IEC603092Three32   ConnectorStandard = "IEC_60309_2_three_32"
+	IEC603092Three64   ConnectorStandard = "IEC_60309_2_three_64"
+	IEC62196T1         ConnectorStandard = "IEC_62196_T1"
+	IEC62196T1COMBO    ConnectorStandard = "IEC_62196_T1_COMBO"
+	IEC62196T2         ConnectorStandard = "IEC_62196_T2"
+	IEC62196T2COMBO    ConnectorStandard = "IEC_62196_T2_COMBO"
+	IEC62196T3A        ConnectorStandard = "IEC_62196_T3A"
+	IEC62196T3C        ConnectorStandard = "IEC_62196_T3C"
+	NEMA1030           ConnectorStandard = "NEMA_10_30"
+	NEMA1050           ConnectorStandard = "NEMA_10_50"
+	NEMA1430           ConnectorStandard = "NEMA_14_30"
+	NEMA1450           ConnectorStandard = "NEMA_14_50"
+	NEMA520            ConnectorStandard = "NEMA_5_20"
+	NEMA630            ConnectorStandard = "NEMA_6_30"
+	NEMA650            ConnectorStandard = "NEMA_6_50"
+	PANTOGRAPHBOTTOMUP ConnectorStandard = "PANTOGRAPH_BOTTOM_UP"
+	PANTOGRAPHTOPDOWN  ConnectorStandard = "PANTOGRAPH_TOP_DOWN"
+	TESLAR             ConnectorStandard = "TESLA_R"
+	TESLAS             ConnectorStandard = "TESLA_S"
+	UNKNOWN            ConnectorStandard = "UNKNOWN"
 )
 
 // Defines values for LocationParkingType.
@@ -157,15 +144,11 @@ type ConnectorStandard string
 type Evse struct {
 	Connectors []Connector `json:"connectors"`
 	EvseId     *string     `json:"evse_id"`
-	Status     EvseStatus  `json:"status"`
 
 	// Uid Uniquely identifies the EVSE within the CPOs platform (and
 	// suboperator platforms).
 	Uid string `json:"uid"`
 }
-
-// EvseStatus defines model for Evse.Status.
-type EvseStatus string
 
 // GeoLocation defines model for GeoLocation.
 type GeoLocation struct {
@@ -780,58 +763,57 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"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",
+	"k3aL5qz10PaePz//ZwAAAP//na/BxrkwAAA=",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

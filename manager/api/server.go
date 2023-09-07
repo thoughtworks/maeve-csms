@@ -301,7 +301,7 @@ func (s *Server) RegisterLocation(w http.ResponseWriter, r *http.Request, locati
 				storeEvses[i] = store.Evse{
 					Connectors:  storeConnectors,
 					EvseId:      reqEvse.EvseId,
-					Status:      string(reqEvse.Status),
+					Status:      string(ocpi.EvseStatusUNKNOWN),
 					Uid:         reqEvse.Uid,
 					LastUpdated: now.Format(time.RFC3339),
 				}
@@ -344,7 +344,7 @@ func (s *Server) RegisterLocation(w http.ResponseWriter, r *http.Request, locati
 				ocpiEvses[i] = ocpi.Evse{
 					Connectors:  ocpiConnectors,
 					EvseId:      reqEvse.EvseId,
-					Status:      ocpi.EvseStatus(reqEvse.Status),
+					Status:      ocpi.EvseStatusUNKNOWN,
 					Uid:         reqEvse.Uid,
 					LastUpdated: now.Format(time.RFC3339),
 				}

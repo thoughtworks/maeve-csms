@@ -494,18 +494,6 @@ components:
         evse_id:
           type: string
           nullable: true
-        status:
-          type: string
-          enum:
-            - AVAILABLE
-            - BLOCKED
-            - CHARGING
-            - INOPERATIVE
-            - OUTOFORDER
-            - PLANNED
-            - REMOVED
-            - RESERVED
-            - UNKNOWN
         connectors:
           type: array
           items:
