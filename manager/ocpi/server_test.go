@@ -90,6 +90,11 @@ func TestServerGetVersion(t *testing.T) {
 					Role:       ocpi.RECEIVER,
 				},
 				{
+					Identifier: "commands",
+					Url:        "/ocpi/receiver/2.2/commands",
+					Role:       ocpi.RECEIVER,
+				},
+				{
 					Identifier: "tokens",
 					Url:        "/ocpi/receiver/2.2/tokens/",
 					Role:       ocpi.RECEIVER,

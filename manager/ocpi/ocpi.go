@@ -65,6 +65,11 @@ func (o *OCPI) GetVersion(context.Context) (VersionDetail, error) {
 				Url:        fmt.Sprintf("%s/ocpi/2.2/credentials", o.externalUrl),
 			},
 			{
+				Identifier: "commands",
+				Role:       RECEIVER,
+				Url:        fmt.Sprintf("%s/ocpi/receiver/2.2/commands", o.externalUrl),
+			},
+			{
 				Identifier: "tokens",
 				Role:       RECEIVER,
 				Url:        fmt.Sprintf("%s/ocpi/receiver/2.2/tokens/", o.externalUrl),

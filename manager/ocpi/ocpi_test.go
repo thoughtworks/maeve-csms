@@ -44,6 +44,11 @@ func TestGetVersionDetails(t *testing.T) {
 				Url:        "/ocpi/2.2/credentials",
 			},
 			{
+				Identifier: "commands",
+				Role:       ocpi.RECEIVER,
+				Url:        "/ocpi/receiver/2.2/commands",
+			},
+			{
 				Identifier: "tokens",
 				Role:       ocpi.RECEIVER,
 				Url:        "/ocpi/receiver/2.2/tokens/",
