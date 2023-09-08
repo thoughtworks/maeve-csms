@@ -22,9 +22,18 @@ func TestBootNotificationHandler(t *testing.T) {
 
 	engine := inmemory.NewStore(clock.RealClock{})
 
+	err = engine.UpdateChargeStationSettings(context.Background(), "cs001", &store.ChargeStationSettings{
+		Settings: map[string]*store.ChargeStationSetting{
+			"foo": {Value: "bar", Status: store.ChargeStationSettingStatusAccepted},
+			"baz": {Value: "qux", Status: store.ChargeStationSettingStatusRebootRequired},
+		},
+	})
+	require.NoError(t, err)
+
 	handler := handlers.BootNotificationHandler{
 		Clock:               clockTest.NewFakePassiveClock(now),
 		RuntimeDetailsStore: engine,
+		SettingsStore:       engine,
 		HeartbeatInterval:   10,
 	}
 
@@ -49,4 +58,10 @@ func TestBootNotificationHandler(t *testing.T) {
 	assert.Equal(t, store.ChargeStationRuntimeDetails{
 		OcppVersion: "1.6",
 	}, *details)
+
+	settings, err := engine.LookupChargeStationSettings(context.Background(), "cs001")
+	require.NoError(t, err)
+	for _, v := range settings.Settings {
+		assert.NotEqual(t, store.ChargeStationSettingStatusRebootRequired, v.Status)
+	}
 }

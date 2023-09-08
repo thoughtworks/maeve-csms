@@ -55,6 +55,13 @@ func NewV16Router(emitter Emitter,
 		},
 	}
 
+	standardCallMaker := BasicCallMaker{
+		E: emitter,
+		Actions: map[reflect.Type]string{
+			reflect.TypeOf(&ocpp16.TriggerMessageJson{}): "TriggerMessage",
+		},
+	}
+
 	return &Router{
 		CallRoutes: map[string]handlers.CallRoute{
 			"BootNotification": {
@@ -64,6 +71,7 @@ func NewV16Router(emitter Emitter,
 				Handler: handlers16.BootNotificationHandler{
 					Clock:               clk,
 					RuntimeDetailsStore: engine,
+					SettingsStore:       engine,
 					HeartbeatInterval:   int(heartbeatInterval.Seconds()),
 				},
 			},
@@ -245,7 +253,15 @@ func NewV16Router(emitter Emitter,
 				ResponseSchema: "ocpp16/ChangeConfigurationResponse.json",
 				Handler: handlers16.ChangeConfigurationResultHandler{
 					SettingsStore: engine,
+					CallMaker:     standardCallMaker,
 				},
+			},
+			"TriggerMessage": {
+				NewRequest:     func() ocpp.Request { return new(ocpp16.TriggerMessageJson) },
+				NewResponse:    func() ocpp.Response { return new(ocpp16.TriggerMessageResponseJson) },
+				RequestSchema:  "ocpp16/TriggerMessage.json",
+				ResponseSchema: "ocpp16/TriggerMessageResponse.json",
+				Handler:        handlers16.TriggerMessageResultHandler{},
 			},
 		},
 	}

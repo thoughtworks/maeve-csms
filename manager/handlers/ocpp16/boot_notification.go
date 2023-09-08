@@ -17,6 +17,7 @@ import (
 type BootNotificationHandler struct {
 	Clock               clock.PassiveClock
 	RuntimeDetailsStore store.ChargeStationRuntimeDetailsStore
+	SettingsStore       store.ChargeStationSettingsStore
 	HeartbeatInterval   int
 }
 
@@ -42,6 +43,27 @@ func (b BootNotificationHandler) HandleCall(ctx context.Context, chargeStationId
 	})
 	if err != nil {
 		return nil, err
+	}
+
+	// remove any reboot required settings
+	settings, err := b.SettingsStore.LookupChargeStationSettings(ctx, chargeStationId)
+	if err != nil {
+		return nil, err
+	}
+
+	updated := false
+	for _, setting := range settings.Settings {
+		if setting.Status == store.ChargeStationSettingStatusRebootRequired {
+			setting.Status = store.ChargeStationSettingStatusAccepted
+			updated = true
+		}
+	}
+
+	if updated {
+		err = b.SettingsStore.UpdateChargeStationSettings(ctx, chargeStationId, settings)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return &types.BootNotificationResponseJson{
