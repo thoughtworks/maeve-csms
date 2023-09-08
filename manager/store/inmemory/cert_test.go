@@ -15,6 +15,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/thoughtworks/maeve-csms/manager/store/inmemory"
+	"k8s.io/utils/clock"
 	"math/big"
 	"testing"
 	"time"
@@ -25,7 +26,7 @@ func TestSetAndLookupAndDeleteCertificate(t *testing.T) {
 
 	pemCertificate := string(pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: cert.Raw}))
 
-	store := inmemory.NewStore()
+	store := inmemory.NewStore(clock.RealClock{})
 
 	err := store.SetCertificate(context.Background(), pemCertificate)
 	require.NoError(t, err)

@@ -10,13 +10,14 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/thoughtworks/maeve-csms/manager/store"
 	"github.com/thoughtworks/maeve-csms/manager/store/firestore"
+	"k8s.io/utils/clock"
 	"testing"
 )
 
 func TestSetAndLookupRegistrationDetails(t *testing.T) {
 	ctx := context.Background()
 
-	engine, err := firestore.NewStore(ctx, "myproject")
+	engine, err := firestore.NewStore(ctx, "myproject", clock.RealClock{})
 	require.NoError(t, err)
 
 	token := "abcdef123456"
@@ -36,7 +37,7 @@ func TestSetAndLookupRegistrationDetails(t *testing.T) {
 func TestDeleteRegistrationDetails(t *testing.T) {
 	ctx := context.Background()
 
-	engine, err := firestore.NewStore(ctx, "myproject")
+	engine, err := firestore.NewStore(ctx, "myproject", clock.RealClock{})
 	require.NoError(t, err)
 
 	token := "abcdef123456"
@@ -58,7 +59,7 @@ func TestDeleteRegistrationDetails(t *testing.T) {
 func TestSetAndLookupPartyDetails(t *testing.T) {
 	ctx := context.Background()
 
-	engine, err := firestore.NewStore(ctx, "myproject")
+	engine, err := firestore.NewStore(ctx, "myproject", clock.RealClock{})
 	require.NoError(t, err)
 
 	want := &store.OcpiParty{

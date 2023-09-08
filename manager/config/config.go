@@ -196,12 +196,12 @@ func getHttpClient(keylogFile string) (*http.Client, error) {
 func getStorage(ctx context.Context, cfg *StorageConfig) (engine store.Engine, err error) {
 	switch cfg.Type {
 	case "firestore":
-		engine, err = firestore.NewStore(ctx, cfg.FirestoreStorage.ProjectId)
+		engine, err = firestore.NewStore(ctx, cfg.FirestoreStorage.ProjectId, clock.RealClock{})
 		if err != nil {
 			return nil, fmt.Errorf("create firestore storage: %w", err)
 		}
 	case "in_memory":
-		engine = inmemory.NewStore()
+		engine = inmemory.NewStore(clock.RealClock{})
 	default:
 		return nil, fmt.Errorf("unknown storage type: %s", cfg.Type)
 	}

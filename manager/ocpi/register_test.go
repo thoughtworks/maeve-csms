@@ -20,7 +20,7 @@ func TestRegistration(t *testing.T) {
 	tokenA := "abcdef123456"
 
 	// setup sender
-	senderStore := inmemory.NewStore()
+	senderStore := inmemory.NewStore(clock.RealClock{})
 	senderOcpiApi := ocpi.NewOCPI(senderStore, http.DefaultClient, "GB", "TWK")
 	senderHandler := server.NewOcpiHandler(senderStore, clock.RealClock{}, senderOcpiApi)
 	senderServer := httptest.NewServer(senderHandler)
@@ -28,7 +28,7 @@ func TestRegistration(t *testing.T) {
 	defer senderServer.Close()
 
 	// setup receiver
-	receiverStore := inmemory.NewStore()
+	receiverStore := inmemory.NewStore(clock.RealClock{})
 	err := receiverStore.SetRegistrationDetails(context.Background(), tokenA, &store.OcpiRegistration{
 		Status: store.OcpiRegistrationStatusPending,
 	})

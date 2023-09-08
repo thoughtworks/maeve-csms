@@ -9,6 +9,7 @@ import (
 	"github.com/thoughtworks/maeve-csms/manager/api"
 	"github.com/thoughtworks/maeve-csms/manager/store/inmemory"
 	"io"
+	"k8s.io/utils/clock"
 	clockTest "k8s.io/utils/clock/testing"
 	"net/http"
 	"net/http/httptest"
@@ -18,7 +19,7 @@ import (
 )
 
 func TestValidationMiddlewareWithInvalidRequest(t *testing.T) {
-	engine := inmemory.NewStore()
+	engine := inmemory.NewStore(clock.RealClock{})
 
 	now := time.Now()
 	srv, err := api.NewServer(engine, clockTest.NewFakePassiveClock(now), nil)
@@ -42,7 +43,7 @@ func TestValidationMiddlewareWithInvalidRequest(t *testing.T) {
 }
 
 func TestValidationMiddlewareWithValidRequest(t *testing.T) {
-	engine := inmemory.NewStore()
+	engine := inmemory.NewStore(clock.RealClock{})
 
 	now := time.Now()
 	srv, err := api.NewServer(engine, clockTest.NewFakePassiveClock(now), nil)
@@ -83,7 +84,7 @@ func TestValidationMiddlewareWithNonApiPath(t *testing.T) {
 }
 
 func TestValidationMiddlewareWithUnknownMethod(t *testing.T) {
-	engine := inmemory.NewStore()
+	engine := inmemory.NewStore(clock.RealClock{})
 
 	now := time.Now()
 	srv, err := api.NewServer(engine, clockTest.NewFakePassiveClock(now), nil)

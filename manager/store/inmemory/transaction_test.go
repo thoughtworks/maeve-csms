@@ -6,6 +6,7 @@ package inmemory_test
 
 import (
 	"context"
+	"k8s.io/utils/clock"
 	"testing"
 	"time"
 
@@ -39,7 +40,7 @@ func NewMeterValues(energyReactiveExportValue float64) []store.MeterValue {
 func TestFindTransactionDoesNotExist(t *testing.T) {
 	ctx := context.Background()
 
-	transactionStore := inmemory.NewStore()
+	transactionStore := inmemory.NewStore(clock.RealClock{})
 
 	got, err := transactionStore.FindTransaction(ctx, "unknown", "ids")
 	assert.NoError(t, err)
@@ -49,7 +50,7 @@ func TestFindTransactionDoesNotExist(t *testing.T) {
 func TestCreateAndFindTransaction(t *testing.T) {
 	ctx := context.Background()
 
-	transactionStore := inmemory.NewStore()
+	transactionStore := inmemory.NewStore(clock.RealClock{})
 
 	meterValues := NewMeterValues(100)
 
@@ -74,7 +75,7 @@ func TestCreateAndFindTransaction(t *testing.T) {
 func TestCreateTransactionWithExistingTransaction(t *testing.T) {
 	ctx := context.Background()
 
-	transactionStore := inmemory.NewStore()
+	transactionStore := inmemory.NewStore(clock.RealClock{})
 
 	meterValues1 := NewMeterValues(100)
 
@@ -104,7 +105,7 @@ func TestCreateTransactionWithExistingTransaction(t *testing.T) {
 func TestTransactionStoreUpdateCreatedTransaction(t *testing.T) {
 	ctx := context.Background()
 
-	transactionStore := inmemory.NewStore()
+	transactionStore := inmemory.NewStore(clock.RealClock{})
 
 	meterValues1 := NewMeterValues(100)
 
@@ -134,7 +135,7 @@ func TestTransactionStoreUpdateCreatedTransaction(t *testing.T) {
 func TestTransactionStoreEndTransaction(t *testing.T) {
 	ctx := context.Background()
 
-	transactionStore := inmemory.NewStore()
+	transactionStore := inmemory.NewStore(clock.RealClock{})
 
 	meterValues1 := NewMeterValues(100)
 	err := transactionStore.CreateTransaction(ctx, "cs004", "1234", idToken, tokenType, meterValues1, 0, false)
@@ -169,7 +170,7 @@ func TestTransactionStoreEndTransaction(t *testing.T) {
 func TestTransactionStoreEndNonExistingTransaction(t *testing.T) {
 	ctx := context.Background()
 
-	transactionStore := inmemory.NewStore()
+	transactionStore := inmemory.NewStore(clock.RealClock{})
 
 	meterValues := NewMeterValues(100)
 	err := transactionStore.EndTransaction(ctx, "cs005", "1234", idToken, tokenType, meterValues, 2)

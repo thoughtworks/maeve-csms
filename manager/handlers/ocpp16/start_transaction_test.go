@@ -4,6 +4,7 @@ package ocpp16_test
 
 import (
 	"context"
+	"k8s.io/utils/clock"
 	"testing"
 	"time"
 
@@ -17,7 +18,7 @@ import (
 )
 
 func TestStartTransaction(t *testing.T) {
-	engine := inmemory.NewStore()
+	engine := inmemory.NewStore(clock.RealClock{})
 
 	err := engine.SetToken(context.Background(), &store.Token{
 		CountryCode: "GB",
@@ -32,7 +33,7 @@ func TestStartTransaction(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	transactionStore := inmemory.NewStore()
+	transactionStore := inmemory.NewStore(clock.RealClock{})
 
 	now, err := time.Parse(time.RFC3339, "2023-06-15T15:05:00+01:00")
 	require.NoError(t, err)
@@ -104,7 +105,7 @@ func TestStartTransaction(t *testing.T) {
 }
 
 func TestStartTransactionWithInvalidRFID(t *testing.T) {
-	engine := inmemory.NewStore()
+	engine := inmemory.NewStore(clock.RealClock{})
 
 	err := engine.SetToken(context.Background(), &store.Token{
 		CountryCode: "GB",
@@ -119,7 +120,7 @@ func TestStartTransactionWithInvalidRFID(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	transactionStore := inmemory.NewStore()
+	transactionStore := inmemory.NewStore(clock.RealClock{})
 
 	now, err := time.Parse(time.RFC3339, "2023-06-15T15:05:00+01:00")
 	require.NoError(t, err)

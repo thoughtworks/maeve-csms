@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp16"
+	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -17,6 +19,7 @@ import (
 	"math/rand"
 	"net/http"
 	"net/url"
+	"reflect"
 	"strings"
 	"time"
 
@@ -187,15 +190,12 @@ func ensureDefaults(h *Handler) {
 }
 
 func (h *Handler) Connect(errCh chan error) {
-	ctx, cancel := context.WithTimeout(context.Background(), h.mqttConnectTimeout)
-	defer cancel()
-
 	// ProxyEmitter supports late binding of the E implementation
 	v16Emitter := &ProxyEmitter{}
 	v201Emitter := &ProxyEmitter{}
 
-	v16Router := NewV16Router(v16Emitter, h.clock, h.storageEngine, h.storageEngine, h.certValidationService, h.chargeStationCertProvider, h.contractCertProvider, h.heartbeatInterval, h.schemaFS)
-	v201Router := NewV201Router(v201Emitter, h.clock, h.storageEngine, h.storageEngine, h.tariffService, h.certValidationService, h.chargeStationCertProvider, h.contractCertProvider, h.heartbeatInterval)
+	v16Router := NewV16Router(v16Emitter, h.clock, h.storageEngine, h.certValidationService, h.chargeStationCertProvider, h.contractCertProvider, h.heartbeatInterval, h.schemaFS)
+	v201Router := NewV201Router(v201Emitter, h.clock, h.storageEngine, h.tariffService, h.certValidationService, h.chargeStationCertProvider, h.contractCertProvider, h.heartbeatInterval)
 
 	mqttV16Topic := fmt.Sprintf("$share/%s/%s/in/ocpp1.6/#", h.mqttGroup, h.mqttPrefix)
 	mqttV201Topic := fmt.Sprintf("$share/%s/%s/in/ocpp2.0.1/#", h.mqttGroup, h.mqttPrefix)
@@ -242,12 +242,19 @@ func (h *Handler) Connect(errCh chan error) {
 		return
 	}
 
-	select {
-	case <-ctx.Done():
-		errCh <- errors.New("timeout waiting for mqtt connection setup")
-	case <-readyCh:
-		// do nothing
+	v16SyncCallMaker := &BasicCallMaker{
+		E: v16Emitter,
+		Actions: map[reflect.Type]string{
+			reflect.TypeOf(&ocpp16.ChangeConfigurationJson{}): "ChangeConfiguration",
+		},
 	}
+	v201SyncCallMaker := &BasicCallMaker{
+		E: v201Emitter,
+		Actions: map[reflect.Type]string{
+			reflect.TypeOf(&ocpp201.SetVariablesRequestJson{}): "SetVariables",
+		},
+	}
+	go SyncSettings(context.Background(), h.storageEngine, v16SyncCallMaker, v201SyncCallMaker, 2*time.Minute, 2*time.Minute)
 }
 
 func getTopicPattern(topic string) string {

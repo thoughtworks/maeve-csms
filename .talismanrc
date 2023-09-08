@@ -65,6 +65,8 @@ fileignoreconfig:
     checksum: 9660c626538042009cebcba874730e4222c115fdf24c9dba12c5d4601c69b613
   - filename: manager/mqtt/router.go
     checksum: 880513a5d3f0070619c4890b5aab9fcf10650afc79550a83c1ad9a986c7e7367
+  - filename: manager/mqtt/settings_test.go
+    checksum: 99db5ba6a8456c7bae42bd1ab98df485a7d742a33171ed03dc92b8a502d4f699
   - filename: manager/ocpi/ocpi.gen.go
     checksum: 6ca663b1e4f6ecaef87f6fadaacdebcc905ac236adf704ac9278d25e605d940d
   - filename: manager/ocpi/register.go
@@ -131,6 +133,8 @@ fileignoreconfig:
     checksum: 04aa0b00b290595b5d8d7a4693bf526a3d6ee1df8a1a2e7ca9a25f0a54eb7dd3
   - filename: manager/store/firestore/cs_test.go
     checksum: b31b2ed998237c77a6cd3501ce4231c2cbe15a2aca68db8715f4f43f9fc7e01c
+  - filename: manager/store/firestore/store.go
+    checksum: 6d89fa8fa70f9eea46760538b892f0d0a0266d18084395352cb5697829762f40
   - filename: manager/store/inmemory/cert_test.go
     checksum: 535591f9b2a347dd1fc00f07aa3742660c96a636dae8f724c9e2842e09b95356
 scopeconfig:

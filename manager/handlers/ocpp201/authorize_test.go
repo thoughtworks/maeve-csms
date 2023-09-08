@@ -12,6 +12,7 @@ import (
 	"github.com/thoughtworks/maeve-csms/manager/services"
 	"github.com/thoughtworks/maeve-csms/manager/store"
 	"github.com/thoughtworks/maeve-csms/manager/store/inmemory"
+	"k8s.io/utils/clock"
 	"testing"
 	"time"
 )
@@ -83,7 +84,7 @@ func setupTokenStore(tokenStore store.TokenStore) error {
 }
 
 func TestAuthorizeKnownRfidCard(t *testing.T) {
-	engine := inmemory.NewStore()
+	engine := inmemory.NewStore(clock.RealClock{})
 	err := setupTokenStore(engine)
 	require.NoError(t, err)
 
@@ -111,7 +112,7 @@ func TestAuthorizeKnownRfidCard(t *testing.T) {
 }
 
 func TestAuthorizeWithUnknownRfidCard(t *testing.T) {
-	engine := inmemory.NewStore()
+	engine := inmemory.NewStore(clock.RealClock{})
 	err := setupTokenStore(engine)
 	require.NoError(t, err)
 
@@ -139,7 +140,7 @@ func TestAuthorizeWithUnknownRfidCard(t *testing.T) {
 }
 
 func TestAuthorizeWithEmaidAndCertificateChain(t *testing.T) {
-	engine := inmemory.NewStore()
+	engine := inmemory.NewStore(clock.RealClock{})
 	err := setupTokenStore(engine)
 	require.NoError(t, err)
 
@@ -172,7 +173,7 @@ func TestAuthorizeWithEmaidAndCertificateChain(t *testing.T) {
 }
 
 func TestAuthorizeWithEmaidAndInvalidCertificateChain(t *testing.T) {
-	engine := inmemory.NewStore()
+	engine := inmemory.NewStore(clock.RealClock{})
 	err := setupTokenStore(engine)
 	require.NoError(t, err)
 
@@ -216,7 +217,7 @@ func TestAuthorizeWithEmaidAndInvalidCertificateChain(t *testing.T) {
 }
 
 func TestAuthorizeWithEmaidAndCertificateHashes(t *testing.T) {
-	engine := inmemory.NewStore()
+	engine := inmemory.NewStore(clock.RealClock{})
 	err := setupTokenStore(engine)
 	require.NoError(t, err)
 
@@ -252,7 +253,7 @@ func TestAuthorizeWithEmaidAndCertificateHashes(t *testing.T) {
 }
 
 func TestAuthorizeWithEmaidAndInvalidCertificateHashes(t *testing.T) {
-	engine := inmemory.NewStore()
+	engine := inmemory.NewStore(clock.RealClock{})
 	err := setupTokenStore(engine)
 	require.NoError(t, err)
 
@@ -300,7 +301,7 @@ func TestAuthorizeWithEmaidAndInvalidCertificateHashes(t *testing.T) {
 }
 
 func TestAuthorizeWithEmaidAndNoCertificateData(t *testing.T) {
-	engine := inmemory.NewStore()
+	engine := inmemory.NewStore(clock.RealClock{})
 	err := setupTokenStore(engine)
 	require.NoError(t, err)
 

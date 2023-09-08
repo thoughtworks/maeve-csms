@@ -12,6 +12,10 @@ func (c ChargeStationAuth) Render(w http.ResponseWriter, r *http.Request) error 
 	return nil
 }
 
+func (c ChargeStationSettings) Bind(r *http.Request) error {
+	return nil
+}
+
 func (t Token) Bind(r *http.Request) error {
 	return nil
 }

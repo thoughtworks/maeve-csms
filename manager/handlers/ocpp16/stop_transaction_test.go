@@ -5,6 +5,7 @@ package ocpp16_test
 import (
 	"context"
 	"fmt"
+	"k8s.io/utils/clock"
 	"math/rand"
 	"testing"
 	"time"
@@ -20,7 +21,7 @@ import (
 
 func TestStopTransactionHandler(t *testing.T) {
 	chargingStationId := fmt.Sprintf("cs%03d", rand.Intn(1000))
-	engine := inmemory.NewStore()
+	engine := inmemory.NewStore(clock.RealClock{})
 
 	err := engine.SetToken(context.Background(), &store.Token{
 		CountryCode: "GB",
@@ -38,7 +39,7 @@ func TestStopTransactionHandler(t *testing.T) {
 	now, err := time.Parse(time.RFC3339, "2023-06-15T15:06:00+01:00")
 	require.NoError(t, err)
 
-	transactionStore := inmemory.NewStore()
+	transactionStore := inmemory.NewStore(clock.RealClock{})
 
 	startContext := "Transaction.Begin"
 	startMeasurand := "MeterValue"

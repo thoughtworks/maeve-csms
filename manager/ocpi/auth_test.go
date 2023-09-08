@@ -12,6 +12,7 @@ import (
 	"github.com/thoughtworks/maeve-csms/manager/ocpi"
 	"github.com/thoughtworks/maeve-csms/manager/store"
 	"github.com/thoughtworks/maeve-csms/manager/store/inmemory"
+	"k8s.io/utils/clock"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -20,7 +21,7 @@ import (
 func TestAuthenticationWithPendingToken(t *testing.T) {
 	token := "abcdef123456"
 
-	engine := inmemory.NewStore()
+	engine := inmemory.NewStore(clock.RealClock{})
 	err := engine.SetRegistrationDetails(context.Background(), token, &store.OcpiRegistration{Status: store.OcpiRegistrationStatusPending})
 	require.NoError(t, err)
 
@@ -65,7 +66,7 @@ func TestAuthenticationWithPendingToken(t *testing.T) {
 func TestAuthenticationWithRegisteredToken(t *testing.T) {
 	token := "abcdef123456"
 
-	engine := inmemory.NewStore()
+	engine := inmemory.NewStore(clock.RealClock{})
 	err := engine.SetRegistrationDetails(context.Background(), token, &store.OcpiRegistration{Status: store.OcpiRegistrationStatusRegistered})
 	require.NoError(t, err)
 
@@ -110,7 +111,7 @@ func TestAuthenticationWithRegisteredToken(t *testing.T) {
 func TestAuthenticationWithUnknownToken(t *testing.T) {
 	token := "abcdef123456"
 
-	engine := inmemory.NewStore()
+	engine := inmemory.NewStore(clock.RealClock{})
 
 	authFn := ocpi.NewTokenAuthenticationFunc(engine)
 

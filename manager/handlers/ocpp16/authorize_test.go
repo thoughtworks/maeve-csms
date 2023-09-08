@@ -10,12 +10,13 @@ import (
 	types "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp16"
 	"github.com/thoughtworks/maeve-csms/manager/store"
 	"github.com/thoughtworks/maeve-csms/manager/store/inmemory"
+	"k8s.io/utils/clock"
 	"testing"
 	"time"
 )
 
 func TestAuthorizeKnownRfidCard(t *testing.T) {
-	engine := inmemory.NewStore()
+	engine := inmemory.NewStore(clock.RealClock{})
 	err := engine.SetToken(context.Background(), &store.Token{
 		CountryCode: "GB",
 		PartyId:     "TWK",
@@ -50,7 +51,7 @@ func TestAuthorizeKnownRfidCard(t *testing.T) {
 }
 
 func TestAuthorizeWithUnknownRfidCard(t *testing.T) {
-	engine := inmemory.NewStore()
+	engine := inmemory.NewStore(clock.RealClock{})
 
 	ah := handlers.AuthorizeHandler{
 		TokenStore: engine,

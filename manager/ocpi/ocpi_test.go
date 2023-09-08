@@ -9,12 +9,13 @@ import (
 	"github.com/thoughtworks/maeve-csms/manager/ocpi"
 	"github.com/thoughtworks/maeve-csms/manager/store"
 	"github.com/thoughtworks/maeve-csms/manager/store/inmemory"
+	"k8s.io/utils/clock"
 	"net/http"
 	"testing"
 )
 
 func TestGetVersions(t *testing.T) {
-	engine := inmemory.NewStore()
+	engine := inmemory.NewStore(clock.RealClock{})
 	ocpiApi := ocpi.NewOCPI(engine, http.DefaultClient, "GB", "TWK")
 
 	want := []ocpi.Version{
@@ -30,7 +31,7 @@ func TestGetVersions(t *testing.T) {
 }
 
 func TestGetVersionDetails(t *testing.T) {
-	engine := inmemory.NewStore()
+	engine := inmemory.NewStore(clock.RealClock{})
 	ocpiApi := ocpi.NewOCPI(engine, http.DefaultClient, "GB", "TWK")
 
 	want := ocpi.VersionDetail{
@@ -55,7 +56,7 @@ func TestGetVersionDetails(t *testing.T) {
 }
 
 func TestGetToken(t *testing.T) {
-	engine := inmemory.NewStore()
+	engine := inmemory.NewStore(clock.RealClock{})
 	ocpiApi := ocpi.NewOCPI(engine, http.DefaultClient, "GB", "TWK")
 	err := engine.SetToken(context.Background(), &store.Token{
 		CountryCode: "GB",
@@ -89,7 +90,7 @@ func TestGetToken(t *testing.T) {
 }
 
 func TestSetToken(t *testing.T) {
-	engine := inmemory.NewStore()
+	engine := inmemory.NewStore(clock.RealClock{})
 	ocpiApi := ocpi.NewOCPI(engine, http.DefaultClient, "GB", "TWK")
 
 	err := ocpiApi.SetToken(context.Background(), ocpi.Token{

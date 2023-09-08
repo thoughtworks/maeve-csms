@@ -11,6 +11,7 @@ import (
 	"github.com/thoughtworks/maeve-csms/manager/store"
 	"github.com/thoughtworks/maeve-csms/manager/store/inmemory"
 	"io"
+	"k8s.io/utils/clock"
 	fakeclock "k8s.io/utils/clock/testing"
 	"net/http"
 	"net/http/httptest"
@@ -20,7 +21,7 @@ import (
 )
 
 func setupHandler(t *testing.T) (http.Handler, store.Engine, time.Time) {
-	engine := inmemory.NewStore()
+	engine := inmemory.NewStore(clock.RealClock{})
 	err := engine.SetRegistrationDetails(context.Background(), "123", &store.OcpiRegistration{
 		Status: store.OcpiRegistrationStatusRegistered,
 	})

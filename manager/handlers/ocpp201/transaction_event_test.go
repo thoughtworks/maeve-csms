@@ -4,6 +4,7 @@ package ocpp201_test
 
 import (
 	"context"
+	"k8s.io/utils/clock"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -16,7 +17,7 @@ import (
 
 func TestTransactionEventHandlerWithStartedEvent(t *testing.T) {
 	ctx := context.Background()
-	transactionStore := inmemory.NewStore()
+	transactionStore := inmemory.NewStore(clock.RealClock{})
 	tariffService := services.BasicKwhTariffService{}
 
 	handler := handlers.TransactionEventHandler{
@@ -64,7 +65,7 @@ func TestTransactionEventHandlerWithStartedEvent(t *testing.T) {
 
 func TestTransactionEventHandlerWithUpdatedEvent(t *testing.T) {
 	ctx := context.Background()
-	transactionStore := inmemory.NewStore()
+	transactionStore := inmemory.NewStore(clock.RealClock{})
 	tariffService := services.BasicKwhTariffService{}
 
 	handler := handlers.TransactionEventHandler{
@@ -108,7 +109,7 @@ func TestTransactionEventHandlerWithUpdatedEvent(t *testing.T) {
 
 func TestTransactionEventHandlerWithEndedEvent(t *testing.T) {
 	ctx := context.Background()
-	transactionStore := inmemory.NewStore()
+	transactionStore := inmemory.NewStore(clock.RealClock{})
 	tariffService := services.BasicKwhTariffService{}
 
 	handler := handlers.TransactionEventHandler{

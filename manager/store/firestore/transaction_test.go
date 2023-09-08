@@ -8,6 +8,7 @@ package firestore_test
 
 import (
 	"context"
+	"k8s.io/utils/clock"
 	"testing"
 	"time"
 
@@ -42,7 +43,7 @@ func NewMeterValues(energyReactiveExportValue float64) []store.MeterValue {
 func TestFindTransactionDoesNotExist(t *testing.T) {
 	ctx := context.Background()
 
-	transactionStore, err := firestore.NewStore(ctx, "myproject")
+	transactionStore, err := firestore.NewStore(ctx, "myproject", clock.RealClock{})
 	require.NoError(t, err)
 
 	got, err := transactionStore.FindTransaction(ctx, "unknown", "ids")
@@ -53,7 +54,7 @@ func TestFindTransactionDoesNotExist(t *testing.T) {
 func TestCreateAndFindTransaction(t *testing.T) {
 	ctx := context.Background()
 
-	transactionStore, err := firestore.NewStore(ctx, "myproject")
+	transactionStore, err := firestore.NewStore(ctx, "myproject", clock.RealClock{})
 	require.NoError(t, err)
 
 	meterValues := NewMeterValues(100)
@@ -79,7 +80,7 @@ func TestCreateAndFindTransaction(t *testing.T) {
 func TestCreateTransactionWithExistingTransaction(t *testing.T) {
 	ctx := context.Background()
 
-	transactionStore, err := firestore.NewStore(ctx, "myproject")
+	transactionStore, err := firestore.NewStore(ctx, "myproject", clock.RealClock{})
 	require.NoError(t, err)
 
 	meterValues1 := NewMeterValues(100)
@@ -110,7 +111,7 @@ func TestCreateTransactionWithExistingTransaction(t *testing.T) {
 func TestTransactionStoreGetAllTransactions(t *testing.T) {
 	ctx := context.Background()
 
-	transactionStore, err := firestore.NewStore(ctx, "myproject")
+	transactionStore, err := firestore.NewStore(ctx, "myproject", clock.RealClock{})
 	require.NoError(t, err)
 
 	transactionsBefore, err := transactionStore.Transactions(ctx)
@@ -135,7 +136,7 @@ func TestTransactionStoreGetAllTransactions(t *testing.T) {
 func TestTransactionStoreUpdateCreatedTransaction(t *testing.T) {
 	ctx := context.Background()
 
-	transactionStore, err := firestore.NewStore(ctx, "myproject")
+	transactionStore, err := firestore.NewStore(ctx, "myproject", clock.RealClock{})
 	require.NoError(t, err)
 
 	meterValues1 := NewMeterValues(100)
@@ -166,7 +167,7 @@ func TestTransactionStoreUpdateCreatedTransaction(t *testing.T) {
 func TestTransactionStoreEndTransaction(t *testing.T) {
 	ctx := context.Background()
 
-	transactionStore, err := firestore.NewStore(ctx, "myproject")
+	transactionStore, err := firestore.NewStore(ctx, "myproject", clock.RealClock{})
 	require.NoError(t, err)
 
 	meterValues1 := NewMeterValues(100)
@@ -202,7 +203,7 @@ func TestTransactionStoreEndTransaction(t *testing.T) {
 func TestTransactionStoreEndNonExistingTransaction(t *testing.T) {
 	ctx := context.Background()
 
-	transactionStore, err := firestore.NewStore(ctx, "myproject")
+	transactionStore, err := firestore.NewStore(ctx, "myproject", clock.RealClock{})
 	require.NoError(t, err)
 
 	meterValues := NewMeterValues(100)
