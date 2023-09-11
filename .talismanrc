@@ -33,6 +33,8 @@ fileignoreconfig:
     checksum: 68dd639262ee2def17f4acbd84c23c7281d8a158ebdc0a1e4b757f1cbe283ae0
   - filename: manager/api/api.gen.go
     checksum: 43ab2f9449e206ac8b905aeaa1e84c69e0766ff98aa0baa7a2f6f6c55b8ca2c7
+  - filename: manager/api/api.gen.go
+    checksum: 10407e39f42f59a080c0c6741b1acfe051e5f63d3b1e4b3a99ceb6283bda8a89
   - filename: manager/api/server.go
     checksum: 98cbd1df522ea428f7e669c01721f3070133062378a4f2e4b167d55eaa8d079b
   - filename: manager/api/server_test.go
@@ -63,6 +65,8 @@ fileignoreconfig:
     checksum: b0acc87b2f077a6bf86f768c72e8d6235c41fa0637ff49766e9ab3c9036c2fd7
   - filename: manager/handlers/has2be/get_certificate_status_test.go
     checksum: 5695931f0c6c0c50715520142264d3e77591506d0607fbd56a559a1440c11248
+  - filename: manager/handlers/ocpp16/change_configuration_result.go
+    checksum: 482d2a875cff37b607a783e428fe74c9c71032f3c4ce809d2643a6b7c0429a79
   - filename: manager/handlers/ocpp16/data_transfer_test.go
     checksum: ff19ad1feeb979a62c6a53e256ab3fe879bd540242153792b8b1148ae7010c4b
   - filename: manager/handlers/ocpp16/stop_transaction.go
@@ -73,8 +77,12 @@ fileignoreconfig:
     checksum: 9660c626538042009cebcba874730e4222c115fdf24c9dba12c5d4601c69b613
   - filename: manager/mqtt/router.go
     checksum: 880513a5d3f0070619c4890b5aab9fcf10650afc79550a83c1ad9a986c7e7367
+  - filename: manager/mqtt/settings.go
+    checksum: a801bcc37934a64d4522be7ed20d73fb13bc159df09440ef5145bf2ced0c571d
   - filename: manager/mqtt/settings_test.go
     checksum: 99db5ba6a8456c7bae42bd1ab98df485a7d742a33171ed03dc92b8a502d4f699
+  - filename: manager/mqtt/settings_test.go
+    checksum: dd7a956f3e659906c047ae6a0e094c335a273fbe4a3248c8b2687224817f24d8
   - filename: manager/ocpi/correlation.go
     checksum: b875df588159233dd77aacdfe0683ce0f1da9a0e17f7b8eb41d1ecc3d1a58a38
   - filename: manager/ocpi/ocpi.gen.go
@@ -97,12 +105,16 @@ fileignoreconfig:
     checksum: be25dc1ae4b0ed897ede8396a7544802fb635bb2eadf9da341265a7136aedcb6
   - filename: manager/ocpp/has2be/types.go
     checksum: a39ac33ecb106ed0511aef5f11131c6a73941b04f2e193c415d513a5a48fb47a
+  - filename: manager/ocpp/ocpp16/change_configuration.go
+    checksum: 33cbd9f8405991748fb38f15b220a2aa4ae68dfbe921f35e49fe74118c8a759b
   - filename: manager/ocpp/ocpp201/authorize_request.go
     checksum: 0d8a2377b6f329c6c765c9be5f5720c1b6a06de8569be8251747e70e94538b69
   - filename: manager/ocpp/ocpp201/certificate_signed_request.go
     checksum: ce7ab452c6bafff18dd02b023d994ae7916fd6ec12537c28ff30796f48340da0
   - filename: manager/ocpp/ocpp201/id_token_enum_type.go
     checksum: 12cb2bc8ca2fe84231986857696a463e3dff4d5f9cdde9b265899b09bb1f95b0
+  - filename: manager/ocpp/ocpp201/set_variables_request.go
+    checksum: d89e126fff18c8e6ecdc170a86bceb01fd2f46a676cae7178c17d1fa3e642613
   - filename: manager/ocpp/ocpp201/transactionevent_request.go
     checksum: 90efafcdaa21a3fc4b5a08616a8ad285ab36db978df6b1f326d4d88e0b661da4
   - filename: manager/ocpp/ocpp201/transactionevent_response.go
@@ -157,20 +169,8 @@ fileignoreconfig:
     checksum: 6d89fa8fa70f9eea46760538b892f0d0a0266d18084395352cb5697829762f40
   - filename: manager/store/inmemory/cert_test.go
     checksum: 535591f9b2a347dd1fc00f07aa3742660c96a636dae8f724c9e2842e09b95356
-  - filename: manager/api/api.gen.go
-    checksum: 10407e39f42f59a080c0c6741b1acfe051e5f63d3b1e4b3a99ceb6283bda8a89
-  - filename: manager/ocpp/ocpp16/change_configuration.go
-    checksum: 33cbd9f8405991748fb38f15b220a2aa4ae68dfbe921f35e49fe74118c8a759b
-  - filename: manager/handlers/ocpp16/change_configuration_result.go
-    checksum: 482d2a875cff37b607a783e428fe74c9c71032f3c4ce809d2643a6b7c0429a79
-  - filename: manager/ocpp/ocpp201/set_variables_request.go
-    checksum: d89e126fff18c8e6ecdc170a86bceb01fd2f46a676cae7178c17d1fa3e642613
   - filename: manager/store/inmemory/store.go
     checksum: ae491736b403a36855b91087ea96d6f6b464fe6564c56850db4a1955ca159b62
-  - filename: manager/mqtt/settings.go
-    checksum: a801bcc37934a64d4522be7ed20d73fb13bc159df09440ef5145bf2ced0c571d
-  - filename: manager/mqtt/settings_test.go
-    checksum: dd7a956f3e659906c047ae6a0e094c335a273fbe4a3248c8b2687224817f24d8
 scopeconfig:
   - scope: go
 version: ''
