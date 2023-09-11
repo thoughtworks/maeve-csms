@@ -11,6 +11,7 @@ import (
 	"go.opentelemetry.io/otel"
 	"golang.org/x/exp/slog"
 	"k8s.io/utils/clock"
+	"time"
 )
 
 var (
@@ -64,7 +65,16 @@ the gateway and send appropriate responses.`,
 		mqttHandler.Connect(errCh)
 
 		if settings.OcpiApi != nil {
-			ocpiServer := server.New("ocpi", cfg.Ocpi.Addr, nil, server.NewOcpiHandler(settings.Storage, clock.RealClock{}, settings.OcpiApi))
+			mqttSender := mqtt.NewSender(settings.Mqtt.Urls,
+				settings.Mqtt.Prefix,
+				"manager",
+				settings.Mqtt.ConnectTimeout,
+				settings.Mqtt.ConnectRetryDelay,
+				uint16(settings.Mqtt.KeepAliveInterval.Round(time.Second).Seconds()),
+				tracer,
+			)
+			mqttSender.Connect(errCh)
+			ocpiServer := server.New("ocpi", cfg.Ocpi.Addr, nil, server.NewOcpiHandler(settings.Storage, clock.RealClock{}, settings.OcpiApi, mqttSender.V16CallMaker))
 			ocpiServer.Start(errCh)
 		}
 

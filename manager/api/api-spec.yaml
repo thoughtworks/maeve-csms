@@ -299,6 +299,34 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Status"
+  /location/{locationId}:
+    post:
+      summary: "Registers a location with the CSMS"
+      description: |
+        Registers a location with the CSMS.
+      operationId: "registerLocation"
+      parameters:
+        - name: "locationId"
+          in: "path"
+          description: "The location identifier"
+          schema:
+            type: "string"
+            maxLength: 64
+      requestBody:
+        required: true
+        content:
+          "application/json":
+            schema:
+              $ref: "#/components/schemas/Location"
+      responses:
+        "201":
+          description: "Created"
+        default:
+          description: "Unexpected error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Status"
 components:
   schemas:
     ChargeStationAuth:
@@ -438,6 +466,149 @@ components:
             endpoints.
       required:
         - token
+    Location:
+      type: "object"
+      description: "A charge station location"
+      required:
+        - "address"
+        - "city"
+        - "country"
+        - "country_code"
+        - "coordinates"
+        - "party_id"
+      properties:
+        country_code:
+          type: string
+        party_id:
+          type: string
+        name:
+          type: string
+          nullable: true
+        address:
+          type: string
+        city:
+          type: string
+        postal_code:
+          type: string
+          nullable: true
+        country:
+          type: string
+        coordinates:
+          $ref: '#/components/schemas/GeoLocation'
+        parking_type:
+          type: string
+          enum:
+            - ALONG_MOTORWAY
+            - PARKING_GARAGE
+            - PARKING_LOT
+            - ON_DRIVEWAY
+            - ON_STREET
+            - UNDERGROUND_GARAGE
+          nullable: true
+        evses:
+          type: array
+          items:
+            $ref: '#/components/schemas/Evse'
+          nullable: true
+    GeoLocation:
+      required:
+        - latitude
+        - longitude
+      type: object
+      properties:
+        latitude:
+          type: string
+        longitude:
+          type: string
+    Evse:
+      type: object
+      properties:
+        uid:
+          type: string
+          description: |-
+            Uniquely identifies the EVSE within the CPOs platform (and
+            suboperator platforms).
+        evse_id:
+          type: string
+          nullable: true
+        connectors:
+          type: array
+          items:
+            $ref: '#/components/schemas/Connector'
+      required:
+        - uid
+        - status
+        - connectors
+    Connector:
+      required:
+        - format
+        - id
+        - max_amperage
+        - max_voltage
+        - power_type
+        - standard
+      type: object
+      properties:
+        id:
+          type: string
+        standard:
+          type: string
+          enum:
+            - CHADEMO
+            - CHAOJI
+            - DOMESTIC_A
+            - DOMESTIC_B
+            - DOMESTIC_C
+            - DOMESTIC_D
+            - DOMESTIC_E
+            - DOMESTIC_F
+            - DOMESTIC_G
+            - DOMESTIC_H
+            - DOMESTIC_I
+            - DOMESTIC_J
+            - DOMESTIC_K
+            - DOMESTIC_L
+            - GBT_AC
+            - GBT_DC
+            - IEC_60309_2_single_16
+            - IEC_60309_2_three_16
+            - IEC_60309_2_three_32
+            - IEC_60309_2_three_64
+            - IEC_62196_T1
+            - IEC_62196_T1_COMBO
+            - IEC_62196_T2
+            - IEC_62196_T2_COMBO
+            - IEC_62196_T3A
+            - IEC_62196_T3C
+            - NEMA_5_20
+            - NEMA_6_30
+            - NEMA_6_50
+            - NEMA_10_30
+            - NEMA_10_50
+            - NEMA_14_30
+            - NEMA_14_50
+            - PANTOGRAPH_BOTTOM_UP
+            - PANTOGRAPH_TOP_DOWN
+            - TESLA_R
+            - TESLA_S
+            - UNKNOWN
+        format:
+          type: string
+          enum:
+            - SOCKET
+            - CABLE
+        power_type:
+          type: string
+          enum:
+            - AC_1_PHASE
+            - AC_3_PHASE
+            - DC
+        max_voltage:
+          type: integer
+          format: int32
+        max_amperage:
+          type: integer
+          format: int32
 
 
 

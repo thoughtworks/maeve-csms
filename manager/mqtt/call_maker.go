@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp16"
+	"golang.org/x/exp/slog"
 	"reflect"
 )
 
@@ -35,6 +36,7 @@ func (b BasicCallMaker) Send(ctx context.Context, chargeStationId string, reques
 		RequestPayload: requestBytes,
 	}
 
+	slog.Info("sending message", "action", msg.Action, "chargeStationId", chargeStationId)
 	return b.E.Emit(ctx, chargeStationId, msg)
 }
 

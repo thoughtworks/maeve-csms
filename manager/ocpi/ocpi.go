@@ -3,8 +3,12 @@
 package ocpi
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/thoughtworks/maeve-csms/manager/store"
 	"net/http"
 )
@@ -19,6 +23,7 @@ type Api interface {
 	SetCredentials(ctx context.Context, token string, credentials Credentials) error
 	SetToken(ctx context.Context, token Token) error
 	GetToken(ctx context.Context, countryCode string, partyID string, tokenUID string) (*Token, error)
+	PushLocation(ctx context.Context, location Location) error
 }
 
 type OCPI struct {
@@ -58,6 +63,11 @@ func (o *OCPI) GetVersion(context.Context) (VersionDetail, error) {
 				Identifier: "credentials",
 				Role:       RECEIVER,
 				Url:        fmt.Sprintf("%s/ocpi/2.2/credentials", o.externalUrl),
+			},
+			{
+				Identifier: "commands",
+				Role:       RECEIVER,
+				Url:        fmt.Sprintf("%s/ocpi/receiver/2.2/commands", o.externalUrl),
 			},
 			{
 				Identifier: "tokens",
@@ -152,4 +162,100 @@ func (o *OCPI) SetToken(ctx context.Context, token Token) error {
 	}
 
 	return o.store.SetToken(ctx, tok)
+}
+
+func (o *OCPI) PushLocation(ctx context.Context, location Location) error {
+	parties, err := o.store.ListPartyDetailsForRole(ctx, "EMSP")
+	if err != nil {
+		return err
+	}
+	for _, party := range parties {
+		err = o.pushLocationToParty(ctx, party, location)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (o *OCPI) pushLocationToParty(ctx context.Context, party *store.OcpiParty, location Location) error {
+	// TODO: retrieve endpoints from store, not via OCPI exchange
+	versions, err := o.getVersions(ctx, party.Url, party.Token)
+	if err != nil {
+		return err
+	}
+
+	endpointUrl, err := getEndpointUrl(versions)
+	if err != nil {
+		return err
+	}
+
+	endpoints, err := o.getEndpoints(ctx, endpointUrl, party.Token)
+	if err != nil {
+		return err
+	}
+
+	locationsUrl, err := o.getLocationsUrl(endpoints)
+	if err != nil {
+		return err
+	}
+
+	err = o.putLocation(ctx, locationsUrl, party.CountryCode, party.PartyId, party.Token, location)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (o *OCPI) getLocationsUrl(endpoints []Endpoint) (string, error) {
+	for _, endpoint := range endpoints {
+		if endpoint.Identifier == "locations" && endpoint.Role == RECEIVER {
+			return fmt.Sprintf("%s/%s/%s", endpoint.Url, o.countryCode, o.partyId), nil
+		}
+	}
+	return "", errors.New("no locations endpoint for receiver found")
+}
+
+func (o *OCPI) putLocation(ctx context.Context, url string, toCountryCode string, toPartyId string, token string, location Location) error {
+	b, err := json.Marshal(location)
+	if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPut, fmt.Sprintf("%s/%s", url, location.Id), bytes.NewReader(b))
+	if err != nil {
+		return err
+	}
+	o.setRequestHeaders(ctx, req, token, toCountryCode, toPartyId)
+
+	resp, err := o.httpClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = resp.Body.Close()
+	}()
+
+	if resp.StatusCode != http.StatusCreated {
+		return fmt.Errorf("status code: %d", resp.StatusCode)
+	}
+
+	return nil
+}
+
+func (o *OCPI) setRequestHeaders(ctx context.Context, req *http.Request, token string, toCountryCode string, toPartyId string) {
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", fmt.Sprintf("Token %s", token))
+	req.Header.Set("X-Request-ID", uuid.New().String())
+	value, ok := ctx.Value(ContextKeyCorrelationId).(string)
+	if !ok {
+		value = uuid.New().String()
+	}
+	req.Header.Set("X-Correlation-ID", value)
+	req.Header.Set("OCPI-from-country-code", o.countryCode)
+	req.Header.Set("OCPI-from-party-id", o.partyId)
+	req.Header.Set("OCPI-to-country-code", toCountryCode)
+	req.Header.Set("OCPI-to-party-id", toPartyId)
 }

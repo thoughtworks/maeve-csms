@@ -4,6 +4,10 @@ package ocpi
 
 import "net/http"
 
+func (OcpiResponseCommandResponse) Render(http.ResponseWriter, *http.Request) error {
+	return nil
+}
+
 func (OcpiResponseListVersion) Render(http.ResponseWriter, *http.Request) error {
 	return nil
 }
@@ -21,5 +25,9 @@ func (Credentials) Bind(r *http.Request) error {
 }
 
 func (Token) Bind(r *http.Request) error {
+	return nil
+}
+
+func (StartSession) Bind(r *http.Request) error {
 	return nil
 }

@@ -3,23 +3,32 @@
 package ocpi
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/go-chi/render"
+	"github.com/thoughtworks/maeve-csms/manager/mqtt"
+	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp16"
+	"golang.org/x/exp/slog"
 	"k8s.io/utils/clock"
 	"net/http"
+	"regexp"
+	"strconv"
 	"time"
 )
 
 type Server struct {
-	ocpi  Api
-	clock clock.PassiveClock
+	ocpi         Api
+	clock        clock.PassiveClock
+	v16CallMaker mqtt.BasicCallMaker
 }
 
-func NewServer(ocpi Api, clock clock.PassiveClock) (*Server, error) {
+func NewServer(ocpi Api, clock clock.PassiveClock, v16CallMaker mqtt.BasicCallMaker) (*Server, error) {
 	return &Server{
-		ocpi:  ocpi,
-		clock: clock,
+		ocpi:         ocpi,
+		clock:        clock,
+		v16CallMaker: v16CallMaker,
 	}, nil
 }
 
@@ -79,6 +88,7 @@ func (s *Server) PostCredentials(w http.ResponseWriter, r *http.Request, params 
 
 	err := s.ocpi.SetCredentials(r.Context(), matches[1], *creds)
 	if err != nil {
+		slog.Error("Error setting credentials", "err", err)
 		_ = render.Render(w, r, ErrInternalError(err))
 		return
 	}
@@ -237,7 +247,55 @@ func (s *Server) PostReserveNow(w http.ResponseWriter, r *http.Request, params P
 }
 
 func (s *Server) PostStartSession(w http.ResponseWriter, r *http.Request, params PostStartSessionParams) {
-	w.WriteHeader(http.StatusNotImplemented)
+	// TODO: the following code supports OCPP 1.6 only, but we need to support 2.0 as well
+	// need to store OCPP protocol version for charge points on first connection
+	// need to create two handlers, one for 1.6 and one for 2.0, and call the right one based on the protocol version
+	startSession := new(StartSession)
+	if err := render.Bind(r, startSession); err != nil {
+		_ = render.Render(w, r, ErrInvalidRequest(err))
+		return
+	}
+	var chargeStationId string
+	if startSession.EvseUid == nil || startSession.ConnectorId == nil {
+		_ = render.Render(w, r, ErrInvalidRequest(errors.New("CSMS does not support start session commands without evse_uid and connector_id")))
+		return
+	} else {
+		// TODO: this needs to become a service with a configurable pattern
+		extractedChargeStationId, err := extractChargeStationId(*startSession.EvseUid)
+		if err != nil {
+			slog.Error("error extracting charge station id", "err", err)
+			_ = render.Render(w, r, ErrInvalidRequest(err))
+			return
+		}
+		chargeStationId = extractedChargeStationId
+	}
+	// We need to store the token because the StartSession handler currently expects the idTag it receives in the store
+	err := s.ocpi.SetToken(context.Background(), startSession.Token)
+	if err != nil {
+		_ = render.Render(w, r, ErrInvalidRequest(err))
+		return
+	}
+	connectorId, err := strconv.Atoi(*startSession.ConnectorId)
+	if err != nil {
+		_ = render.Render(w, r, ErrInvalidRequest(err))
+		return
+	}
+	remoteStartTransactionReq := ocpp16.RemoteStartTransactionJson{
+		ConnectorId: &connectorId,
+		IdTag:       startSession.Token.Uid,
+	}
+	commandResponse := CommandResponse{Result: CommandResponseResultACCEPTED}
+	err = s.v16CallMaker.Send(context.Background(), chargeStationId, &remoteStartTransactionReq)
+	if err != nil {
+		slog.Error("error sending mqtt message", "err", err)
+		commandResponse = CommandResponse{Result: CommandResponseResultREJECTED}
+	}
+	_ = render.Render(w, r, OcpiResponseCommandResponse{
+		StatusCode:    StatusSuccess,
+		StatusMessage: &StatusSuccessMessage,
+		Timestamp:     s.clock.Now().Format(time.RFC3339),
+		Data:          &commandResponse,
+	})
 }
 
 func (s *Server) PostStopSession(w http.ResponseWriter, r *http.Request, params PostStopSessionParams) {
@@ -370,4 +428,16 @@ func (s *Server) GetTokensPageFromDataOwner(w http.ResponseWriter, r *http.Reque
 
 func (s *Server) PostRealTimeTokenAuthorization(w http.ResponseWriter, r *http.Request, tokenUID string, params PostRealTimeTokenAuthorizationParams) {
 	w.WriteHeader(http.StatusNotImplemented)
+}
+
+func extractChargeStationId(evseId string) (string, error) {
+	pattern := `^[a-zA-Z]{5}E([a-zA-Z0-9]+)?$`
+	regex := regexp.MustCompile(pattern)
+	match := regex.FindStringSubmatch(evseId)
+	if len(match) >= 2 {
+		chargePointID := match[1]
+		return chargePointID, nil
+	} else {
+		return "", fmt.Errorf("invalid EVSE ID format, could not extract charge point ID: %s", evseId)
+	}
 }

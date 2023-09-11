@@ -6,6 +6,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/rs/cors"
+	"github.com/thoughtworks/maeve-csms/manager/mqtt"
 	"github.com/thoughtworks/maeve-csms/manager/ocpi"
 	"github.com/thoughtworks/maeve-csms/manager/store"
 	"github.com/unrolled/secure"
@@ -14,8 +15,8 @@ import (
 	"os"
 )
 
-func NewOcpiHandler(engine store.Engine, clock clock.PassiveClock, ocpiApi ocpi.Api) http.Handler {
-	ocpiServer, err := ocpi.NewServer(ocpiApi, clock)
+func NewOcpiHandler(engine store.Engine, clock clock.PassiveClock, ocpiApi ocpi.Api, v16CallMaker mqtt.BasicCallMaker) http.Handler {
+	ocpiServer, err := ocpi.NewServer(ocpiApi, clock, v16CallMaker)
 	if err != nil {
 		panic(err)
 	}

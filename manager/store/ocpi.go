@@ -32,4 +32,5 @@ type OcpiStore interface {
 
 	SetPartyDetails(ctx context.Context, partyDetails *OcpiParty) error
 	GetPartyDetails(ctx context.Context, role, countryCode, partyId string) (*OcpiParty, error)
+	ListPartyDetailsForRole(ctx context.Context, role string) ([]*OcpiParty, error)
 }

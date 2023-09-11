@@ -10,4 +10,5 @@ type Engine interface {
 	TransactionStore
 	CertificateStore
 	OcpiStore
+	LocationStore
 }

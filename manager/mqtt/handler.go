@@ -190,6 +190,9 @@ func ensureDefaults(h *Handler) {
 }
 
 func (h *Handler) Connect(errCh chan error) {
+	ctx, cancel := context.WithTimeout(context.Background(), h.mqttConnectTimeout)
+	defer cancel()
+
 	// ProxyEmitter supports late binding of the E implementation
 	v16Emitter := &ProxyEmitter{}
 	v201Emitter := &ProxyEmitter{}
@@ -240,6 +243,13 @@ func (h *Handler) Connect(errCh chan error) {
 	if err != nil {
 		errCh <- err
 		return
+	}
+
+	select {
+	case <-ctx.Done():
+		errCh <- errors.New("timeout waiting for mqtt connection setup")
+	case <-readyCh:
+		// do nothing
 	}
 
 	v16SyncCallMaker := &BasicCallMaker{

@@ -3982,6 +3982,8 @@ components:
           type: string
         evse_uid:
           type: string
+        connector_id:
+          type: string
         authorization_reference:
           type: string
     StopSession:

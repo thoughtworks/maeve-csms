@@ -78,3 +78,27 @@ func TestSetAndLookupPartyDetails(t *testing.T) {
 
 	assert.Equal(t, want, got)
 }
+
+func TestSetAndListPartyDetails(t *testing.T) {
+	ctx := context.Background()
+
+	engine, err := firestore.NewStore(ctx, "myproject", clock.RealClock{})
+	require.NoError(t, err)
+
+	want := &store.OcpiParty{
+		Role:        "EMSP",
+		CountryCode: "GB",
+		PartyId:     "TWK",
+		Url:         "https://example.com/ocpi/versions",
+		Token:       "abcdef123456",
+	}
+
+	err = engine.SetPartyDetails(ctx, want)
+	require.NoError(t, err)
+
+	got, err := engine.ListPartyDetailsForRole(ctx, "EMSP")
+	require.NoError(t, err)
+
+	assert.Equal(t, 1, len(got))
+	assert.Equal(t, want, got[0])
+}
