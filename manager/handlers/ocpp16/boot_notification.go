@@ -51,18 +51,20 @@ func (b BootNotificationHandler) HandleCall(ctx context.Context, chargeStationId
 		return nil, err
 	}
 
-	updated := false
-	for _, setting := range settings.Settings {
-		if setting.Status == store.ChargeStationSettingStatusRebootRequired {
-			setting.Status = store.ChargeStationSettingStatusAccepted
-			updated = true
+	if settings != nil && settings.Settings != nil {
+		updated := false
+		for _, setting := range settings.Settings {
+			if setting.Status == store.ChargeStationSettingStatusRebootRequired {
+				setting.Status = store.ChargeStationSettingStatusAccepted
+				updated = true
+			}
 		}
-	}
 
-	if updated {
-		err = b.SettingsStore.UpdateChargeStationSettings(ctx, chargeStationId, settings)
-		if err != nil {
-			return nil, err
+		if updated {
+			err = b.SettingsStore.UpdateChargeStationSettings(ctx, chargeStationId, settings)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
