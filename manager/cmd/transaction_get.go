@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"k8s.io/utils/clock"
 
 	"github.com/spf13/cobra"
 	"github.com/thoughtworks/maeve-csms/manager/store"
@@ -27,7 +28,7 @@ var getTransactionsCmd = &cobra.Command{
 	Long:  long,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		ctx := context.Background()
-		transactionStore, err := firestore.NewStore(ctx, gcloudProject)
+		transactionStore, err := firestore.NewStore(ctx, gcloudProject, clock.RealClock{})
 		if err != nil {
 			return fmt.Errorf("creating transaction store: %w", err)
 		}

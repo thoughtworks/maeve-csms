@@ -34,8 +34,7 @@ type Router struct {
 
 func NewV16Router(emitter Emitter,
 	clk clock.PassiveClock,
-	tokenStore store.TokenStore,
-	transactionStore store.TransactionStore,
+	engine store.Engine,
 	certValidationService services.CertificateValidationService,
 	chargeStationCertProvider services.ChargeStationCertificateProvider,
 	contractCertProvider services.ContractCertificateProvider,
@@ -56,6 +55,13 @@ func NewV16Router(emitter Emitter,
 		},
 	}
 
+	standardCallMaker := BasicCallMaker{
+		E: emitter,
+		Actions: map[reflect.Type]string{
+			reflect.TypeOf(&ocpp16.TriggerMessageJson{}): "TriggerMessage",
+		},
+	}
+
 	return &Router{
 		CallRoutes: map[string]handlers.CallRoute{
 			"BootNotification": {
@@ -63,8 +69,10 @@ func NewV16Router(emitter Emitter,
 				RequestSchema:  "ocpp16/BootNotification.json",
 				ResponseSchema: "ocpp16/BootNotificationResponse.json",
 				Handler: handlers16.BootNotificationHandler{
-					Clock:             clk,
-					HeartbeatInterval: int(heartbeatInterval.Seconds()),
+					Clock:               clk,
+					RuntimeDetailsStore: engine,
+					SettingsStore:       engine,
+					HeartbeatInterval:   int(heartbeatInterval.Seconds()),
 				},
 			},
 			"Heartbeat": {
@@ -86,7 +94,7 @@ func NewV16Router(emitter Emitter,
 				RequestSchema:  "ocpp16/Authorize.json",
 				ResponseSchema: "ocpp16/AuthorizeResponse.json",
 				Handler: handlers16.AuthorizeHandler{
-					TokenStore: tokenStore,
+					TokenStore: engine,
 				},
 			},
 			"StartTransaction": {
@@ -95,8 +103,8 @@ func NewV16Router(emitter Emitter,
 				ResponseSchema: "ocpp16/StartTransactionResponse.json",
 				Handler: handlers16.StartTransactionHandler{
 					Clock:            clk,
-					TokenStore:       tokenStore,
-					TransactionStore: transactionStore,
+					TokenStore:       engine,
+					TransactionStore: engine,
 				},
 			},
 			"StopTransaction": {
@@ -105,8 +113,8 @@ func NewV16Router(emitter Emitter,
 				ResponseSchema: "ocpp16/StopTransactionResponse.json",
 				Handler: handlers16.StopTransactionHandler{
 					Clock:            clk,
-					TokenStore:       tokenStore,
-					TransactionStore: transactionStore,
+					TokenStore:       engine,
+					TransactionStore: engine,
 				},
 			},
 			"MeterValues": {
@@ -114,7 +122,7 @@ func NewV16Router(emitter Emitter,
 				RequestSchema:  "ocpp16/MeterValues.json",
 				ResponseSchema: "ocpp16/MeterValuesResponse.json",
 				Handler: handlers16.MeterValuesHandler{
-					TransactionStore: transactionStore,
+					TransactionStore: engine,
 				},
 			},
 			"DataTransfer": {
@@ -130,7 +138,7 @@ func NewV16Router(emitter Emitter,
 								RequestSchema:  "ocpp201/AuthorizeRequest.json",
 								ResponseSchema: "ocpp201/AuthorizeResponse.json",
 								Handler: handlers201.AuthorizeHandler{
-									TokenStore:                   tokenStore,
+									TokenStore:                   engine,
 									CertificateValidationService: certValidationService,
 								},
 							},
@@ -167,7 +175,7 @@ func NewV16Router(emitter Emitter,
 								ResponseSchema: "has2be/AuthorizeResponse.json",
 								Handler: handlersHasToBe.AuthorizeHandler{
 									Handler201: handlers201.AuthorizeHandler{
-										TokenStore:                   tokenStore,
+										TokenStore:                   engine,
 										CertificateValidationService: certValidationService,
 									},
 								},
@@ -238,14 +246,30 @@ func NewV16Router(emitter Emitter,
 					},
 				},
 			},
+			"ChangeConfiguration": {
+				NewRequest:     func() ocpp.Request { return new(ocpp16.ChangeConfigurationJson) },
+				NewResponse:    func() ocpp.Response { return new(ocpp16.ChangeConfigurationResponseJson) },
+				RequestSchema:  "ocpp16/ChangeConfiguration.json",
+				ResponseSchema: "ocpp16/ChangeConfigurationResponse.json",
+				Handler: handlers16.ChangeConfigurationResultHandler{
+					SettingsStore: engine,
+					CallMaker:     standardCallMaker,
+				},
+			},
+			"TriggerMessage": {
+				NewRequest:     func() ocpp.Request { return new(ocpp16.TriggerMessageJson) },
+				NewResponse:    func() ocpp.Response { return new(ocpp16.TriggerMessageResponseJson) },
+				RequestSchema:  "ocpp16/TriggerMessage.json",
+				ResponseSchema: "ocpp16/TriggerMessageResponse.json",
+				Handler:        handlers16.TriggerMessageResultHandler{},
+			},
 		},
 	}
 }
 
 func NewV201Router(emitter Emitter,
 	clk clock.PassiveClock,
-	tokenStore store.TokenStore,
-	transactionStore store.TransactionStore,
+	engine store.Engine,
 	tariffService services.TariffService,
 	certValidationService services.CertificateValidationService,
 	chargeStationCertProvider services.ChargeStationCertificateProvider,
@@ -289,7 +313,7 @@ func NewV201Router(emitter Emitter,
 				RequestSchema:  "ocpp201/AuthorizeRequest.json",
 				ResponseSchema: "ocpp201/AuthorizeResponse.json",
 				Handler: handlers201.AuthorizeHandler{
-					TokenStore:                   tokenStore,
+					TokenStore:                   engine,
 					CertificateValidationService: certValidationService,
 				},
 			},
@@ -298,7 +322,7 @@ func NewV201Router(emitter Emitter,
 				RequestSchema:  "ocpp201/TransactionEventRequest.json",
 				ResponseSchema: "ocpp201/TransactionEventResponse.json",
 				Handler: handlers201.TransactionEventHandler{
-					TransactionStore: transactionStore,
+					TransactionStore: engine,
 					TariffService:    tariffService,
 				},
 			},

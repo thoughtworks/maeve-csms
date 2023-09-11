@@ -352,7 +352,7 @@ func TestRegisterLocation(t *testing.T) {
 }
 
 func setupServer(t *testing.T) (*httptest.Server, *chi.Mux, store.Engine, clock.PassiveClock) {
-	engine := inmemory.NewStore()
+	engine := inmemory.NewStore(clock.RealClock{})
 	ocpiApi := ocpi.NewOCPI(engine, nil, "GB", "TWK")
 
 	now := time.Now().UTC()

@@ -9,6 +9,11 @@ import (
 	"encoding/base64"
 	"encoding/pem"
 	"fmt"
+	"golang.org/x/exp/maps"
+	"golang.org/x/exp/slices"
+	"k8s.io/utils/clock"
+	"math"
+	"sort"
 	"sync"
 	"time"
 
@@ -20,24 +25,30 @@ import (
 // instances. It is primarily provided to support unit testing.
 type Store struct {
 	sync.Mutex
-	chargeStationAuth map[string]*store.ChargeStationAuth
-	tokens            map[string]*store.Token
-	transactions      map[string]*store.Transaction
-	certificates      map[string]string
-	registrations     map[string]*store.OcpiRegistration
-	partyDetails      map[string]*store.OcpiParty
-	locations         map[string]*store.Location
+	clock                       clock.PassiveClock
+	chargeStationAuth           map[string]*store.ChargeStationAuth
+	chargeStationSettings       map[string]*store.ChargeStationSettings
+	chargeStationRuntimeDetails map[string]*store.ChargeStationRuntimeDetails
+	tokens                      map[string]*store.Token
+	transactions                map[string]*store.Transaction
+	certificates                map[string]string
+	registrations               map[string]*store.OcpiRegistration
+	partyDetails                map[string]*store.OcpiParty
+	locations                   map[string]*store.Location
 }
 
-func NewStore() *Store {
+func NewStore(clock clock.PassiveClock) *Store {
 	return &Store{
-		chargeStationAuth: make(map[string]*store.ChargeStationAuth),
-		tokens:            make(map[string]*store.Token),
-		transactions:      make(map[string]*store.Transaction),
-		certificates:      make(map[string]string),
-		registrations:     make(map[string]*store.OcpiRegistration),
-		partyDetails:      make(map[string]*store.OcpiParty),
-		locations:         make(map[string]*store.Location),
+		clock:                       clock,
+		chargeStationAuth:           make(map[string]*store.ChargeStationAuth),
+		chargeStationSettings:       make(map[string]*store.ChargeStationSettings),
+		chargeStationRuntimeDetails: make(map[string]*store.ChargeStationRuntimeDetails),
+		tokens:                      make(map[string]*store.Token),
+		transactions:                make(map[string]*store.Transaction),
+		certificates:                make(map[string]string),
+		registrations:               make(map[string]*store.OcpiRegistration),
+		partyDetails:                make(map[string]*store.OcpiParty),
+		locations:                   make(map[string]*store.Location),
 	}
 }
 
@@ -52,6 +63,71 @@ func (s *Store) LookupChargeStationAuth(_ context.Context, chargeStationId strin
 	s.Lock()
 	defer s.Unlock()
 	return s.chargeStationAuth[chargeStationId], nil
+}
+
+func (s *Store) UpdateChargeStationSettings(_ context.Context, chargeStationId string, settings *store.ChargeStationSettings) error {
+	s.Lock()
+	defer s.Unlock()
+	set := s.chargeStationSettings[chargeStationId]
+	now := s.clock.Now().UTC()
+	if set == nil {
+		set = &store.ChargeStationSettings{
+			ChargeStationId: chargeStationId,
+			Settings:        make(map[string]*store.ChargeStationSetting, len(settings.Settings)),
+		}
+		maps.Copy(set.Settings, settings.Settings)
+		for _, v := range set.Settings {
+			v.LastUpdated = now
+		}
+	} else {
+		for k, v := range settings.Settings {
+			set.Settings[k] = v
+			set.Settings[k].LastUpdated = now
+		}
+	}
+	s.chargeStationSettings[chargeStationId] = set
+	return nil
+}
+
+func (s *Store) LookupChargeStationSettings(_ context.Context, chargeStationId string) (*store.ChargeStationSettings, error) {
+	s.Lock()
+	defer s.Unlock()
+	return s.chargeStationSettings[chargeStationId], nil
+}
+
+func (s *Store) ListChargeStationSettings(_ context.Context, pageSize int, previousChargeStationId string) ([]*store.ChargeStationSettings, error) {
+	s.Lock()
+	defer s.Unlock()
+
+	keys := maps.Keys(s.chargeStationSettings)
+	sort.Strings(keys)
+
+	i, found := slices.BinarySearch(keys, previousChargeStationId)
+	if !found {
+		i = 0
+	} else {
+		i++
+	}
+
+	var settings []*store.ChargeStationSettings
+	max := int(math.Min(float64(i+pageSize), float64(len(keys))))
+	for _, k := range keys[i:max] {
+		settings = append(settings, s.chargeStationSettings[k])
+	}
+	return settings, nil
+}
+
+func (s *Store) SetChargeStationRuntimeDetails(_ context.Context, chargeStationId string, details *store.ChargeStationRuntimeDetails) error {
+	s.Lock()
+	defer s.Unlock()
+	s.chargeStationRuntimeDetails[chargeStationId] = details
+	return nil
+}
+
+func (s *Store) LookupChargeStationRuntimeDetails(_ context.Context, chargeStationId string) (*store.ChargeStationRuntimeDetails, error) {
+	s.Lock()
+	defer s.Unlock()
+	return s.chargeStationRuntimeDetails[chargeStationId], nil
 }
 
 func (s *Store) SetToken(_ context.Context, token *store.Token) error {

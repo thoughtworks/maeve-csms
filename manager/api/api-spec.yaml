@@ -26,7 +26,7 @@ paths:
           description: "The charge station identifier"
           schema:
             type: "string"
-            maxLength: 64
+            maxLength: 28
       requestBody:
         required: true
         content:
@@ -36,6 +36,37 @@ paths:
       responses:
         "201":
           description: "Created"
+        default:
+          description: "Unexpected error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Status"
+  /cs/{csId}/reconfigure:
+    post:
+      summary: "Reconfigure the charge station"
+      description: |
+        Supplies new configuration that should be applied to the charge station. This is not
+        intended to be used as a general charge station provisioning mechanism, it is intended
+        for one time changes required during testing. After reconfiguration, the charge station
+        will be rebooted so the new configuration can take effect if instructed to.
+      operationId: "reconfigureChargeStation"
+      parameters:
+        - name: "csId"
+          in: "path"
+          description: "The charge station identifier"
+          schema:
+            type: "string"
+            maxLength: 28
+      requestBody:
+        required: true
+        content:
+          "application/json":
+            schema:
+              $ref: "#/components/schemas/ChargeStationSettings"
+      responses:
+        "200":
+          description: "OK"
         default:
           description: "Unexpected error"
           content:
@@ -55,7 +86,7 @@ paths:
           description: "The charge station identifier"
           schema:
             type: "string"
-            maxLength: 64
+            maxLength: 28
       responses:
         "200":
           description: "Charge station auth response"
@@ -315,6 +346,12 @@ components:
           type: "string"
           maxLength: 64
           description: "The base64 encoded, SHA-256 hash of the charge station password"
+    ChargeStationSettings:
+      type: "object"
+      description: "Settings for a charge station"
+      additionalProperties:
+        type: "string"
+        maxLength: 500
     Token:
       type: "object"
       description: "An authorization token"

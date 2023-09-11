@@ -22,7 +22,7 @@ import (
 )
 
 func TestSwaggerHandler(t *testing.T) {
-	engine := inmemory.NewStore()
+	engine := inmemory.NewStore(clock.RealClock{})
 	ocpiApi := ocpi.NewOCPI(engine, http.DefaultClient, "GB", "TWK")
 	handler := NewOcpiHandler(engine, clock.RealClock{}, ocpiApi, newNoopV16CallMaker())
 
@@ -53,7 +53,7 @@ func TestSwaggerHandler(t *testing.T) {
 
 func TestAPIRequestWithValidToken(t *testing.T) {
 	token := "abcdef123456"
-	engine := inmemory.NewStore()
+	engine := inmemory.NewStore(clock.RealClock{})
 	err := engine.SetRegistrationDetails(context.Background(), token, &store.OcpiRegistration{Status: store.OcpiRegistrationStatusPending})
 	require.NoError(t, err)
 	now, err := time.Parse(time.RFC3339, "2023-06-15T15:05:00Z")
@@ -86,7 +86,7 @@ func TestAPIRequestWithValidToken(t *testing.T) {
 
 func TestAPIRequestWithInvalidToken(t *testing.T) {
 	token := "abcdef123456"
-	engine := inmemory.NewStore()
+	engine := inmemory.NewStore(clock.RealClock{})
 	ocpiApi := ocpi.NewOCPI(engine, http.DefaultClient, "GB", "TWK")
 	handler := NewOcpiHandler(engine, clock.RealClock{}, ocpiApi, newNoopV16CallMaker())
 

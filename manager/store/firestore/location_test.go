@@ -11,13 +11,14 @@ import (
 	"github.com/thoughtworks/maeve-csms/manager/store"
 	"github.com/thoughtworks/maeve-csms/manager/store/firestore"
 	"golang.org/x/net/context"
+	"k8s.io/utils/clock"
 	"math/rand"
 	"testing"
 )
 
 func TestSetAndLookupLocation(t *testing.T) {
 	ctx := context.Background()
-	locationStore, err := firestore.NewStore(ctx, "myproject")
+	locationStore, err := firestore.NewStore(ctx, "myproject", clock.RealClock{})
 	require.NoError(t, err)
 
 	want := &store.Location{
@@ -47,7 +48,7 @@ func TestSetAndLookupLocation(t *testing.T) {
 
 func TestListLocations(t *testing.T) {
 	ctx := context.Background()
-	locationStore, err := firestore.NewStore(ctx, "myproject")
+	locationStore, err := firestore.NewStore(ctx, "myproject", clock.RealClock{})
 	require.NoError(t, err)
 
 	locations := make([]*store.Location, 20)

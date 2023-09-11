@@ -83,6 +83,10 @@ func TestMqttConnection(t *testing.T) {
 	err = mqttClient.AwaitConnection(ctx)
 	require.NoError(t, err)
 
+	defer func() {
+		_ = mqttClient.Disconnect(ctx)
+	}()
+
 	// publish a message to the input channel
 	msg := mqtt.Message{
 		MessageType:    mqtt.MessageTypeCall,

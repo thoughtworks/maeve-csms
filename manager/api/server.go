@@ -57,6 +57,30 @@ func (s *Server) RegisterChargeStation(w http.ResponseWriter, r *http.Request, c
 	w.WriteHeader(http.StatusCreated)
 }
 
+func (s *Server) ReconfigureChargeStation(w http.ResponseWriter, r *http.Request, csId string) {
+	req := new(ChargeStationSettings)
+	if err := render.Bind(r, req); err != nil {
+		_ = render.Render(w, r, ErrInvalidRequest(err))
+		return
+	}
+
+	chargeStationSettings := make(map[string]*store.ChargeStationSetting)
+	for k, v := range *req {
+		chargeStationSettings[k] = &store.ChargeStationSetting{
+			Value:  v,
+			Status: store.ChargeStationSettingStatusPending,
+		}
+	}
+
+	err := s.store.UpdateChargeStationSettings(r.Context(), csId, &store.ChargeStationSettings{
+		Settings: chargeStationSettings,
+	})
+	if err != nil {
+		_ = render.Render(w, r, ErrInternalError(err))
+		return
+	}
+}
+
 func (s *Server) LookupChargeStationAuth(w http.ResponseWriter, r *http.Request, csId string) {
 	auth, err := s.store.LookupChargeStationAuth(r.Context(), csId)
 	if err != nil {

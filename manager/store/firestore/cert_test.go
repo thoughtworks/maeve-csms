@@ -17,6 +17,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/thoughtworks/maeve-csms/manager/store/firestore"
+	"k8s.io/utils/clock"
 	"math/big"
 	"testing"
 	"time"
@@ -29,7 +30,7 @@ func TestSetAndLookupAndDeleteCertificate(t *testing.T) {
 
 	pemCertificate := string(pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: cert.Raw}))
 
-	store, err := firestore.NewStore(ctx, "myproject")
+	store, err := firestore.NewStore(ctx, "myproject", clock.RealClock{})
 	require.NoError(t, err)
 
 	err = store.SetCertificate(ctx, pemCertificate)

@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"google.golang.org/api/iterator"
+	"k8s.io/utils/clock"
 	"testing"
 
 	firestoreapi "cloud.google.com/go/firestore"
@@ -52,7 +53,7 @@ func TestSetAndLookupToken(t *testing.T) {
 
 	ctx := context.Background()
 
-	tokenStore, err := firestore.NewStore(ctx, "myproject")
+	tokenStore, err := firestore.NewStore(ctx, "myproject", clock.RealClock{})
 	require.NoError(t, err)
 
 	contractId, err := ocpp.NormalizeEmaid("GB-TWK-C12345678")
@@ -84,7 +85,7 @@ func TestLookupTokenThatDoesNotExist(t *testing.T) {
 
 	ctx := context.Background()
 
-	tokenStore, err := firestore.NewStore(ctx, "myproject")
+	tokenStore, err := firestore.NewStore(ctx, "myproject", clock.RealClock{})
 	require.NoError(t, err)
 
 	got, err := tokenStore.LookupToken(ctx, "unknown-rfid")
@@ -97,7 +98,7 @@ func TestListTokensWithNoMatches(t *testing.T) {
 
 	ctx := context.Background()
 
-	tokenStore, err := firestore.NewStore(ctx, "myproject")
+	tokenStore, err := firestore.NewStore(ctx, "myproject", clock.RealClock{})
 	require.NoError(t, err)
 
 	got, err := tokenStore.ListTokens(ctx, 0, 10)
@@ -110,7 +111,7 @@ func TestListTokens(t *testing.T) {
 
 	ctx := context.Background()
 
-	tokenStore, err := firestore.NewStore(ctx, "myproject")
+	tokenStore, err := firestore.NewStore(ctx, "myproject", clock.RealClock{})
 	require.NoError(t, err)
 
 	contractId, err := ocpp.NormalizeEmaid("GB-TWK-C12345678")
@@ -152,7 +153,7 @@ func TestListTokensWithOffset(t *testing.T) {
 
 	ctx := context.Background()
 
-	tokenStore, err := firestore.NewStore(ctx, "myproject")
+	tokenStore, err := firestore.NewStore(ctx, "myproject", clock.RealClock{})
 	require.NoError(t, err)
 
 	contractId, err := ocpp.NormalizeEmaid("GB-TWK-C12345678")
