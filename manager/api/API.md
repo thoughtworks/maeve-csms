@@ -84,6 +84,57 @@ so it can been configured when it sends a boot notification.
 This operation does not require authentication
 </aside>
 
+## reconfigureChargeStation
+
+<a id="opIdreconfigureChargeStation"></a>
+
+`POST /cs/{csId}/reconfigure`
+
+*Reconfigure the charge station*
+
+Supplies new configuration that should be applied to the charge station. This is not
+intended to be used as a general charge station provisioning mechanism, it is intended
+for one time changes required during testing. After reconfiguration, the charge station
+will be rebooted so the new configuration can take effect if instructed to.
+
+> Body parameter
+
+```json
+{
+  "property1": "string",
+  "property2": "string"
+}
+```
+
+<h3 id="reconfigurechargestation-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|csId|path|string|false|The charge station identifier|
+|body|body|[ChargeStationSettings](#schemachargestationsettings)|true|none|
+
+> Example responses
+
+> default Response
+
+```json
+{
+  "status": "string",
+  "error": "string"
+}
+```
+
+<h3 id="reconfigurechargestation-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|OK|None|
+|default|Default|Unexpected error|[Status](#schemastatus)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
 ## lookupChargeStationAuth
 
 <a id="opIdlookupChargeStationAuth"></a>
@@ -490,6 +541,80 @@ a registration with the CSMS.
 This operation does not require authentication
 </aside>
 
+## registerLocation
+
+<a id="opIdregisterLocation"></a>
+
+`POST /location/{locationId}`
+
+*Registers a location with the CSMS*
+
+Registers a location with the CSMS.
+
+> Body parameter
+
+```json
+{
+  "country_code": "string",
+  "party_id": "string",
+  "name": "string",
+  "address": "string",
+  "city": "string",
+  "postal_code": "string",
+  "country": "string",
+  "coordinates": {
+    "latitude": "string",
+    "longitude": "string"
+  },
+  "parking_type": "ALONG_MOTORWAY",
+  "evses": [
+    {
+      "uid": "string",
+      "evse_id": "string",
+      "connectors": [
+        {
+          "id": "string",
+          "standard": "CHADEMO",
+          "format": "SOCKET",
+          "power_type": "AC_1_PHASE",
+          "max_voltage": 0,
+          "max_amperage": 0
+        }
+      ]
+    }
+  ]
+}
+```
+
+<h3 id="registerlocation-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|locationId|path|string|false|The location identifier|
+|body|body|[Location](#schemalocation)|true|none|
+
+> Example responses
+
+> default Response
+
+```json
+{
+  "status": "string",
+  "error": "string"
+}
+```
+
+<h3 id="registerlocation-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|201|[Created](https://tools.ietf.org/html/rfc7231#section-6.3.2)|Created|None|
+|default|Default|Unexpected error|[Status](#schemastatus)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
 # Schemas
 
 <h2 id="tocS_ChargeStationAuth">ChargeStationAuth</h2>
@@ -515,6 +640,29 @@ Connection details for a charge station
 |---|---|---|---|---|
 |securityProfile|integer|true|none|The security profile to use for the charge station: * `0` - unsecured transport with basic auth * `1` - TLS with basic auth * `2` - TLS with client certificate|
 |base64SHA256Password|string|false|none|The base64 encoded, SHA-256 hash of the charge station password|
+
+<h2 id="tocS_ChargeStationSettings">ChargeStationSettings</h2>
+<!-- backwards compatibility -->
+<a id="schemachargestationsettings"></a>
+<a id="schema_ChargeStationSettings"></a>
+<a id="tocSchargestationsettings"></a>
+<a id="tocschargestationsettings"></a>
+
+```json
+{
+  "property1": "string",
+  "property2": "string"
+}
+
+```
+
+Settings for a charge station
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|**additionalProperties**|string|false|none|The key is the name of the setting. For OCPP 2.0.1 the name should have the following pattern:<br><component>/<variable>. The component name can include an optional component instance name and evse id<br>separated by semi-colons. The variable name can include an optional variable instance name and attribute<br>type separated by semi-colons. The maximum length for OCPP 1.6 is 500 characters.|
 
 <h2 id="tocS_Token">Token</h2>
 <!-- backwards compatibility -->
@@ -651,4 +799,206 @@ Defines the initial connection details for the OCPI registration process
 |---|---|
 |status|PENDING|
 |status|REGISTERED|
+
+<h2 id="tocS_Location">Location</h2>
+<!-- backwards compatibility -->
+<a id="schemalocation"></a>
+<a id="schema_Location"></a>
+<a id="tocSlocation"></a>
+<a id="tocslocation"></a>
+
+```json
+{
+  "country_code": "string",
+  "party_id": "string",
+  "name": "string",
+  "address": "string",
+  "city": "string",
+  "postal_code": "string",
+  "country": "string",
+  "coordinates": {
+    "latitude": "string",
+    "longitude": "string"
+  },
+  "parking_type": "ALONG_MOTORWAY",
+  "evses": [
+    {
+      "uid": "string",
+      "evse_id": "string",
+      "connectors": [
+        {
+          "id": "string",
+          "standard": "CHADEMO",
+          "format": "SOCKET",
+          "power_type": "AC_1_PHASE",
+          "max_voltage": 0,
+          "max_amperage": 0
+        }
+      ]
+    }
+  ]
+}
+
+```
+
+A charge station location
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|country_code|string|true|none|none|
+|party_id|string|true|none|none|
+|name|string¦null|false|none|none|
+|address|string|true|none|none|
+|city|string|true|none|none|
+|postal_code|string¦null|false|none|none|
+|country|string|true|none|none|
+|coordinates|[GeoLocation](#schemageolocation)|true|none|none|
+|parking_type|string¦null|false|none|none|
+|evses|[[Evse](#schemaevse)]¦null|false|none|none|
+
+#### Enumerated Values
+
+|Property|Value|
+|---|---|
+|parking_type|ALONG_MOTORWAY|
+|parking_type|PARKING_GARAGE|
+|parking_type|PARKING_LOT|
+|parking_type|ON_DRIVEWAY|
+|parking_type|ON_STREET|
+|parking_type|UNDERGROUND_GARAGE|
+
+<h2 id="tocS_GeoLocation">GeoLocation</h2>
+<!-- backwards compatibility -->
+<a id="schemageolocation"></a>
+<a id="schema_GeoLocation"></a>
+<a id="tocSgeolocation"></a>
+<a id="tocsgeolocation"></a>
+
+```json
+{
+  "latitude": "string",
+  "longitude": "string"
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|latitude|string|true|none|none|
+|longitude|string|true|none|none|
+
+<h2 id="tocS_Evse">Evse</h2>
+<!-- backwards compatibility -->
+<a id="schemaevse"></a>
+<a id="schema_Evse"></a>
+<a id="tocSevse"></a>
+<a id="tocsevse"></a>
+
+```json
+{
+  "uid": "string",
+  "evse_id": "string",
+  "connectors": [
+    {
+      "id": "string",
+      "standard": "CHADEMO",
+      "format": "SOCKET",
+      "power_type": "AC_1_PHASE",
+      "max_voltage": 0,
+      "max_amperage": 0
+    }
+  ]
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|uid|string|true|none|Uniquely identifies the EVSE within the CPOs platform (and<br>suboperator platforms).|
+|evse_id|string¦null|false|none|none|
+|connectors|[[Connector](#schemaconnector)]|true|none|none|
+
+<h2 id="tocS_Connector">Connector</h2>
+<!-- backwards compatibility -->
+<a id="schemaconnector"></a>
+<a id="schema_Connector"></a>
+<a id="tocSconnector"></a>
+<a id="tocsconnector"></a>
+
+```json
+{
+  "id": "string",
+  "standard": "CHADEMO",
+  "format": "SOCKET",
+  "power_type": "AC_1_PHASE",
+  "max_voltage": 0,
+  "max_amperage": 0
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|id|string|true|none|none|
+|standard|string|true|none|none|
+|format|string|true|none|none|
+|power_type|string|true|none|none|
+|max_voltage|integer(int32)|true|none|none|
+|max_amperage|integer(int32)|true|none|none|
+
+#### Enumerated Values
+
+|Property|Value|
+|---|---|
+|standard|CHADEMO|
+|standard|CHAOJI|
+|standard|DOMESTIC_A|
+|standard|DOMESTIC_B|
+|standard|DOMESTIC_C|
+|standard|DOMESTIC_D|
+|standard|DOMESTIC_E|
+|standard|DOMESTIC_F|
+|standard|DOMESTIC_G|
+|standard|DOMESTIC_H|
+|standard|DOMESTIC_I|
+|standard|DOMESTIC_J|
+|standard|DOMESTIC_K|
+|standard|DOMESTIC_L|
+|standard|GBT_AC|
+|standard|GBT_DC|
+|standard|IEC_60309_2_single_16|
+|standard|IEC_60309_2_three_16|
+|standard|IEC_60309_2_three_32|
+|standard|IEC_60309_2_three_64|
+|standard|IEC_62196_T1|
+|standard|IEC_62196_T1_COMBO|
+|standard|IEC_62196_T2|
+|standard|IEC_62196_T2_COMBO|
+|standard|IEC_62196_T3A|
+|standard|IEC_62196_T3C|
+|standard|NEMA_5_20|
+|standard|NEMA_6_30|
+|standard|NEMA_6_50|
+|standard|NEMA_10_30|
+|standard|NEMA_10_50|
+|standard|NEMA_14_30|
+|standard|NEMA_14_50|
+|standard|PANTOGRAPH_BOTTOM_UP|
+|standard|PANTOGRAPH_TOP_DOWN|
+|standard|TESLA_R|
+|standard|TESLA_S|
+|standard|UNKNOWN|
+|format|SOCKET|
+|format|CABLE|
+|power_type|AC_1_PHASE|
+|power_type|AC_3_PHASE|
+|power_type|DC|
 

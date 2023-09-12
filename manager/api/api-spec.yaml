@@ -351,7 +351,12 @@ components:
       description: "Settings for a charge station"
       additionalProperties:
         type: "string"
-        maxLength: 500
+        description: |
+          The key is the name of the setting. For OCPP 2.0.1 the name should have the following pattern:
+          <component>/<variable>. The component name can include an optional component instance name and evse id
+          separated by semi-colons. The variable name can include an optional variable instance name and attribute
+          type separated by semi-colons. The maximum length for OCPP 1.6 is 500 characters.
+        maxLength: 1000
     Token:
       type: "object"
       description: "An authorization token"

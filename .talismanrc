@@ -24,17 +24,9 @@ fileignoreconfig:
   - filename: manager/Dockerfile
     checksum: db69536d308b905d6214db1fb0e10442fe3e770ef3fed47809ca1f3ec099409d
   - filename: manager/api/API.md
-    checksum: c111751da44c7310d6b77b76e1a5826c44cce62e47a32eaec564e86064bb1de2
+    checksum: c9a715fef138947fcaa341a4ee531a1c87216f180de576565ff5edb42cec936e
   - filename: manager/api/api.gen.go
-    checksum: fb9c6cf09f7864a32c38e40fb8a8598d3c6bd5c406245c6b31666c2ccb1f9e24
-  - filename: manager/api/api.gen.go
-    checksum: 711dafa8a64745b56d1848e74e67a96e97c6abe99a927f8783023b42abf46f69
-  - filename: manager/api/api.gen.go
-    checksum: 68dd639262ee2def17f4acbd84c23c7281d8a158ebdc0a1e4b757f1cbe283ae0
-  - filename: manager/api/api.gen.go
-    checksum: 43ab2f9449e206ac8b905aeaa1e84c69e0766ff98aa0baa7a2f6f6c55b8ca2c7
-  - filename: manager/api/api.gen.go
-    checksum: 10407e39f42f59a080c0c6741b1acfe051e5f63d3b1e4b3a99ceb6283bda8a89
+    checksum: 75f3fb88cb73741e2238d914d22edbdb7c60a9e35ae60f862420189ca77345ec
   - filename: manager/api/server.go
     checksum: 98cbd1df522ea428f7e669c01721f3070133062378a4f2e4b167d55eaa8d079b
   - filename: manager/api/server_test.go

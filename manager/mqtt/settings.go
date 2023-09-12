@@ -4,10 +4,14 @@ package mqtt
 
 import (
 	"context"
+	"fmt"
 	"github.com/thoughtworks/maeve-csms/manager/handlers"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp16"
+	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
 	"github.com/thoughtworks/maeve-csms/manager/store"
 	"golang.org/x/exp/slog"
+	"regexp"
+	"strconv"
 	"time"
 )
 
@@ -37,9 +41,9 @@ func SyncSettings(ctx context.Context, engine store.Engine, v16CallMaker, v201Ca
 					slog.Error("lookup charge station runtime details", slog.String("err", err.Error()),
 						slog.String("chargeStationId", pendingSetting.ChargeStationId))
 				}
+				csId := pendingSetting.ChargeStationId
 				switch details.OcppVersion {
 				case "1.6":
-					csId := pendingSetting.ChargeStationId
 					for name, setting := range pendingSetting.Settings {
 						if setting.Status == store.ChargeStationSettingStatusPending && time.Since(setting.LastUpdated) > retryAfter {
 							slog.Info("updating charge station settings", slog.String("chargeStationId", csId),
@@ -67,11 +71,89 @@ func SyncSettings(ctx context.Context, engine store.Engine, v16CallMaker, v201Ca
 						}
 					}
 				case "2.0.1":
-					slog.Warn("2.0.1 not implemented")
+					var variables []ocpp201.SetVariableDataType
+					for name, setting := range pendingSetting.Settings {
+						slog.Info("updating charge station settings", slog.String("chargeStationId", csId),
+							slog.String("key", name),
+							slog.String("value", setting.Value),
+							slog.String("version", details.OcppVersion))
+						if setting.Status == store.ChargeStationSettingStatusPending && time.Since(setting.LastUpdated) > retryAfter {
+							err = engine.UpdateChargeStationSettings(ctx, csId, &store.ChargeStationSettings{
+								Settings: map[string]*store.ChargeStationSetting{
+									name: {Status: setting.Status, Value: setting.Value},
+								},
+							})
+							if err != nil {
+								slog.Error("update charge station settings", slog.String("err", err.Error()))
+								continue
+							}
+							var variable ocpp201.SetVariableDataType
+							err = parseOcpp201Name(name, &variable)
+							if err != nil {
+								slog.Error("parse ocpp 2.0.1 name", slog.String("err", err.Error()))
+								continue
+							}
+							variable.AttributeValue = setting.Value
+							variables = append(variables, variable)
+						}
+					}
+					if len(variables) > 0 {
+						req := &ocpp201.SetVariablesRequestJson{
+							SetVariableData: variables,
+						}
+						err = v201CallMaker.Send(ctx, csId, req)
+						if err != nil {
+							slog.Error("send set variables request", slog.String("err", err.Error()),
+								slog.String("chargeStationId", csId))
+						}
+					}
 				}
 			}
 		}
 	}
+}
+
+// ocpp201NamePattern is a regexp that matches the following:
+// - Component name - mandatory (first component)
+// - Component instance - optional (first component following a ';')
+// - EVSE id - optional (second component following a ';')
+// - Variable name - mandatory (first component following a '/')
+// - Variable instance - optional (first component following a ';')
+// - Attribute type - optional (second component following a ';')
+var ocpp201NamePattern = regexp.MustCompile(`^([A-Za-z0-9*\-_=:+|@.]+)(?:;([A-Za-z0-9*\-_=:+|@.]+))?(?:;(\d+))?/([A-Za-z0-9*\-_=:+|@.]+)(?:;([A-Za-z0-9*\-_=:+|@.]+))?(?:;(Actual|Target|MinSet|MaxSet))?$`)
+
+func parseOcpp201Name(name string, set *ocpp201.SetVariableDataType) error {
+	matches := ocpp201NamePattern.FindStringSubmatch(name)
+	if len(matches) != 7 {
+		return fmt.Errorf("invalid ocpp 2.0.1 name: %s", name)
+	}
+	set.Component = ocpp201.ComponentType{
+		Name: matches[1],
+	}
+	if matches[2] != "" {
+		set.Component.Instance = &matches[2]
+	}
+	if matches[3] != "" {
+		evseId, err := strconv.Atoi(matches[3])
+		if err != nil {
+			return fmt.Errorf("invalid ocpp 2.0.1 name (EVSE id is not an integer): %s", name)
+		}
+		set.Component.Evse = &ocpp201.EVSEType{
+			Id: evseId,
+		}
+	}
+
+	set.Variable = ocpp201.VariableType{
+		Name: matches[4],
+	}
+	if matches[5] != "" {
+		set.Variable.Instance = &matches[5]
+	}
+	if matches[6] != "" {
+		set.AttributeType = (*ocpp201.AttributeEnumType)(&matches[6])
+	}
+
+	return nil
 }
 
 func filterPendingSettings(settings []*store.ChargeStationSettings) []*store.ChargeStationSettings {
