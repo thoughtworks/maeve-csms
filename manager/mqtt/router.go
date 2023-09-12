@@ -125,6 +125,12 @@ func NewV16Router(emitter Emitter,
 					TransactionStore: engine,
 				},
 			},
+			"SecurityEventNotification": {
+				NewRequest:     func() ocpp.Request { return new(ocpp16.SecurityEventNotificationJson) },
+				RequestSchema:  "ocpp16/SecurityEventNotification.json",
+				ResponseSchema: "ocpp16/SecurityEventNotificationResponse.json",
+				Handler:        handlers16.SecurityEventNotificationHandler{},
+			},
 			"DataTransfer": {
 				NewRequest:     func() ocpp.Request { return new(ocpp16.DataTransferJson) },
 				RequestSchema:  "ocpp16/DataTransfer.json",
@@ -350,6 +356,12 @@ func NewV201Router(emitter Emitter,
 				Handler: handlers201.Get15118EvCertificateHandler{
 					ContractCertificateProvider: contractCertProvider,
 				},
+			},
+			"SecurityEventNotification": {
+				NewRequest:     func() ocpp.Request { return new(ocpp201.SecurityEventNotificationRequestJson) },
+				RequestSchema:  "ocpp201/SecurityEventNotificationRequest.json",
+				ResponseSchema: "ocpp201/SecurityEventNotificationResponse.json",
+				Handler:        handlers201.SecurityEventNotificationHandler{},
 			},
 		},
 		CallResultRoutes: map[string]handlers.CallResultRoute{
