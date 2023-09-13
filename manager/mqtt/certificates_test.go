@@ -93,6 +93,10 @@ func TestSyncCertificates(t *testing.T) {
 		OcppVersion: "2.0.1",
 	})
 	require.NoError(t, err)
+	err = engine.SetChargeStationRuntimeDetails(ctx, "cs003", &store.ChargeStationRuntimeDetails{
+		OcppVersion: "2.0.1",
+	})
+	require.NoError(t, err)
 
 	evccPemBlock := pem.Block{
 		Type:  "CERTIFICATE",
@@ -146,6 +150,18 @@ func TestSyncCertificates(t *testing.T) {
 	})
 	require.NoError(t, err)
 
+	err = engine.UpdateChargeStationInstallCertificates(ctx, "cs003", &store.ChargeStationInstallCertificates{
+		Certificates: []*store.ChargeStationInstallCertificate{
+			{
+				CertificateId:                 v2gCertId,
+				CertificateInstallationStatus: store.CertificateInstallationRejected,
+				CertificateType:               store.CertificateTypeV2G,
+				CertificateData:               string(v2gPemBytes),
+			},
+		},
+	})
+	require.NoError(t, err)
+
 	updater := &updateChargeStation{}
 	v16CallMaker := &mockCallMaker{
 		engine:   engine,
@@ -164,9 +180,11 @@ func TestSyncCertificates(t *testing.T) {
 	assert.Equal(t, v16CallMaker.callEvents[1].chargeStationId, "cs001")
 	assert.IsType(t, &ocpp201.InstallCertificateRequestJson{}, v16CallMaker.callEvents[1].request)
 
-	require.Len(t, v201CallMaker.callEvents, 2)
+	require.Len(t, v201CallMaker.callEvents, 3)
 	assert.Equal(t, v201CallMaker.callEvents[0].chargeStationId, "cs002")
 	assert.IsType(t, &ocpp201.CertificateSignedRequestJson{}, v201CallMaker.callEvents[0].request)
 	assert.Equal(t, v201CallMaker.callEvents[1].chargeStationId, "cs002")
 	assert.IsType(t, &ocpp201.InstallCertificateRequestJson{}, v201CallMaker.callEvents[1].request)
+	assert.Equal(t, v201CallMaker.callEvents[2].chargeStationId, "cs003")
+	assert.IsType(t, &ocpp201.InstallCertificateRequestJson{}, v201CallMaker.callEvents[2].request)
 }
