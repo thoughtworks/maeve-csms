@@ -4,6 +4,7 @@ package firestore
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/thoughtworks/maeve-csms/manager/store"
 	"golang.org/x/exp/slog"
@@ -78,7 +79,7 @@ func (s *Store) ListPartyDetailsForRole(context context.Context, role string) ([
 	iter := s.client.Collection(fmt.Sprintf("OcpiParty/%s/Id", role)).Documents(context)
 	for {
 		doc, err := iter.Next()
-		if err == iterator.Done {
+		if errors.Is(err, iterator.Done) {
 			break
 		}
 		if err != nil {

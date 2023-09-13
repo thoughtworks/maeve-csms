@@ -198,7 +198,7 @@ func (h *Handler) Connect(errCh chan error) {
 	v201Emitter := &ProxyEmitter{}
 
 	v16Router := NewV16Router(v16Emitter, h.clock, h.storageEngine, h.certValidationService, h.chargeStationCertProvider, h.contractCertProvider, h.heartbeatInterval, h.schemaFS)
-	v201Router := NewV201Router(v201Emitter, h.clock, h.storageEngine, h.tariffService, h.certValidationService, h.chargeStationCertProvider, h.contractCertProvider, h.heartbeatInterval)
+	v201Router := NewV201Router(h.clock, h.storageEngine, h.tariffService, h.certValidationService, h.chargeStationCertProvider, h.contractCertProvider, h.heartbeatInterval)
 
 	mqttV16Topic := fmt.Sprintf("$share/%s/%s/in/ocpp1.6/#", h.mqttGroup, h.mqttPrefix)
 	mqttV201Topic := fmt.Sprintf("$share/%s/%s/in/ocpp2.0.1/#", h.mqttGroup, h.mqttPrefix)
@@ -258,6 +258,19 @@ func (h *Handler) Connect(errCh chan error) {
 			reflect.TypeOf(&ocpp16.ChangeConfigurationJson{}): "ChangeConfiguration",
 		},
 	}
+	dataTransferCallMaker := &DataTransferCallMaker{
+		E: v16Emitter,
+		Actions: map[reflect.Type]DataTransferAction{
+			reflect.TypeOf(&ocpp201.CertificateSignedRequestJson{}): {
+				VendorId:  "org.openchargealliance.iso15118pnc",
+				MessageId: "CertificateSigned",
+			},
+			reflect.TypeOf(&ocpp201.InstallCertificateRequestJson{}): {
+				VendorId:  "org.openchargealliance.iso15118pnc",
+				MessageId: "InstallCertificate",
+			},
+		},
+	}
 	v201SyncCallMaker := &BasicCallMaker{
 		E: v201Emitter,
 		Actions: map[reflect.Type]string{
@@ -265,6 +278,7 @@ func (h *Handler) Connect(errCh chan error) {
 		},
 	}
 	go SyncSettings(context.Background(), h.storageEngine, v16SyncCallMaker, v201SyncCallMaker, 2*time.Minute, 2*time.Minute)
+	go SyncCertificates(context.Background(), h.storageEngine, dataTransferCallMaker, v201SyncCallMaker, 2*time.Minute, 2*time.Minute)
 }
 
 func getTopicPattern(topic string) string {

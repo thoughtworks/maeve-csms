@@ -49,7 +49,7 @@ func deleteTokens(t *testing.T, gcloudProject string) {
 }
 
 func TestSetAndLookupToken(t *testing.T) {
-	defer deleteTokens(t, "myproject")
+	defer cleanupAllCollections(t, "myproject")
 
 	ctx := context.Background()
 
@@ -81,7 +81,7 @@ func TestSetAndLookupToken(t *testing.T) {
 }
 
 func TestLookupTokenThatDoesNotExist(t *testing.T) {
-	defer deleteTokens(t, "myproject")
+	defer cleanupAllCollections(t, "myproject")
 
 	ctx := context.Background()
 
@@ -94,7 +94,7 @@ func TestLookupTokenThatDoesNotExist(t *testing.T) {
 }
 
 func TestListTokensWithNoMatches(t *testing.T) {
-	defer deleteTokens(t, "myproject")
+	defer cleanupAllCollections(t, "myproject")
 
 	ctx := context.Background()
 
@@ -107,7 +107,7 @@ func TestListTokensWithNoMatches(t *testing.T) {
 }
 
 func TestListTokens(t *testing.T) {
-	defer deleteTokens(t, "myproject")
+	defer cleanupAllCollections(t, "myproject")
 
 	ctx := context.Background()
 
@@ -149,7 +149,7 @@ func TestListTokens(t *testing.T) {
 }
 
 func TestListTokensWithOffset(t *testing.T) {
-	defer deleteTokens(t, "myproject")
+	defer cleanupAllCollections(t, "myproject")
 
 	ctx := context.Background()
 

@@ -19,6 +19,8 @@ import (
 )
 
 func TestSetAndLookupChargeStationAuth(t *testing.T) {
+	defer cleanupAllCollections(t, "myproject")
+
 	ctx := context.Background()
 
 	authStore, err := firestore.NewStore(ctx, "myproject", clock.RealClock{})
@@ -39,6 +41,8 @@ func TestSetAndLookupChargeStationAuth(t *testing.T) {
 }
 
 func TestLookupChargeStationAuthWithUnregisteredChargeStation(t *testing.T) {
+	defer cleanupAllCollections(t, "myproject")
+
 	ctx := context.Background()
 
 	authStore, err := firestore.NewStore(ctx, "myproject", clock.RealClock{})
@@ -50,6 +54,8 @@ func TestLookupChargeStationAuthWithUnregisteredChargeStation(t *testing.T) {
 }
 
 func TestUpdateAndLookupChargeStationSettingsWithNewSettings(t *testing.T) {
+	defer cleanupAllCollections(t, "myproject")
+
 	ctx := context.Background()
 
 	now := time.Now()
@@ -74,6 +80,8 @@ func TestUpdateAndLookupChargeStationSettingsWithNewSettings(t *testing.T) {
 }
 
 func TestUpdateAndLookupChargeStationSettingsWithUpdatedSettings(t *testing.T) {
+	defer cleanupAllCollections(t, "myproject")
+
 	ctx := context.Background()
 
 	settingsStore, err := firestore.NewStore(ctx, "myproject", clock.RealClock{})
@@ -113,6 +121,8 @@ func TestUpdateAndLookupChargeStationSettingsWithUpdatedSettings(t *testing.T) {
 }
 
 func TestListChargeStationSettings(t *testing.T) {
+	defer cleanupAllCollections(t, "myproject")
+
 	ctx := context.Background()
 
 	now := time.Now()
@@ -160,7 +170,129 @@ func TestListChargeStationSettings(t *testing.T) {
 	assert.Len(t, csIds, 25)
 }
 
+func TestUpdateAndLookupChargeStationInstallCertificates(t *testing.T) {
+	defer cleanupAllCollections(t, "myproject")
+
+	ctx := context.Background()
+
+	installCertsStore, err := firestore.NewStore(ctx, "myproject", clock.RealClock{})
+	require.NoError(t, err)
+
+	err = installCertsStore.UpdateChargeStationInstallCertificates(ctx, "cs001", &store.ChargeStationInstallCertificates{
+		Certificates: []*store.ChargeStationInstallCertificate{
+			{
+				CertificateType:               store.CertificateTypeChargeStation,
+				CertificateId:                 "csms001",
+				CertificateData:               "csms-pem-data",
+				CertificateInstallationStatus: store.CertificateInstallationPending,
+			},
+			{
+				CertificateType:               store.CertificateTypeV2G,
+				CertificateId:                 "v2g001",
+				CertificateData:               "v2g-pem-data",
+				CertificateInstallationStatus: store.CertificateInstallationAccepted,
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	err = installCertsStore.UpdateChargeStationInstallCertificates(ctx, "cs001", &store.ChargeStationInstallCertificates{
+		Certificates: []*store.ChargeStationInstallCertificate{
+			{
+				CertificateType:               store.CertificateTypeChargeStation,
+				CertificateId:                 "csms001",
+				CertificateData:               "csms-pem-data",
+				CertificateInstallationStatus: store.CertificateInstallationAccepted,
+			},
+			{
+				CertificateType:               store.CertificateTypeEVCC,
+				CertificateId:                 "evcc001",
+				CertificateData:               "evcc-pem-data",
+				CertificateInstallationStatus: store.CertificateInstallationPending,
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	got, err := installCertsStore.LookupChargeStationInstallCertificates(ctx, "cs001")
+	require.NoError(t, err)
+
+	assert.Len(t, got.Certificates, 3)
+	for _, cert := range got.Certificates {
+		switch cert.CertificateId {
+		case "csms001":
+			assert.Equal(t, "csms-pem-data", cert.CertificateData)
+			assert.Equal(t, store.CertificateInstallationAccepted, cert.CertificateInstallationStatus)
+		case "v2g001":
+			assert.Equal(t, "v2g-pem-data", cert.CertificateData)
+			assert.Equal(t, store.CertificateInstallationAccepted, cert.CertificateInstallationStatus)
+		case "evcc001":
+			assert.Equal(t, "evcc-pem-data", cert.CertificateData)
+			assert.Equal(t, store.CertificateInstallationPending, cert.CertificateInstallationStatus)
+		default:
+			t.Errorf("unexpected certificate id: %s", cert.CertificateId)
+		}
+	}
+}
+
+func TestListChargeStationInstallCertificates(t *testing.T) {
+	defer cleanupAllCollections(t, "myproject")
+
+	ctx := context.Background()
+
+	now := time.Now()
+	certInstallStore, err := firestore.NewStore(ctx, "myproject", clockTest.NewFakePassiveClock(now))
+	require.NoError(t, err)
+
+	want := &store.ChargeStationInstallCertificates{
+		Certificates: []*store.ChargeStationInstallCertificate{
+			{
+				CertificateType:               store.CertificateTypeV2G,
+				CertificateId:                 "v2g001",
+				CertificateData:               "v2g-pem-data",
+				CertificateInstallationStatus: store.CertificateInstallationPending,
+				LastUpdated:                   now.UTC(),
+			},
+		},
+	}
+	for i := 0; i < 25; i++ {
+		csId := fmt.Sprintf("cs%03d", i)
+		err := certInstallStore.UpdateChargeStationInstallCertificates(ctx, csId, want)
+		require.NoError(t, err)
+	}
+
+	csIds := make(map[string]struct{})
+
+	page1, err := certInstallStore.ListChargeStationInstallCertificates(ctx, 10, "")
+	require.NoError(t, err)
+	require.Len(t, page1, 10)
+	for _, got := range page1 {
+		csIds[got.ChargeStationId] = struct{}{}
+		assert.Equal(t, want.Certificates, got.Certificates)
+	}
+
+	page2, err := certInstallStore.ListChargeStationInstallCertificates(ctx, 10, page1[len(page1)-1].ChargeStationId)
+	require.NoError(t, err)
+	require.Len(t, page2, 10)
+	for _, got := range page2 {
+		csIds[got.ChargeStationId] = struct{}{}
+		assert.Equal(t, want.Certificates, got.Certificates)
+	}
+
+	page3, err := certInstallStore.ListChargeStationInstallCertificates(ctx, 10, page2[len(page2)-1].ChargeStationId)
+	require.NoError(t, err)
+	require.Len(t, page3, 5)
+	for _, got := range page3 {
+		csIds[got.ChargeStationId] = struct{}{}
+		assert.Equal(t, want.Certificates, got.Certificates)
+	}
+
+	assert.Len(t, csIds, 25)
+}
+
 func TestSetAndLookupChargeStationRuntimeDetails(t *testing.T) {
+	defer cleanupAllCollections(t, "myproject")
+
 	ctx := context.Background()
 
 	detailsStore, err := firestore.NewStore(ctx, "myproject", clock.RealClock{})
@@ -180,6 +312,8 @@ func TestSetAndLookupChargeStationRuntimeDetails(t *testing.T) {
 }
 
 func TestLookupChargeStationRuntimeDetailsWithUnregisteredChargeStation(t *testing.T) {
+	defer cleanupAllCollections(t, "myproject")
+
 	ctx := context.Background()
 
 	detailsStore, err := firestore.NewStore(ctx, "myproject", clock.RealClock{})

@@ -41,20 +41,6 @@ func NewV16Router(emitter Emitter,
 	heartbeatInterval time.Duration,
 	schemaFS fs.FS) *Router {
 
-	dataTransferCallMaker := DataTransferCallMaker{
-		E: emitter,
-		Actions: map[reflect.Type]DataTransferAction{
-			reflect.TypeOf(&ocpp201.CertificateSignedRequestJson{}): {
-				VendorId:  "org.openchargealliance.iso15118pnc",
-				MessageId: "CertificateSigned",
-			},
-			reflect.TypeOf(&has2be.CertificateSignedRequestJson{}): {
-				VendorId:  "iso15118",
-				MessageId: "CertificateSigned",
-			},
-		},
-	}
-
 	standardCallMaker := BasicCallMaker{
 		E: emitter,
 		Actions: map[reflect.Type]string{
@@ -162,7 +148,7 @@ func NewV16Router(emitter Emitter,
 								ResponseSchema: "ocpp201/SignCertificateResponse.json",
 								Handler: handlers201.SignCertificateHandler{
 									ChargeStationCertificateProvider: chargeStationCertProvider,
-									CallMaker:                        dataTransferCallMaker,
+									Store:                            engine,
 								},
 							},
 							"Get15118EVCertificate": {
@@ -213,7 +199,7 @@ func NewV16Router(emitter Emitter,
 								Handler: handlersHasToBe.SignCertificateHandler{
 									Handler201: handlers201.SignCertificateHandler{
 										ChargeStationCertificateProvider: chargeStationCertProvider,
-										CallMaker:                        dataTransferCallMaker,
+										Store:                            engine,
 									},
 								},
 							},
@@ -237,7 +223,18 @@ func NewV16Router(emitter Emitter,
 								NewResponse:    func() ocpp.Response { return new(ocpp201.CertificateSignedResponseJson) },
 								RequestSchema:  "ocpp201/CertificateSignedRequest.json",
 								ResponseSchema: "ocpp201/CertificateSignedResponse.json",
-								Handler:        handlers201.CertificateSignedResultHandler{},
+								Handler: handlers201.CertificateSignedResultHandler{
+									Store: engine,
+								},
+							},
+							"InstallCertificate": {
+								NewRequest:     func() ocpp.Request { return new(ocpp201.InstallCertificateRequestJson) },
+								NewResponse:    func() ocpp.Response { return new(ocpp201.InstallCertificateResponseJson) },
+								RequestSchema:  "ocpp201/InstallCertificateRequest.json",
+								ResponseSchema: "ocpp201/InstallCertificateResponse.json",
+								Handler: handlers201.InstallCertificateResultHandler{
+									Store: engine,
+								},
 							},
 						},
 						"iso15118": { // has2be extensions
@@ -273,21 +270,13 @@ func NewV16Router(emitter Emitter,
 	}
 }
 
-func NewV201Router(emitter Emitter,
-	clk clock.PassiveClock,
+func NewV201Router(clk clock.PassiveClock,
 	engine store.Engine,
 	tariffService services.TariffService,
 	certValidationService services.CertificateValidationService,
 	chargeStationCertProvider services.ChargeStationCertificateProvider,
 	contractCertProvider services.ContractCertificateProvider,
 	heartbeatInterval time.Duration) *Router {
-
-	callMaker := BasicCallMaker{
-		E: emitter,
-		Actions: map[reflect.Type]string{
-			reflect.TypeOf(&ocpp201.CertificateSignedRequestJson{}): "CertificateSigned",
-		},
-	}
 
 	return &Router{
 		CallRoutes: map[string]handlers.CallRoute{
@@ -346,7 +335,7 @@ func NewV201Router(emitter Emitter,
 				ResponseSchema: "ocpp201/SignCertificateResponse.json",
 				Handler: handlers201.SignCertificateHandler{
 					ChargeStationCertificateProvider: chargeStationCertProvider,
-					CallMaker:                        callMaker,
+					Store:                            engine,
 				},
 			},
 			"Get15118EVCertificate": {
@@ -370,7 +359,18 @@ func NewV201Router(emitter Emitter,
 				NewResponse:    func() ocpp.Response { return new(ocpp201.CertificateSignedResponseJson) },
 				RequestSchema:  "ocpp201/CertificateSignedRequest.json",
 				ResponseSchema: "ocpp201/CertificateSignedResponse.json",
-				Handler:        handlers201.CertificateSignedResultHandler{},
+				Handler: handlers201.CertificateSignedResultHandler{
+					Store: engine,
+				},
+			},
+			"InstallCertificate": {
+				NewRequest:     func() ocpp.Request { return new(ocpp201.InstallCertificateRequestJson) },
+				NewResponse:    func() ocpp.Response { return new(ocpp201.InstallCertificateResponseJson) },
+				RequestSchema:  "ocpp201/InstallCertificateRequest.json",
+				ResponseSchema: "ocpp201/InstallCertificateResponse.json",
+				Handler: handlers201.InstallCertificateResultHandler{
+					Store: engine,
+				},
 			},
 		},
 	}

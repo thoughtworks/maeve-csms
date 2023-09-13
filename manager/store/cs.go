@@ -60,3 +60,41 @@ type ChargeStationRuntimeDetailsStore interface {
 	SetChargeStationRuntimeDetails(ctx context.Context, chargeStationId string, details *ChargeStationRuntimeDetails) error
 	LookupChargeStationRuntimeDetails(ctx context.Context, chargeStationId string) (*ChargeStationRuntimeDetails, error)
 }
+
+type CertificateType string
+
+var (
+	CertificateTypeChargeStation CertificateType = "ChargeStation"
+	CertificateTypeEVCC          CertificateType = "EVCC"
+	CertificateTypeV2G           CertificateType = "V2G"
+	CertificateTypeMO            CertificateType = "MO"
+	CertificateTypeMF            CertificateType = "MF"
+	CertificateTypeCSMS          CertificateType = "CSMS"
+)
+
+type CertificateInstallationStatus string
+
+var (
+	CertificateInstallationPending  CertificateInstallationStatus = "Pending"
+	CertificateInstallationAccepted CertificateInstallationStatus = "Accepted"
+	CertificateInstallationRejected CertificateInstallationStatus = "Rejected"
+)
+
+type ChargeStationInstallCertificate struct {
+	CertificateType               CertificateType
+	CertificateId                 string
+	CertificateData               string
+	CertificateInstallationStatus CertificateInstallationStatus
+	LastUpdated                   time.Time
+}
+
+type ChargeStationInstallCertificates struct {
+	ChargeStationId string
+	Certificates    []*ChargeStationInstallCertificate
+}
+
+type ChargeStationInstallCertificatesStore interface {
+	UpdateChargeStationInstallCertificates(ctx context.Context, chargeStationId string, certificates *ChargeStationInstallCertificates) error
+	LookupChargeStationInstallCertificates(ctx context.Context, chargeStationId string) (*ChargeStationInstallCertificates, error)
+	ListChargeStationInstallCertificates(ctx context.Context, pageSize int, previousChargeStationId string) ([]*ChargeStationInstallCertificates, error)
+}

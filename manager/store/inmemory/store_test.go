@@ -116,3 +116,101 @@ func TestListChargeStationSettingsReturnsDataInPages(t *testing.T) {
 
 	assert.Len(t, csIds, 25)
 }
+
+func TestUpdateChargeStationInstallCertificates(t *testing.T) {
+	now := time.Now()
+	engine := inmemory.NewStore(clockTest.NewFakePassiveClock(now))
+
+	want := &store.ChargeStationInstallCertificates{
+		ChargeStationId: "cs001",
+		Certificates: []*store.ChargeStationInstallCertificate{
+			{
+				CertificateType:               store.CertificateTypeV2G,
+				CertificateId:                 "v2g001",
+				CertificateData:               "v2g-pem-data",
+				CertificateInstallationStatus: store.CertificateInstallationPending,
+			},
+		},
+	}
+
+	err := engine.UpdateChargeStationInstallCertificates(context.Background(), "cs001", want)
+	require.NoError(t, err)
+
+	got, err := engine.LookupChargeStationInstallCertificates(context.Background(), "cs001")
+	require.NoError(t, err)
+	assert.Equal(t, want, got)
+	assert.Equal(t, now.UTC(), got.Certificates[0].LastUpdated)
+}
+
+func TestUpdateChargeStationCertificateWithExistingCertificate(t *testing.T) {
+	engine := inmemory.NewStore(clock.RealClock{})
+
+	err := engine.UpdateChargeStationInstallCertificates(context.Background(), "cs001", &store.ChargeStationInstallCertificates{
+		ChargeStationId: "cs001",
+		Certificates: []*store.ChargeStationInstallCertificate{
+			{
+				CertificateType:               store.CertificateTypeV2G,
+				CertificateId:                 "v2g001",
+				CertificateData:               "v2g-pem-data",
+				CertificateInstallationStatus: store.CertificateInstallationAccepted,
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	err = engine.UpdateChargeStationInstallCertificates(context.Background(), "cs001", &store.ChargeStationInstallCertificates{
+		ChargeStationId: "cs001",
+		Certificates: []*store.ChargeStationInstallCertificate{
+			{
+				CertificateType:               store.CertificateTypeV2G,
+				CertificateId:                 "v2g001",
+				CertificateData:               "updated-v2g-pem-data",
+				CertificateInstallationStatus: store.CertificateInstallationPending,
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	got, err := engine.LookupChargeStationInstallCertificates(context.Background(), "cs001")
+	require.NoError(t, err)
+	assert.Equal(t, "updated-v2g-pem-data", got.Certificates[0].CertificateData)
+	assert.Equal(t, store.CertificateInstallationPending, got.Certificates[0].CertificateInstallationStatus)
+}
+
+func TestUpdateChargeStationCertificateWithNewCertificate(t *testing.T) {
+	engine := inmemory.NewStore(clock.RealClock{})
+
+	err := engine.UpdateChargeStationInstallCertificates(context.Background(), "cs001", &store.ChargeStationInstallCertificates{
+		ChargeStationId: "cs001",
+		Certificates: []*store.ChargeStationInstallCertificate{
+			{
+				CertificateType:               store.CertificateTypeV2G,
+				CertificateId:                 "v2g001",
+				CertificateData:               "v2g-pem-data",
+				CertificateInstallationStatus: store.CertificateInstallationAccepted,
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	err = engine.UpdateChargeStationInstallCertificates(context.Background(), "cs001", &store.ChargeStationInstallCertificates{
+		ChargeStationId: "cs001",
+		Certificates: []*store.ChargeStationInstallCertificate{
+			{
+				CertificateType:               store.CertificateTypeEVCC,
+				CertificateId:                 "evcc001",
+				CertificateData:               "evcc-pem-data",
+				CertificateInstallationStatus: store.CertificateInstallationPending,
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	got, err := engine.LookupChargeStationInstallCertificates(context.Background(), "cs001")
+	require.NoError(t, err)
+	assert.Len(t, got.Certificates, 2)
+	assert.Equal(t, "v2g-pem-data", got.Certificates[0].CertificateData)
+	assert.Equal(t, store.CertificateInstallationAccepted, got.Certificates[0].CertificateInstallationStatus)
+	assert.Equal(t, "evcc-pem-data", got.Certificates[1].CertificateData)
+	assert.Equal(t, store.CertificateInstallationPending, got.Certificates[1].CertificateInstallationStatus)
+}

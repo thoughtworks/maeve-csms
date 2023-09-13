@@ -24,6 +24,8 @@ import (
 )
 
 func TestSetAndLookupAndDeleteCertificate(t *testing.T) {
+	defer cleanupAllCollections(t, "myproject")
+
 	ctx := context.Background()
 
 	cert := generateCertificate(t)

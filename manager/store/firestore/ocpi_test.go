@@ -15,6 +15,8 @@ import (
 )
 
 func TestSetAndLookupRegistrationDetails(t *testing.T) {
+	defer cleanupAllCollections(t, "myproject")
+
 	ctx := context.Background()
 
 	engine, err := firestore.NewStore(ctx, "myproject", clock.RealClock{})
@@ -35,6 +37,8 @@ func TestSetAndLookupRegistrationDetails(t *testing.T) {
 }
 
 func TestDeleteRegistrationDetails(t *testing.T) {
+	defer cleanupAllCollections(t, "myproject")
+
 	ctx := context.Background()
 
 	engine, err := firestore.NewStore(ctx, "myproject", clock.RealClock{})
@@ -57,6 +61,8 @@ func TestDeleteRegistrationDetails(t *testing.T) {
 }
 
 func TestSetAndLookupPartyDetails(t *testing.T) {
+	defer cleanupAllCollections(t, "myproject")
+
 	ctx := context.Background()
 
 	engine, err := firestore.NewStore(ctx, "myproject", clock.RealClock{})
@@ -80,6 +86,8 @@ func TestSetAndLookupPartyDetails(t *testing.T) {
 }
 
 func TestSetAndListPartyDetails(t *testing.T) {
+	defer cleanupAllCollections(t, "myproject")
+
 	ctx := context.Background()
 
 	engine, err := firestore.NewStore(ctx, "myproject", clock.RealClock{})

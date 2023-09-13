@@ -4,10 +4,10 @@ package ocpp201
 
 import (
 	"context"
+	"github.com/thoughtworks/maeve-csms/manager/store"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/thoughtworks/maeve-csms/manager/handlers"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
 	types "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
 	"github.com/thoughtworks/maeve-csms/manager/services"
@@ -16,7 +16,7 @@ import (
 
 type SignCertificateHandler struct {
 	ChargeStationCertificateProvider services.ChargeStationCertificateProvider
-	CallMaker                        handlers.CallMaker
+	Store                            store.Engine
 }
 
 func (s SignCertificateHandler) HandleCall(ctx context.Context, chargeStationId string, request ocpp.Request) (ocpp.Response, error) {
@@ -34,31 +34,44 @@ func (s SignCertificateHandler) HandleCall(ctx context.Context, chargeStationId 
 	status := types.GenericStatusEnumTypeRejected
 
 	if s.ChargeStationCertificateProvider != nil {
-		status = types.GenericStatusEnumTypeAccepted
+		var certType services.CertificateType
+		var storeType store.CertificateType
+		if certificateType == types.CertificateSigningUseEnumTypeChargingStationCertificate {
+			certType = services.CertificateTypeCSO
+			storeType = store.CertificateTypeChargeStation
+		} else {
+			certType = services.CertificateTypeV2G
+			storeType = store.CertificateTypeEVCC
+		}
 
-		go func() {
-			var certType services.CertificateType
-			if certificateType == types.CertificateSigningUseEnumTypeChargingStationCertificate {
-				certType = services.CertificateTypeCSO
-			} else {
-				certType = services.CertificateTypeV2G
-			}
-
-			pemChain, err := s.ChargeStationCertificateProvider.ProvideCertificate(ctx, certType, req.Csr)
+		pemChain, err := s.ChargeStationCertificateProvider.ProvideCertificate(ctx, certType, req.Csr)
+		if err != nil {
+			slog.Error("failed to sign certificate", "err", err)
+			span.AddEvent("failed to sign certificate", trace.WithAttributes(attribute.String("err", err.Error())))
+		} else {
+			certId, err := GetCertificateId(pemChain)
 			if err != nil {
-				slog.Error("failed to sign certificate", "err", err)
+				slog.Error("failed to get certificate id", "err", err)
+				span.AddEvent("failed to get certificate id", trace.WithAttributes(attribute.String("err", err.Error())))
 			} else {
-				certSignedReq := &types.CertificateSignedRequestJson{
-					CertificateChain: pemChain,
-					CertificateType:  &certificateType,
-				}
-
-				err = s.CallMaker.Send(ctx, chargeStationId, certSignedReq)
+				err = s.Store.UpdateChargeStationInstallCertificates(ctx, chargeStationId, &store.ChargeStationInstallCertificates{
+					Certificates: []*store.ChargeStationInstallCertificate{
+						{
+							CertificateType:               storeType,
+							CertificateId:                 certId,
+							CertificateData:               pemChain,
+							CertificateInstallationStatus: store.CertificateInstallationPending,
+						},
+					},
+				})
 				if err != nil {
-					slog.Error("failed to send certificate signed request", "err", err)
+					slog.Error("failed to update charge station install certificates", "err", err)
+					span.AddEvent("failed to update charge station install certificates", trace.WithAttributes(attribute.String("err", err.Error())))
+				} else {
+					status = types.GenericStatusEnumTypeAccepted
 				}
 			}
-		}()
+		}
 	}
 
 	span.SetAttributes(attribute.String("request.status", string(status)))

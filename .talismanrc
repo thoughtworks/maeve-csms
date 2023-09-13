@@ -65,6 +65,8 @@ fileignoreconfig:
     checksum: 26b2a5113699eb2d1558d782785a5a44ac17477e1d6d47be9f0ae9a0d0877242
   - filename: manager/handlers/ocpp201/get_certificate_status_test.go
     checksum: c181e8cd66c0b11de814810bf8d2dd411489ad5e0dc0e47ec5ca0555148b6ecd
+  - filename: manager/handlers/tracing.go
+    checksum: 5a44615eb6e4eab449c5594c09b3d7b2c5499ffa2452d2b4bce48ddddb9955e5
   - filename: manager/mqtt/handler.go
     checksum: 9660c626538042009cebcba874730e4222c115fdf24c9dba12c5d4601c69b613
   - filename: manager/mqtt/router.go
@@ -162,7 +164,7 @@ fileignoreconfig:
   - filename: manager/store/inmemory/cert_test.go
     checksum: 535591f9b2a347dd1fc00f07aa3742660c96a636dae8f724c9e2842e09b95356
   - filename: manager/store/inmemory/store.go
-    checksum: ae491736b403a36855b91087ea96d6f6b464fe6564c56850db4a1955ca159b62
+    checksum: 94bc86687c5df5703d2fc1a9cf5a9013e802b86ec8c2ab8cc82dafcd17295c6a
 scopeconfig:
   - scope: go
 version: ''

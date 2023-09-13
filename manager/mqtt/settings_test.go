@@ -36,7 +36,10 @@ func (m *mockCallMaker) Send(ctx context.Context, chargeStationId string, reques
 		chargeStationId: chargeStationId,
 		request:         request,
 	})
-	return m.updateFn(ctx, m.engine, chargeStationId, request)
+	if m.updateFn != nil {
+		return m.updateFn(ctx, m.engine, chargeStationId, request)
+	}
+	return nil
 }
 
 func updateV16StatusToAccepted(ctx context.Context, engine store.Engine, chargeStationId string, request ocpp.Request) error {

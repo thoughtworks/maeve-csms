@@ -5,7 +5,11 @@
 package firestore_test
 
 import (
+	firestoreapi "cloud.google.com/go/firestore"
 	"context"
+	"errors"
+	"github.com/stretchr/testify/assert"
+	"google.golang.org/api/iterator"
 	"log"
 	"os"
 	"testing"
@@ -66,4 +70,46 @@ func TestMain(m *testing.M) {
 	teardown()
 
 	os.Exit(exitVal)
+}
+
+func cleanupAllCollections(t *testing.T, gcloudProject string) {
+	cleanupCollection(t, gcloudProject, "Certificate")
+	cleanupCollection(t, gcloudProject, "ChargeStation")
+	cleanupCollection(t, gcloudProject, "ChargeStationSettings")
+	cleanupCollection(t, gcloudProject, "ChargeStationInstallCertificates")
+	cleanupCollection(t, gcloudProject, "ChargeStationRuntimeDetails")
+	cleanupCollection(t, gcloudProject, "Location")
+	cleanupCollection(t, gcloudProject, "OcpiParty")
+	cleanupCollection(t, gcloudProject, "OcpiRegistration")
+	cleanupCollection(t, gcloudProject, "Token")
+	cleanupCollection(t, gcloudProject, "Transaction")
+}
+
+func cleanupCollection(t *testing.T, gcloudProject, collection string) {
+	ctx := context.Background()
+
+	client, err := firestoreapi.NewClient(ctx, gcloudProject)
+	assert.NoError(t, err)
+
+	col := client.Collection(collection)
+	bulkwriter := client.BulkWriter(ctx)
+
+	numDeleted := 0
+	iter := col.Documents(ctx)
+	for {
+		doc, err := iter.Next()
+		if errors.Is(err, iterator.Done) {
+			break
+		}
+		assert.NoError(t, err)
+		_, err = bulkwriter.Delete(doc.Ref)
+		assert.NoError(t, err)
+		numDeleted++
+	}
+
+	if numDeleted == 0 {
+		bulkwriter.End()
+	}
+
+	bulkwriter.Flush()
 }

@@ -25,30 +25,32 @@ import (
 // instances. It is primarily provided to support unit testing.
 type Store struct {
 	sync.Mutex
-	clock                       clock.PassiveClock
-	chargeStationAuth           map[string]*store.ChargeStationAuth
-	chargeStationSettings       map[string]*store.ChargeStationSettings
-	chargeStationRuntimeDetails map[string]*store.ChargeStationRuntimeDetails
-	tokens                      map[string]*store.Token
-	transactions                map[string]*store.Transaction
-	certificates                map[string]string
-	registrations               map[string]*store.OcpiRegistration
-	partyDetails                map[string]*store.OcpiParty
-	locations                   map[string]*store.Location
+	clock                            clock.PassiveClock
+	chargeStationAuth                map[string]*store.ChargeStationAuth
+	chargeStationSettings            map[string]*store.ChargeStationSettings
+	chargeStationInstallCertificates map[string]*store.ChargeStationInstallCertificates
+	chargeStationRuntimeDetails      map[string]*store.ChargeStationRuntimeDetails
+	tokens                           map[string]*store.Token
+	transactions                     map[string]*store.Transaction
+	certificates                     map[string]string
+	registrations                    map[string]*store.OcpiRegistration
+	partyDetails                     map[string]*store.OcpiParty
+	locations                        map[string]*store.Location
 }
 
 func NewStore(clock clock.PassiveClock) *Store {
 	return &Store{
-		clock:                       clock,
-		chargeStationAuth:           make(map[string]*store.ChargeStationAuth),
-		chargeStationSettings:       make(map[string]*store.ChargeStationSettings),
-		chargeStationRuntimeDetails: make(map[string]*store.ChargeStationRuntimeDetails),
-		tokens:                      make(map[string]*store.Token),
-		transactions:                make(map[string]*store.Transaction),
-		certificates:                make(map[string]string),
-		registrations:               make(map[string]*store.OcpiRegistration),
-		partyDetails:                make(map[string]*store.OcpiParty),
-		locations:                   make(map[string]*store.Location),
+		clock:                            clock,
+		chargeStationAuth:                make(map[string]*store.ChargeStationAuth),
+		chargeStationSettings:            make(map[string]*store.ChargeStationSettings),
+		chargeStationInstallCertificates: make(map[string]*store.ChargeStationInstallCertificates),
+		chargeStationRuntimeDetails:      make(map[string]*store.ChargeStationRuntimeDetails),
+		tokens:                           make(map[string]*store.Token),
+		transactions:                     make(map[string]*store.Transaction),
+		certificates:                     make(map[string]string),
+		registrations:                    make(map[string]*store.OcpiRegistration),
+		partyDetails:                     make(map[string]*store.OcpiParty),
+		locations:                        make(map[string]*store.Location),
 	}
 }
 
@@ -115,6 +117,72 @@ func (s *Store) ListChargeStationSettings(_ context.Context, pageSize int, previ
 		settings = append(settings, s.chargeStationSettings[k])
 	}
 	return settings, nil
+}
+
+func (s *Store) UpdateChargeStationInstallCertificates(_ context.Context, chargeStationId string, certificates *store.ChargeStationInstallCertificates) error {
+	s.Lock()
+	defer s.Unlock()
+	certs := s.chargeStationInstallCertificates[chargeStationId]
+	now := s.clock.Now().UTC()
+	if certs == nil {
+		certs = &store.ChargeStationInstallCertificates{
+			ChargeStationId: chargeStationId,
+			Certificates:    slices.Clone(certificates.Certificates),
+		}
+
+		for _, v := range certs.Certificates {
+			v.LastUpdated = now
+		}
+	} else {
+		var newCerts []*store.ChargeStationInstallCertificate
+		for _, v := range certificates.Certificates {
+			matched := false
+			for _, c := range certs.Certificates {
+				if v.CertificateId == c.CertificateId {
+					c.CertificateData = v.CertificateData
+					c.CertificateInstallationStatus = v.CertificateInstallationStatus
+					c.CertificateType = v.CertificateType
+					c.LastUpdated = now
+					matched = true
+					break
+				}
+			}
+			if !matched {
+				newCerts = append(newCerts, v)
+			}
+		}
+		certs.Certificates = append(certs.Certificates, newCerts...)
+	}
+	s.chargeStationInstallCertificates[chargeStationId] = certs
+	return nil
+}
+
+func (s *Store) LookupChargeStationInstallCertificates(_ context.Context, chargeStationId string) (*store.ChargeStationInstallCertificates, error) {
+	s.Lock()
+	defer s.Unlock()
+	return s.chargeStationInstallCertificates[chargeStationId], nil
+}
+
+func (s *Store) ListChargeStationInstallCertificates(_ context.Context, pageSize int, previousChargeStationId string) ([]*store.ChargeStationInstallCertificates, error) {
+	s.Lock()
+	defer s.Unlock()
+
+	keys := maps.Keys(s.chargeStationInstallCertificates)
+	sort.Strings(keys)
+
+	i, found := slices.BinarySearch(keys, previousChargeStationId)
+	if !found {
+		i = 0
+	} else {
+		i++
+	}
+
+	var installCertificates []*store.ChargeStationInstallCertificates
+	max := int(math.Min(float64(i+pageSize), float64(len(keys))))
+	for _, k := range keys[i:max] {
+		installCertificates = append(installCertificates, s.chargeStationInstallCertificates[k])
+	}
+	return installCertificates, nil
 }
 
 func (s *Store) SetChargeStationRuntimeDetails(_ context.Context, chargeStationId string, details *store.ChargeStationRuntimeDetails) error {

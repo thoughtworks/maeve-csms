@@ -132,6 +132,94 @@ func (s *Store) ListChargeStationSettings(ctx context.Context, pageSize int, pre
 	return chargeStationSettings, nil
 }
 
+type chargeStationInstallCertificate struct {
+	Type        string    `firestore:"t"`
+	Data        string    `firestore:"d"`
+	Status      string    `firestore:"s"`
+	LastUpdated time.Time `firestore:"u"`
+}
+
+func mapChargeStationInstallCertificates(certificates map[string]*chargeStationInstallCertificate) []*store.ChargeStationInstallCertificate {
+	var certs []*store.ChargeStationInstallCertificate
+	for id, c := range certificates {
+		certs = append(certs, &store.ChargeStationInstallCertificate{
+			CertificateType:               store.CertificateType(c.Type),
+			CertificateId:                 id,
+			CertificateData:               c.Data,
+			CertificateInstallationStatus: store.CertificateInstallationStatus(c.Status),
+			LastUpdated:                   c.LastUpdated,
+		})
+	}
+	return certs
+}
+
+func (s *Store) UpdateChargeStationInstallCertificates(ctx context.Context, chargeStationId string, certificates *store.ChargeStationInstallCertificates) error {
+	csRef := s.client.Doc(fmt.Sprintf("ChargeStationInstallCertificates/%s", chargeStationId))
+	var set = make(map[string]*chargeStationInstallCertificate)
+	now := s.clock.Now().UTC()
+	for _, c := range certificates.Certificates {
+		set[c.CertificateId] = &chargeStationInstallCertificate{
+			Type:        string(c.CertificateType),
+			Data:        c.CertificateData,
+			Status:      string(c.CertificateInstallationStatus),
+			LastUpdated: now,
+		}
+	}
+	_, err := csRef.Set(ctx, set, firestore.MergeAll)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *Store) LookupChargeStationInstallCertificates(ctx context.Context, chargeStationId string) (*store.ChargeStationInstallCertificates, error) {
+	csRef := s.client.Doc(fmt.Sprintf("ChargeStationInstallCertificates/%s", chargeStationId))
+	snap, err := csRef.Get(ctx)
+	if err != nil {
+		if status.Code(err) == codes.NotFound {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("lookup charge station install certificates %s: %w", chargeStationId, err)
+	}
+	var csData map[string]*chargeStationInstallCertificate
+	if err = snap.DataTo(&csData); err != nil {
+		return nil, fmt.Errorf("map charge station install certificates %s: %w", chargeStationId, err)
+	}
+	var certs = mapChargeStationInstallCertificates(csData)
+	return &store.ChargeStationInstallCertificates{
+		ChargeStationId: chargeStationId,
+		Certificates:    certs,
+	}, nil
+}
+
+func (s *Store) ListChargeStationInstallCertificates(ctx context.Context, pageSize int, previousCsId string) ([]*store.ChargeStationInstallCertificates, error) {
+	var installCerts []*store.ChargeStationInstallCertificates
+	var docIt *firestore.DocumentIterator
+	if previousCsId == "" {
+		docIt = s.client.Collection("ChargeStationInstallCertificates").OrderBy(firestore.DocumentID, firestore.Asc).
+			Limit(pageSize).Documents(ctx)
+	} else {
+		docIt = s.client.Collection("ChargeStationInstallCertificates").OrderBy(firestore.DocumentID, firestore.Asc).
+			StartAfter(previousCsId).Limit(pageSize).Documents(ctx)
+	}
+	snaps, err := docIt.GetAll()
+	if err != nil {
+		return nil, fmt.Errorf("list charge station install certificates: %w", err)
+	}
+	for _, snap := range snaps {
+		var certs map[string]*chargeStationInstallCertificate
+		if err = snap.DataTo(&certs); err != nil {
+			return nil, fmt.Errorf("map charge station install certificates: %w", err)
+		}
+		installCert := mapChargeStationInstallCertificates(certs)
+		installCerts = append(installCerts, &store.ChargeStationInstallCertificates{
+			ChargeStationId: snap.Ref.ID,
+			Certificates:    installCert,
+		})
+	}
+	return installCerts, nil
+}
+
 type chargeStationRuntimeDetails struct {
 	OcppVersion string `firestore:"v"`
 }

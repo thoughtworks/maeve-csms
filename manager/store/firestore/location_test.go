@@ -17,6 +17,8 @@ import (
 )
 
 func TestSetAndLookupLocation(t *testing.T) {
+	defer cleanupAllCollections(t, "myproject")
+
 	ctx := context.Background()
 	locationStore, err := firestore.NewStore(ctx, "myproject", clock.RealClock{})
 	require.NoError(t, err)
@@ -47,6 +49,8 @@ func TestSetAndLookupLocation(t *testing.T) {
 }
 
 func TestListLocations(t *testing.T) {
+	defer cleanupAllCollections(t, "myproject")
+
 	ctx := context.Background()
 	locationStore, err := firestore.NewStore(ctx, "myproject", clock.RealClock{})
 	require.NoError(t, err)
@@ -81,8 +85,4 @@ func TestListLocations(t *testing.T) {
 		loc.LastUpdated = ""
 		assert.Equal(t, locations[i], got[i])
 	}
-}
-
-func strPointer(s string) *string {
-	return &s
 }
