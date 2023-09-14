@@ -73,6 +73,32 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Status"
+  /cs/{csId}/certificates:
+    post:
+      summary: "Install certificates on the charge station"
+      operationId: "installChargeStationCertificates"
+      parameters:
+        - name: "csId"
+          in: "path"
+          description: "The charge station identifier"
+          schema:
+            type: "string"
+            maxLength: 28
+      requestBody:
+        required: true
+        content:
+          "application/json":
+            schema:
+              $ref: "#/components/schemas/ChargeStationInstallCertificates"
+      responses:
+        "200":
+          description: "OK"
+        default:
+          description: "Unexpected error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Status"
   /cs/{csId}/auth:
     get:
       summary: "Returns the authentication details"
@@ -357,6 +383,33 @@ components:
           separated by semi-colons. The variable name can include an optional variable instance name and attribute
           type separated by semi-colons. The maximum length for OCPP 1.6 is 500 characters.
         maxLength: 1000
+    ChargeStationInstallCertificates:
+      type: "object"
+      description: |
+        The set of certificates to install on the charge station. The certificates will be sent
+        to the charge station asynchronously.
+      required:
+        - "certificates"
+      properties:
+        certificates:
+          type: "array"
+          items:
+            type: "object"
+            description: "The set of certificates to install"
+            required:
+              - "type"
+              - "certificate"
+            properties:
+              type:
+                type: "string"
+                enum:
+                  - V2G
+                  - MO
+                  - MF
+                  - CSMS
+              certificate:
+                type: "string"
+                description: "The PEM encoded certificate with newlines replaced by `\\n`"
     Token:
       type: "object"
       description: "An authorization token"

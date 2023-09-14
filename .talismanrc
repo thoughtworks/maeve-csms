@@ -26,7 +26,7 @@ fileignoreconfig:
   - filename: manager/api/API.md
     checksum: c9a715fef138947fcaa341a4ee531a1c87216f180de576565ff5edb42cec936e
   - filename: manager/api/api.gen.go
-    checksum: 75f3fb88cb73741e2238d914d22edbdb7c60a9e35ae60f862420189ca77345ec
+    checksum: 2b83e705746d6a90495b24c409a3e7ecd5931f439be1088fad917c1272fb3f62
   - filename: manager/api/server.go
     checksum: 98cbd1df522ea428f7e669c01721f3070133062378a4f2e4b167d55eaa8d079b
   - filename: manager/api/server_test.go

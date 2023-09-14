@@ -135,6 +135,56 @@ will be rebooted so the new configuration can take effect if instructed to.
 This operation does not require authentication
 </aside>
 
+## installChargeStationCertificates
+
+<a id="opIdinstallChargeStationCertificates"></a>
+
+`POST /cs/{csId}/certificates`
+
+*Install certificates on the charge station*
+
+> Body parameter
+
+```json
+{
+  "certificates": [
+    {
+      "type": "V2G",
+      "certificate": "string"
+    }
+  ]
+}
+```
+
+<h3 id="installchargestationcertificates-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|csId|path|string|false|The charge station identifier|
+|body|body|[ChargeStationInstallCertificates](#schemachargestationinstallcertificates)|true|none|
+
+> Example responses
+
+> default Response
+
+```json
+{
+  "status": "string",
+  "error": "string"
+}
+```
+
+<h3 id="installchargestationcertificates-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|OK|None|
+|default|Default|Unexpected error|[Status](#schemastatus)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
 ## lookupChargeStationAuth
 
 <a id="opIdlookupChargeStationAuth"></a>
@@ -663,6 +713,45 @@ Settings for a charge station
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
 |**additionalProperties**|string|false|none|The key is the name of the setting. For OCPP 2.0.1 the name should have the following pattern:<br><component>/<variable>. The component name can include an optional component instance name and evse id<br>separated by semi-colons. The variable name can include an optional variable instance name and attribute<br>type separated by semi-colons. The maximum length for OCPP 1.6 is 500 characters.|
+
+<h2 id="tocS_ChargeStationInstallCertificates">ChargeStationInstallCertificates</h2>
+<!-- backwards compatibility -->
+<a id="schemachargestationinstallcertificates"></a>
+<a id="schema_ChargeStationInstallCertificates"></a>
+<a id="tocSchargestationinstallcertificates"></a>
+<a id="tocschargestationinstallcertificates"></a>
+
+```json
+{
+  "certificates": [
+    {
+      "type": "V2G",
+      "certificate": "string"
+    }
+  ]
+}
+
+```
+
+The set of certificates to install on the charge station. The certificates will be sent
+to the charge station asynchronously.
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|certificates|[object]|true|none|none|
+|» type|string|true|none|none|
+|» certificate|string|true|none|The PEM encoded certificate with newlines replaced by `\n`|
+
+#### Enumerated Values
+
+|Property|Value|
+|---|---|
+|type|V2G|
+|type|MO|
+|type|MF|
+|type|CSMS|
 
 <h2 id="tocS_Token">Token</h2>
 <!-- backwards compatibility -->

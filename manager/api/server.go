@@ -3,6 +3,8 @@
 package api
 
 import (
+	"fmt"
+	handlers "github.com/thoughtworks/maeve-csms/manager/handlers/ocpp201"
 	"github.com/thoughtworks/maeve-csms/manager/ocpi"
 	"net/http"
 	"time"
@@ -74,6 +76,39 @@ func (s *Server) ReconfigureChargeStation(w http.ResponseWriter, r *http.Request
 
 	err := s.store.UpdateChargeStationSettings(r.Context(), csId, &store.ChargeStationSettings{
 		Settings: chargeStationSettings,
+	})
+	if err != nil {
+		_ = render.Render(w, r, ErrInternalError(err))
+		return
+	}
+}
+
+func (s *Server) InstallChargeStationCertificates(w http.ResponseWriter, r *http.Request, csId string) {
+	req := new(ChargeStationInstallCertificates)
+	if err := render.Bind(r, req); err != nil {
+		_ = render.Render(w, r, ErrInvalidRequest(err))
+		return
+	}
+
+	var certs []*store.ChargeStationInstallCertificate
+	for _, cert := range req.Certificates {
+		certId, err := handlers.GetCertificateId(cert.Certificate)
+		if err != nil {
+			_ = render.Render(w, r, ErrInvalidRequest(fmt.Errorf("invalid certificate: %w", err)))
+			return
+		}
+
+		certs = append(certs, &store.ChargeStationInstallCertificate{
+			CertificateType:               store.CertificateType(cert.Type),
+			CertificateId:                 certId,
+			CertificateData:               cert.Certificate,
+			CertificateInstallationStatus: store.CertificateInstallationPending,
+		})
+	}
+
+	err := s.store.UpdateChargeStationInstallCertificates(r.Context(), csId, &store.ChargeStationInstallCertificates{
+		ChargeStationId: csId,
+		Certificates:    certs,
 	})
 	if err != nil {
 		_ = render.Render(w, r, ErrInternalError(err))
