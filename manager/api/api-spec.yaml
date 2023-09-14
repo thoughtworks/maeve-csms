@@ -73,6 +73,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Status"
+
   /cs/{csId}/certificates:
     post:
       summary: "Install certificates on the charge station"
@@ -410,6 +411,13 @@ components:
               certificate:
                 type: "string"
                 description: "The PEM encoded certificate with newlines replaced by `\\n`"
+              status:
+                type: "string"
+                description: "The status, defaults to Pending"
+                enum:
+                  - Accepted
+                  - Rejected
+                  - Pending
     Token:
       type: "object"
       description: "An authorization token"

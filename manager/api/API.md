@@ -150,7 +150,8 @@ This operation does not require authentication
   "certificates": [
     {
       "type": "V2G",
-      "certificate": "string"
+      "certificate": "string",
+      "status": "Accepted"
     }
   ]
 }
@@ -726,7 +727,8 @@ Settings for a charge station
   "certificates": [
     {
       "type": "V2G",
-      "certificate": "string"
+      "certificate": "string",
+      "status": "Accepted"
     }
   ]
 }
@@ -743,6 +745,7 @@ to the charge station asynchronously.
 |certificates|[object]|true|none|none|
 |» type|string|true|none|none|
 |» certificate|string|true|none|The PEM encoded certificate with newlines replaced by `\n`|
+|» status|string|false|none|The status, defaults to Pending|
 
 #### Enumerated Values
 
@@ -752,6 +755,9 @@ to the charge station asynchronously.
 |type|MO|
 |type|MF|
 |type|CSMS|
+|status|Accepted|
+|status|Rejected|
+|status|Pending|
 
 <h2 id="tocS_Token">Token</h2>
 <!-- backwards compatibility -->

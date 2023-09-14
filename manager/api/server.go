@@ -98,11 +98,16 @@ func (s *Server) InstallChargeStationCertificates(w http.ResponseWriter, r *http
 			return
 		}
 
+		status := store.CertificateInstallationPending
+		if cert.Status != nil {
+			status = store.CertificateInstallationStatus(*cert.Status)
+		}
+
 		certs = append(certs, &store.ChargeStationInstallCertificate{
 			CertificateType:               store.CertificateType(cert.Type),
 			CertificateId:                 certId,
 			CertificateData:               cert.Certificate,
-			CertificateInstallationStatus: store.CertificateInstallationPending,
+			CertificateInstallationStatus: status,
 		})
 	}
 
