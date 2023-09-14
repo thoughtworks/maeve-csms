@@ -277,8 +277,8 @@ func (h *Handler) Connect(errCh chan error) {
 			reflect.TypeOf(&ocpp201.SetVariablesRequestJson{}): "SetVariables",
 		},
 	}
-	go SyncSettings(context.Background(), h.storageEngine, v16SyncCallMaker, v201SyncCallMaker, 2*time.Minute, 2*time.Minute)
-	go SyncCertificates(context.Background(), h.storageEngine, dataTransferCallMaker, v201SyncCallMaker, 2*time.Minute, 2*time.Minute)
+	go SyncSettings(context.Background(), h.storageEngine, h.clock, v16SyncCallMaker, v201SyncCallMaker, 2*time.Minute, 2*time.Minute)
+	go SyncCertificates(context.Background(), h.storageEngine, h.clock, dataTransferCallMaker, v201SyncCallMaker, 2*time.Minute, 2*time.Minute)
 }
 
 func getTopicPattern(topic string) string {

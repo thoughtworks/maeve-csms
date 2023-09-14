@@ -49,20 +49,18 @@ func (s *Store) LookupChargeStationAuth(ctx context.Context, chargeStationId str
 }
 
 type chargeStationSetting struct {
-	Value       string    `firestore:"v"`
-	Status      string    `firestore:"s"`
-	LastUpdated time.Time `firestore:"u"`
+	Value     string    `firestore:"v"`
+	Status    string    `firestore:"s"`
+	SendAfter time.Time `firestore:"u"`
 }
 
 func (s *Store) UpdateChargeStationSettings(ctx context.Context, chargeStationId string, settings *store.ChargeStationSettings) error {
 	csRef := s.client.Doc(fmt.Sprintf("ChargeStationSettings/%s", chargeStationId))
 	var set = make(map[string]*chargeStationSetting)
-	now := s.clock.Now().UTC()
 	for k, v := range settings.Settings {
 		set[k] = &chargeStationSetting{
-			Value:       v.Value,
-			Status:      string(v.Status),
-			LastUpdated: now,
+			Value:  v.Value,
+			Status: string(v.Status),
 		}
 	}
 	_, err := csRef.Set(ctx, set, firestore.MergeAll)
@@ -96,9 +94,9 @@ func mapChargeStationSettings(csData map[string]*chargeStationSetting) map[strin
 	var settings = make(map[string]*store.ChargeStationSetting)
 	for k, v := range csData {
 		settings[k] = &store.ChargeStationSetting{
-			Value:       v.Value,
-			Status:      store.ChargeStationSettingStatus(v.Status),
-			LastUpdated: v.LastUpdated,
+			Value:     v.Value,
+			Status:    store.ChargeStationSettingStatus(v.Status),
+			SendAfter: v.SendAfter,
 		}
 	}
 	return settings
@@ -133,10 +131,10 @@ func (s *Store) ListChargeStationSettings(ctx context.Context, pageSize int, pre
 }
 
 type chargeStationInstallCertificate struct {
-	Type        string    `firestore:"t"`
-	Data        string    `firestore:"d"`
-	Status      string    `firestore:"s"`
-	LastUpdated time.Time `firestore:"u"`
+	Type      string    `firestore:"t"`
+	Data      string    `firestore:"d"`
+	Status    string    `firestore:"s"`
+	SendAfter time.Time `firestore:"u"`
 }
 
 func mapChargeStationInstallCertificates(certificates map[string]*chargeStationInstallCertificate) []*store.ChargeStationInstallCertificate {
@@ -147,7 +145,7 @@ func mapChargeStationInstallCertificates(certificates map[string]*chargeStationI
 			CertificateId:                 id,
 			CertificateData:               c.Data,
 			CertificateInstallationStatus: store.CertificateInstallationStatus(c.Status),
-			LastUpdated:                   c.LastUpdated,
+			SendAfter:                     c.SendAfter,
 		})
 	}
 	return certs
@@ -156,13 +154,12 @@ func mapChargeStationInstallCertificates(certificates map[string]*chargeStationI
 func (s *Store) UpdateChargeStationInstallCertificates(ctx context.Context, chargeStationId string, certificates *store.ChargeStationInstallCertificates) error {
 	csRef := s.client.Doc(fmt.Sprintf("ChargeStationInstallCertificates/%s", chargeStationId))
 	var set = make(map[string]*chargeStationInstallCertificate)
-	now := s.clock.Now().UTC()
 	for _, c := range certificates.Certificates {
 		set[c.CertificateId] = &chargeStationInstallCertificate{
-			Type:        string(c.CertificateType),
-			Data:        c.CertificateData,
-			Status:      string(c.CertificateInstallationStatus),
-			LastUpdated: now,
+			Type:      string(c.CertificateType),
+			Data:      c.CertificateData,
+			Status:    string(c.CertificateInstallationStatus),
+			SendAfter: c.SendAfter,
 		}
 	}
 	_, err := csRef.Set(ctx, set, firestore.MergeAll)

@@ -65,8 +65,8 @@ func TestUpdateAndLookupChargeStationSettingsWithNewSettings(t *testing.T) {
 	want := &store.ChargeStationSettings{
 		ChargeStationId: "cs001",
 		Settings: map[string]*store.ChargeStationSetting{
-			"foo": {Value: "bar", Status: store.ChargeStationSettingStatusPending, LastUpdated: now.UTC()},
-			"baz": {Value: "qux", Status: store.ChargeStationSettingStatusPending, LastUpdated: now.UTC()},
+			"foo": {Value: "bar", Status: store.ChargeStationSettingStatusPending},
+			"baz": {Value: "qux", Status: store.ChargeStationSettingStatusPending},
 		},
 	}
 
@@ -117,7 +117,6 @@ func TestUpdateAndLookupChargeStationSettingsWithUpdatedSettings(t *testing.T) {
 	assert.Len(t, got.Settings, len(want.Settings))
 	assert.Equal(t, store.ChargeStationSettingStatusPending, got.Settings["foo"].Status)
 	assert.Equal(t, store.ChargeStationSettingStatusAccepted, got.Settings["baz"].Status)
-	assert.True(t, got.Settings["foo"].LastUpdated.Before(got.Settings["baz"].LastUpdated))
 }
 
 func TestListChargeStationSettings(t *testing.T) {
@@ -131,8 +130,8 @@ func TestListChargeStationSettings(t *testing.T) {
 
 	want := &store.ChargeStationSettings{
 		Settings: map[string]*store.ChargeStationSetting{
-			"foo": {Value: "bar", Status: store.ChargeStationSettingStatusPending, LastUpdated: now.UTC()},
-			"baz": {Value: "qux", Status: store.ChargeStationSettingStatusPending, LastUpdated: now.UTC()},
+			"foo": {Value: "bar", Status: store.ChargeStationSettingStatusPending},
+			"baz": {Value: "qux", Status: store.ChargeStationSettingStatusPending},
 		},
 	}
 	for i := 0; i < 25; i++ {
@@ -251,7 +250,7 @@ func TestListChargeStationInstallCertificates(t *testing.T) {
 				CertificateId:                 "v2g001",
 				CertificateData:               "v2g-pem-data",
 				CertificateInstallationStatus: store.CertificateInstallationPending,
-				LastUpdated:                   now.UTC(),
+				SendAfter:                     now.UTC(),
 			},
 		},
 	}

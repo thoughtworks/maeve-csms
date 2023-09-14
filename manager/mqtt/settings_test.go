@@ -94,7 +94,7 @@ type updateWithNoResponse struct {
 	updateAttempts []time.Time
 }
 
-func (u *updateWithNoResponse) update(ctx context.Context, engine store.Engine, chargeStationId string, req ocpp.Request) error {
+func (u *updateWithNoResponse) update(context.Context, store.Engine, string, ocpp.Request) error {
 	u.updateAttempts = append(u.updateAttempts, time.Now())
 	return nil
 }
@@ -127,7 +127,7 @@ func TestSyncV16Settings(t *testing.T) {
 	require.NoError(t, err)
 
 	v16CallMaker := &mockCallMaker{engine: engine, updateFn: updateV16StatusToAccepted}
-	mqtt.SyncSettings(ctx, engine, v16CallMaker, nil, 100*time.Millisecond, 500*time.Millisecond)
+	mqtt.SyncSettings(ctx, engine, clock.RealClock{}, v16CallMaker, nil, 100*time.Millisecond, 500*time.Millisecond)
 
 	settings, err := engine.LookupChargeStationSettings(ctx, "cs001")
 	require.NoError(t, err)
@@ -163,10 +163,11 @@ func TestSyncV16SettingsRetryAfterDelay(t *testing.T) {
 
 	updater := updateWithNoResponse{}
 	v16CallMaker := &mockCallMaker{engine: engine, updateFn: updater.update}
-	mqtt.SyncSettings(ctx, engine, v16CallMaker, nil, 100*time.Millisecond, 400*time.Millisecond)
+	mqtt.SyncSettings(ctx, engine, clock.RealClock{}, v16CallMaker, nil, 100*time.Millisecond, 400*time.Millisecond)
 
-	require.Equal(t, 2, len(updater.updateAttempts))
+	require.Equal(t, 3, len(updater.updateAttempts))
 	assert.True(t, updater.updateAttempts[1].After(updater.updateAttempts[0].Add(400*time.Millisecond)))
+	assert.True(t, updater.updateAttempts[2].After(updater.updateAttempts[1].Add(400*time.Millisecond)))
 }
 
 func TestSyncV201Variables(t *testing.T) {
@@ -197,7 +198,7 @@ func TestSyncV201Variables(t *testing.T) {
 	require.NoError(t, err)
 
 	v201CallMaker := &mockCallMaker{engine: engine, updateFn: updateV201StatusToAccepted}
-	mqtt.SyncSettings(ctx, engine, nil, v201CallMaker, 100*time.Millisecond, 500*time.Millisecond)
+	mqtt.SyncSettings(ctx, engine, clock.RealClock{}, nil, v201CallMaker, 100*time.Millisecond, 500*time.Millisecond)
 
 	settings, err := engine.LookupChargeStationSettings(ctx, "cs001")
 	require.NoError(t, err)
@@ -233,10 +234,11 @@ func TestSyncV201SettingsRetryAfterDelay(t *testing.T) {
 
 	updater := updateWithNoResponse{}
 	v201CallMaker := &mockCallMaker{engine: engine, updateFn: updater.update}
-	mqtt.SyncSettings(ctx, engine, nil, v201CallMaker, 100*time.Millisecond, 400*time.Millisecond)
+	mqtt.SyncSettings(ctx, engine, clock.RealClock{}, nil, v201CallMaker, 100*time.Millisecond, 400*time.Millisecond)
 
-	require.Equal(t, 2, len(updater.updateAttempts))
+	require.Equal(t, 3, len(updater.updateAttempts))
 	assert.True(t, updater.updateAttempts[1].After(updater.updateAttempts[0].Add(400*time.Millisecond)))
+	assert.True(t, updater.updateAttempts[2].After(updater.updateAttempts[1].Add(400*time.Millisecond)))
 }
 
 func TestSyncSettingsWithManyChargeStations(t *testing.T) {
@@ -287,7 +289,7 @@ func TestSyncSettingsWithManyChargeStations(t *testing.T) {
 
 	v16CallMaker := &mockCallMaker{engine: engine, updateFn: updateV16StatusToAccepted}
 	v201CallMaker := &mockCallMaker{engine: engine, updateFn: updateV201StatusToAccepted}
-	mqtt.SyncSettings(ctx, engine, v16CallMaker, v201CallMaker, 100*time.Millisecond, 500*time.Millisecond)
+	mqtt.SyncSettings(ctx, engine, clock.RealClock{}, v16CallMaker, v201CallMaker, 100*time.Millisecond, 500*time.Millisecond)
 
 	settings, err := engine.LookupChargeStationSettings(ctx, "cs133")
 	require.NoError(t, err)

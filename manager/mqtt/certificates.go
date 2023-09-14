@@ -8,10 +8,11 @@ import (
 	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
 	"github.com/thoughtworks/maeve-csms/manager/store"
 	"golang.org/x/exp/slog"
+	"k8s.io/utils/clock"
 	"time"
 )
 
-func SyncCertificates(ctx context.Context, engine store.Engine, v16CallMaker, v201CallMaker handlers.CallMaker, runEvery, retryAfter time.Duration) {
+func SyncCertificates(ctx context.Context, engine store.Engine, clock clock.PassiveClock, v16CallMaker, v201CallMaker handlers.CallMaker, runEvery, retryAfter time.Duration) {
 	var previousChargeStationId string
 	for {
 		select {
@@ -46,10 +47,11 @@ func SyncCertificates(ctx context.Context, engine store.Engine, v16CallMaker, v2
 
 				csId := pendingCertificateInstallation.ChargeStationId
 				for _, certificate := range pendingCertificateInstallation.Certificates {
-					if certificate.CertificateInstallationStatus != store.CertificateInstallationAccepted && time.Since(certificate.LastUpdated) > retryAfter {
+					if certificate.CertificateInstallationStatus != store.CertificateInstallationAccepted && clock.Now().After(certificate.SendAfter) {
 						slog.Info("updating charge station certificates", slog.String("chargeStationId", csId),
 							slog.String("certificate", certificate.CertificateId),
 							slog.String("version", details.OcppVersion))
+						certificate.SendAfter = clock.Now().Add(retryAfter)
 						err = engine.UpdateChargeStationInstallCertificates(ctx, csId, &store.ChargeStationInstallCertificates{
 							Certificates: []*store.ChargeStationInstallCertificate{
 								certificate,

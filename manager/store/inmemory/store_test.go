@@ -22,8 +22,8 @@ func TestUpdateChargeStationSettingsWithNewSettings(t *testing.T) {
 	want := &store.ChargeStationSettings{
 		ChargeStationId: "cs001",
 		Settings: map[string]*store.ChargeStationSetting{
-			"foo": {Value: "bar", Status: store.ChargeStationSettingStatusPending, LastUpdated: now.UTC()},
-			"baz": {Value: "qux", Status: store.ChargeStationSettingStatusPending, LastUpdated: now.UTC()},
+			"foo": {Value: "bar", Status: store.ChargeStationSettingStatusPending, SendAfter: now.UTC()},
+			"baz": {Value: "qux", Status: store.ChargeStationSettingStatusPending, SendAfter: now.UTC()},
 		},
 	}
 
@@ -37,6 +37,8 @@ func TestUpdateChargeStationSettingsWithNewSettings(t *testing.T) {
 }
 
 func TestUpdateChargeStationSettingsWithExistingSettings(t *testing.T) {
+	engine := inmemory.NewStore(clock.RealClock{})
+
 	want := &store.ChargeStationSettings{
 		ChargeStationId: "cs001",
 		Settings: map[string]*store.ChargeStationSetting{
@@ -45,7 +47,6 @@ func TestUpdateChargeStationSettingsWithExistingSettings(t *testing.T) {
 		},
 	}
 
-	engine := inmemory.NewStore(clock.RealClock{})
 	err := engine.UpdateChargeStationSettings(context.Background(), "cs001", &store.ChargeStationSettings{
 		Settings: map[string]*store.ChargeStationSetting{
 			"foo": {Value: "bar", Status: store.ChargeStationSettingStatusPending},
@@ -68,7 +69,6 @@ func TestUpdateChargeStationSettingsWithExistingSettings(t *testing.T) {
 	assert.Len(t, got.Settings, len(want.Settings))
 	assert.Equal(t, store.ChargeStationSettingStatusPending, got.Settings["foo"].Status)
 	assert.Equal(t, store.ChargeStationSettingStatusAccepted, got.Settings["baz"].Status)
-	assert.True(t, got.Settings["foo"].LastUpdated.Before(got.Settings["baz"].LastUpdated))
 }
 
 func TestListChargeStationSettingsReturnsDataInPages(t *testing.T) {
@@ -78,8 +78,8 @@ func TestListChargeStationSettingsReturnsDataInPages(t *testing.T) {
 	want := &store.ChargeStationSettings{
 		ChargeStationId: "cs001",
 		Settings: map[string]*store.ChargeStationSetting{
-			"foo": {Value: "bar", Status: store.ChargeStationSettingStatusPending, LastUpdated: now.UTC()},
-			"baz": {Value: "qux", Status: store.ChargeStationSettingStatusPending, LastUpdated: now.UTC()},
+			"foo": {Value: "bar", Status: store.ChargeStationSettingStatusPending, SendAfter: now.UTC()},
+			"baz": {Value: "qux", Status: store.ChargeStationSettingStatusPending, SendAfter: now.UTC()},
 		},
 	}
 	for i := 0; i < 25; i++ {
@@ -139,7 +139,7 @@ func TestUpdateChargeStationInstallCertificates(t *testing.T) {
 	got, err := engine.LookupChargeStationInstallCertificates(context.Background(), "cs001")
 	require.NoError(t, err)
 	assert.Equal(t, want, got)
-	assert.Equal(t, now.UTC(), got.Certificates[0].LastUpdated)
+	assert.Equal(t, time.Time{}, got.Certificates[0].SendAfter)
 }
 
 func TestUpdateChargeStationCertificateWithExistingCertificate(t *testing.T) {

@@ -172,7 +172,7 @@ func TestSyncCertificates(t *testing.T) {
 		updateFn: updater.update,
 	}
 
-	mqtt.SyncCertificates(ctx, engine, v16CallMaker, v201CallMaker, 100*time.Millisecond, 100*time.Millisecond)
+	mqtt.SyncCertificates(ctx, engine, clock.RealClock{}, v16CallMaker, v201CallMaker, 100*time.Millisecond, 100*time.Millisecond)
 
 	require.Len(t, v16CallMaker.callEvents, 2)
 	assert.Equal(t, v16CallMaker.callEvents[0].chargeStationId, "cs001")

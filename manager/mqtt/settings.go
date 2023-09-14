@@ -10,12 +10,13 @@ import (
 	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
 	"github.com/thoughtworks/maeve-csms/manager/store"
 	"golang.org/x/exp/slog"
+	"k8s.io/utils/clock"
 	"regexp"
 	"strconv"
 	"time"
 )
 
-func SyncSettings(ctx context.Context, engine store.Engine, v16CallMaker, v201CallMaker handlers.CallMaker, runEvery time.Duration, retryAfter time.Duration) {
+func SyncSettings(ctx context.Context, engine store.Engine, clock clock.PassiveClock, v16CallMaker, v201CallMaker handlers.CallMaker, runEvery time.Duration, retryAfter time.Duration) {
 	var previousChargeStationId string
 	for {
 		select {
@@ -45,14 +46,14 @@ func SyncSettings(ctx context.Context, engine store.Engine, v16CallMaker, v201Ca
 				switch details.OcppVersion {
 				case "1.6":
 					for name, setting := range pendingSetting.Settings {
-						if setting.Status == store.ChargeStationSettingStatusPending && time.Since(setting.LastUpdated) > retryAfter {
+						if setting.Status == store.ChargeStationSettingStatusPending && clock.Now().After(setting.SendAfter) {
 							slog.Info("updating charge station settings", slog.String("chargeStationId", csId),
 								slog.String("key", name),
 								slog.String("value", setting.Value),
 								slog.String("version", details.OcppVersion))
 							err = engine.UpdateChargeStationSettings(ctx, csId, &store.ChargeStationSettings{
 								Settings: map[string]*store.ChargeStationSetting{
-									name: {Status: setting.Status, Value: setting.Value},
+									name: {Status: setting.Status, Value: setting.Value, SendAfter: clock.Now().Add(retryAfter)},
 								},
 							})
 							if err != nil {
@@ -77,10 +78,10 @@ func SyncSettings(ctx context.Context, engine store.Engine, v16CallMaker, v201Ca
 							slog.String("key", name),
 							slog.String("value", setting.Value),
 							slog.String("version", details.OcppVersion))
-						if setting.Status == store.ChargeStationSettingStatusPending && time.Since(setting.LastUpdated) > retryAfter {
+						if setting.Status == store.ChargeStationSettingStatusPending && clock.Now().After(setting.SendAfter) {
 							err = engine.UpdateChargeStationSettings(ctx, csId, &store.ChargeStationSettings{
 								Settings: map[string]*store.ChargeStationSetting{
-									name: {Status: setting.Status, Value: setting.Value},
+									name: {Status: setting.Status, Value: setting.Value, SendAfter: clock.Now().Add(retryAfter)},
 								},
 							})
 							if err != nil {

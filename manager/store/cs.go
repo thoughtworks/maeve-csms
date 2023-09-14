@@ -36,9 +36,9 @@ var (
 )
 
 type ChargeStationSetting struct {
-	Value       string
-	Status      ChargeStationSettingStatus
-	LastUpdated time.Time
+	Value     string
+	Status    ChargeStationSettingStatus
+	SendAfter time.Time
 }
 
 type ChargeStationSettings struct {
@@ -85,7 +85,7 @@ type ChargeStationInstallCertificate struct {
 	CertificateId                 string
 	CertificateData               string
 	CertificateInstallationStatus CertificateInstallationStatus
-	LastUpdated                   time.Time
+	SendAfter                     time.Time
 }
 
 type ChargeStationInstallCertificates struct {

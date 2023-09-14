@@ -71,20 +71,15 @@ func (s *Store) UpdateChargeStationSettings(_ context.Context, chargeStationId s
 	s.Lock()
 	defer s.Unlock()
 	set := s.chargeStationSettings[chargeStationId]
-	now := s.clock.Now().UTC()
 	if set == nil {
 		set = &store.ChargeStationSettings{
 			ChargeStationId: chargeStationId,
 			Settings:        make(map[string]*store.ChargeStationSetting, len(settings.Settings)),
 		}
 		maps.Copy(set.Settings, settings.Settings)
-		for _, v := range set.Settings {
-			v.LastUpdated = now
-		}
 	} else {
 		for k, v := range settings.Settings {
 			set.Settings[k] = v
-			set.Settings[k].LastUpdated = now
 		}
 	}
 	s.chargeStationSettings[chargeStationId] = set
@@ -123,15 +118,10 @@ func (s *Store) UpdateChargeStationInstallCertificates(_ context.Context, charge
 	s.Lock()
 	defer s.Unlock()
 	certs := s.chargeStationInstallCertificates[chargeStationId]
-	now := s.clock.Now().UTC()
 	if certs == nil {
 		certs = &store.ChargeStationInstallCertificates{
 			ChargeStationId: chargeStationId,
 			Certificates:    slices.Clone(certificates.Certificates),
-		}
-
-		for _, v := range certs.Certificates {
-			v.LastUpdated = now
 		}
 	} else {
 		var newCerts []*store.ChargeStationInstallCertificate
@@ -142,7 +132,6 @@ func (s *Store) UpdateChargeStationInstallCertificates(_ context.Context, charge
 					c.CertificateData = v.CertificateData
 					c.CertificateInstallationStatus = v.CertificateInstallationStatus
 					c.CertificateType = v.CertificateType
-					c.LastUpdated = now
 					matched = true
 					break
 				}
@@ -457,7 +446,7 @@ func (s *Store) LookupLocation(_ context.Context, locationId string) (*store.Loc
 	return s.locations[locationId], nil
 }
 
-func (s *Store) ListLocations(context context.Context, offset int, limit int) ([]*store.Location, error) {
+func (s *Store) ListLocations(_ context.Context, offset int, limit int) ([]*store.Location, error) {
 	s.Lock()
 	defer s.Unlock()
 	var locations []*store.Location

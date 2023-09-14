@@ -67,12 +67,14 @@ fileignoreconfig:
     checksum: c181e8cd66c0b11de814810bf8d2dd411489ad5e0dc0e47ec5ca0555148b6ecd
   - filename: manager/handlers/tracing.go
     checksum: 5a44615eb6e4eab449c5594c09b3d7b2c5499ffa2452d2b4bce48ddddb9955e5
+  - filename: manager/mqtt/certificates.go
+    checksum: be0efcb6bb764994f66367764282f7c14332b9d0e73e8df8aac46f92bd93a493
   - filename: manager/mqtt/handler.go
     checksum: 9660c626538042009cebcba874730e4222c115fdf24c9dba12c5d4601c69b613
   - filename: manager/mqtt/router.go
     checksum: 880513a5d3f0070619c4890b5aab9fcf10650afc79550a83c1ad9a986c7e7367
   - filename: manager/mqtt/settings.go
-    checksum: a801bcc37934a64d4522be7ed20d73fb13bc159df09440ef5145bf2ced0c571d
+    checksum: 6f058ad0205d28c649ac22b615cdd64029b46723d8fc5d5ced579e99b426ec8f
   - filename: manager/mqtt/settings_test.go
     checksum: 99db5ba6a8456c7bae42bd1ab98df485a7d742a33171ed03dc92b8a502d4f699
   - filename: manager/mqtt/settings_test.go
