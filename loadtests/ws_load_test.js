@@ -6,10 +6,13 @@ export const options = {
     discardResponseBodies: true,
     scenarios: {
         contacts: {
-            executor: 'per-vu-iterations',
-            vus: 5,
-            iterations: 5,
-            maxDuration: '20s',
+            executor: 'ramping-vus',
+            startVUs: 0,
+            stages: [
+                { duration: '20s', target: 5 },
+                { duration: '10s', target: 0 },
+            ],
+            gracefulRampDown: '0s',
         },
     },
 };
