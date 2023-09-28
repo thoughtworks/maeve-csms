@@ -10,8 +10,23 @@ export const options = {
             executor: 'ramping-vus',
             startVUs: 0,
             stages: [
-                { duration: '20s', target: 5 },
-                { duration: '10s', target: 0 },
+                { duration: '1m', target: 5 },
+                { duration: '1m', target: 10 },
+                { duration: '1m', target: 15 },
+                { duration: '1m', target: 20 },
+                { duration: '1m', target: 25 },
+                { duration: '1m', target: 30 },
+                { duration: '1m', target: 25 },
+                { duration: '1m', target: 30 },
+                { duration: '1m', target: 25 },
+                { duration: '1m', target: 30 },
+                { duration: '1m', target: 25 },
+                { duration: '1m', target: 20 },
+                { duration: '1m', target: 15 },
+                { duration: '1m', target: 10 },
+                { duration: '1m', target: 5 },
+                { duration: '1m', target: 5 },
+                { duration: '1m', target: 0 },
             ],
             gracefulRampDown: '0s',
         },
@@ -20,16 +35,16 @@ export const options = {
 
 export default function () {
     let vuIdInTest = exec.vu.idInTest
-    let data = `cs00${vuIdInTest}:fiddlesticks_fishsticks`;
+    let data = `cs${vuIdInTest}:fiddlesticks_fishsticks`;
     let base64data = encoding.b64encode(data)
     const params = {
         headers: {'Sec-WebSocket-Protocol': 'ocpp1.6', 'Authorization': `Basic ${base64data}`}
     };
-        const url = `ws://localhost/ws/cs00${vuIdInTest}`;
+        const url = `ws://localhost/ws/cs${vuIdInTest}`;
         const res = ws.connect(url, params, function (socket) {
         socket.send('[2,"1","BootNotification",{"chargePointModel":"me100","chargePointVendor":"me"}]');
         socket.send('[2,"2","BootNotification",{"chargePointModel":"me100","chargePointVendor":"me"}]');
-        socket.send('[2, "3", "StatusNotification", {"connectorId": 1, "errorCode": "NoError", "status": "Available"}]');
+        socket.send('[2,"3", "StatusNotification", {"connectorId": 1, "errorCode": "NoError", "status": "Available"}]');
         socket.send('[2,"4","Heartbeat", {}]');
         socket.send('[2,"5","Heartbeat", {}]');
         socket.send('[2,"6","Heartbeat", {}]');
