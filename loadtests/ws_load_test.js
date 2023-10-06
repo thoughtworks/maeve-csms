@@ -9,25 +9,25 @@ export const options = {
     scenarios: {
         contacts: {
             executor: 'ramping-vus',
-            startVUs: 0,
+            startVUs: 2,
             stages: [
-                { duration: '1m', target: 5 }
-                { duration: '1m', target: 10 },
-                { duration: '1m', target: 15 },
-                { duration: '1m', target: 20 },
-                { duration: '1m', target: 25 },
-                { duration: '1m', target: 30 },
-                { duration: '1m', target: 25 },
-                { duration: '1m', target: 30 },
-                { duration: '1m', target: 25 },
-                { duration: '1m', target: 30 },
-                { duration: '1m', target: 25 },
-                { duration: '1m', target: 20 },
-                { duration: '1m', target: 15 },
-                { duration: '1m', target: 10 },
-                { duration: '1m', target: 5 },
-                { duration: '1m', target: 5 },
-                { duration: '1m', target: 0 },
+                { duration: '5m', target: 50 },
+                { duration: '5m', target: 100 },
+                { duration: '10m', target: 200 },
+                { duration: '10m', target: 300 },
+                { duration: '10m', target: 400 },
+                { duration: '10m', target: 500 },
+                { duration: '10m', target: 600 },
+                { duration: '5m', target: 550 },
+                { duration: '5m', target: 600 },
+                { duration: '5m', target: 550 },
+                { duration: '5m', target: 600 },
+                { duration: '10m', target: 500 },
+                { duration: '10m', target: 400 },
+                { duration: '10m', target: 300 },
+                { duration: '10m', target: 100 },
+                { duration: '5m', target: 50 },
+                { duration: '5m', target: 0 }
             ],
             gracefulRampDown: '0s',
         },
@@ -53,7 +53,7 @@ export default function () {
         sleep(10)
         socket.send('[2,"5","Heartbeat", {}]');
         sleep(10)
-        socket.send('[2,"6", "[2, "16", "Authorize", {"idTag": "38748383L7337848H823"}]');
+        socket.send('[2, "6", "Authorize", {"idTag": "38748383L7337848H823"}]');
         sleep(10)
         socket.send('[2,"7", "StatusNotification", {"connectorId": 1, "errorCode": "NoError", "status": "Preparing"}]');
         sleep(10)
