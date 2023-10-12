@@ -12,4 +12,5 @@ type Engine interface {
 	CertificateStore
 	OcpiStore
 	LocationStore
+	SessionStore
 }

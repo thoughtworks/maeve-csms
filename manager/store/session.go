@@ -26,12 +26,14 @@ type Session struct {
 	LocationId    *string
 	EvseId        *string
 	ConnectorId   *string
-	Currency      *string
-	TotalCost     Price //can be omitted
+	Currency      string
+	TotalCost     Price //can be omitted/optional
 	Status        string
 	LastUpdated   string
 }
 
 type SessionStore interface {
 	SetSession(ctx context.Context, session *Session) error
+	LookupSession(ctx context.Context, sessionId string) (*Session, error)
+	ListSessions(ctx context.Context, offset int, limit int) ([]*Session, error)
 }

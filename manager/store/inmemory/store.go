@@ -36,6 +36,7 @@ type Store struct {
 	registrations                    map[string]*store.OcpiRegistration
 	partyDetails                     map[string]*store.OcpiParty
 	locations                        map[string]*store.Location
+	sessions                         map[string]*store.Session
 }
 
 func NewStore(clock clock.PassiveClock) *Store {
@@ -51,6 +52,7 @@ func NewStore(clock clock.PassiveClock) *Store {
 		registrations:                    make(map[string]*store.OcpiRegistration),
 		partyDetails:                     make(map[string]*store.OcpiParty),
 		locations:                        make(map[string]*store.Location),
+		sessions:                         make(map[string]*store.Session),
 	}
 }
 
@@ -461,4 +463,37 @@ func (s *Store) ListLocations(_ context.Context, offset int, limit int) ([]*stor
 		locations = make([]*store.Location, 0)
 	}
 	return locations, nil
+}
+
+func (s *Store) SetSession(_ context.Context, session *store.Session) error {
+	s.Lock()
+	defer s.Unlock()
+
+	s.sessions[session.Id] = session
+
+	return nil
+}
+
+func (s *Store) LookupSession(_ context.Context, SessionId string) (*store.Session, error) {
+	s.Lock()
+	defer s.Unlock()
+
+	return s.sessions[SessionId], nil
+}
+
+func (s *Store) ListSessions(_ context.Context, offset int, limit int) ([]*store.Session, error) {
+	s.Lock()
+	defer s.Unlock()
+	var sessions []*store.Session
+	count := 0
+	for _, session := range s.sessions {
+		if count >= offset && count < offset+limit {
+			sessions = append(sessions, session)
+		}
+		count++
+	}
+	if sessions == nil {
+		sessions = make([]*store.Session, 0)
+	}
+	return sessions, nil
 }

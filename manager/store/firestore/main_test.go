@@ -81,6 +81,7 @@ func cleanupAllCollections(t *testing.T, gcloudProject string) {
 	cleanupCollection(t, gcloudProject, "Location")
 	cleanupCollection(t, gcloudProject, "OcpiParty")
 	cleanupCollection(t, gcloudProject, "OcpiRegistration")
+	cleanupCollection(t, gcloudProject, "Session")
 	cleanupCollection(t, gcloudProject, "Token")
 	cleanupCollection(t, gcloudProject, "Transaction")
 }
