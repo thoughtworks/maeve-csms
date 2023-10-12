@@ -1,5 +1,3 @@
-//go:build integration
-
 package firestore_test
 
 import (
@@ -13,7 +11,7 @@ import (
 )
 
 func TestSetAndLookupSession(t *testing.T) {
-	defer cleanupAllCollections(t, "myproject")
+	//defer cleanupAllCollections(t, "myproject")
 
 	ctx := context.Background()
 	sessionStore, err := firestore.NewStore(ctx, "myproject", clock.RealClock{})
