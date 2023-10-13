@@ -1,3 +1,5 @@
+//go:build integration
+
 package firestore_test
 
 import (
@@ -11,7 +13,7 @@ import (
 )
 
 func TestSetAndLookupSession(t *testing.T) {
-	//defer cleanupAllCollections(t, "myproject")
+	defer cleanupAllCollections(t, "myproject")
 
 	ctx := context.Background()
 	sessionStore, err := firestore.NewStore(ctx, "myproject", clock.RealClock{})
@@ -29,10 +31,9 @@ func TestSetAndLookupSession(t *testing.T) {
 			Type:       "RFID",
 			Uid:        "MYRFIDTAG",
 		},
-		AuthMethod:  "AUTH_REQUEST", //may cause issue
-		Currency:    "GBP",
-		Status:      "ACTIVE",
-		LastUpdated: "2019-08-24T14:15:22Z",
+		AuthMethod: "AUTH_REQUEST", //may cause issue
+		Currency:   "GBP",
+		Status:     "ACTIVE",
 	}
 	err = sessionStore.SetSession(ctx, want)
 	require.NoError(t, err)
@@ -40,7 +41,8 @@ func TestSetAndLookupSession(t *testing.T) {
 	got, err := sessionStore.LookupSession(ctx, "s001")
 	require.NoError(t, err)
 
-	//assert.Regexp(t, `^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z`)
+	assert.Regexp(t, `^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z`, got.LastUpdated)
+	got.LastUpdated = ""
 
 	assert.Equal(t, want, got)
 }
