@@ -53,10 +53,25 @@ curl http://localhost:9410/api/v0/cs/cs3 -H 'content-type: application/json' -d 
 curl -i http://localhost:9410/api/v0/token -H 'content-type: application/json' -d '{"countryCode": "GB","partyId": "TWK","type": "RFID","uid": "38748383L7337848H823","contractId": "GBTWK012345678V","issuer": "Thoughtworks","valid": true,"cacheMode": "ALWAYS"}'
 ```
 
-4. Run the load test using the script file and output the results to the k6 dashboard
+4. Set the load simulation in loadtests/ws_load_test.js
+
+```bash
+scenarios: {
+        contacts: {
+            executor: 'ramping-vus',
+            startVUs: ,
+            stages: [
+                { duration: '', target:  },
+            ],
+            gracefulRampDown: '',
+        }
+```
+
+5. Run the load test using the script file and output the results to the k6 dashboard
 ```bash
 ./k6 run --out dashboard loadtests/ws_load_test.js 
 ```
+
 
 
 
