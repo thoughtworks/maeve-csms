@@ -53,7 +53,7 @@ curl http://localhost:9410/api/v0/cs/cs3 -H 'content-type: application/json' -d 
 curl -i http://localhost:9410/api/v0/token -H 'content-type: application/json' -d '{"countryCode": "GB","partyId": "TWK","type": "RFID","uid": "38748383L7337848H823","contractId": "GBTWK012345678V","issuer": "Thoughtworks","valid": true,"cacheMode": "ALWAYS"}'
 ```
 
-4. Set the load simulation for ramping virtual users in loadtests/ws_load_test.js. Please refer to https://k6.io/docs/using-k6/scenarios/executors/ramping-vus/ for guidance
+4. Set the load simulation for ramping virtual users in loadtests/ws_load_test.js. Please refer to https://k6.io/docs/using-k6/scenarios/executors/ramping-vus/ for guidance. Please note that 1 virtual user is the equivalent to 1 charge station.
 
 
 5. Run the load test using the script file and output the results to the k6 dashboard
