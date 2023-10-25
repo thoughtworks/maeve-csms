@@ -33,7 +33,7 @@ require (
 	golang.org/x/exp v0.0.0-20230728194245-b0cb94b80691
 	golang.org/x/net v0.17.0
 	google.golang.org/api v0.126.0
-	google.golang.org/grpc v1.57.0
+	google.golang.org/grpc v1.57.1
 	k8s.io/utils v0.0.0-20230505201702-9f6742963106
 )
 
