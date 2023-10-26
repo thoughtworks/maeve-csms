@@ -5,6 +5,7 @@
 package firestore_test
 
 import (
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/thoughtworks/maeve-csms/manager/store"
@@ -61,7 +62,7 @@ func TestListSessions(t *testing.T) {
 		sessions[i] = &store.Session{
 			CountryCode:   "BEL",
 			PartyId:       "TWK",
-			Id:            "s001",
+			Id:            fmt.Sprintf("s%03d", i),
 			StartDateTime: "", //Look at
 			EndDateTime:   "",
 			Kwh:           5,
