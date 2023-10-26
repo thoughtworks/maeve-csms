@@ -1,9 +1,13 @@
+// SPDX-License-Identifier: Apache-2.0
+
 package firestore
 
 import (
+	"cloud.google.com/go/firestore"
 	"context"
 	"fmt"
 	"github.com/thoughtworks/maeve-csms/manager/store"
+	"google.golang.org/api/iterator"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -35,5 +39,25 @@ func (s *Store) LookupSession(ctx context.Context, sessionId string) (*store.Ses
 }
 
 func (s *Store) ListSessions(context context.Context, offset int, limit int) ([]*store.Session, error) {
-	return nil, nil
+	var sessions []*store.Session
+	iter := s.client.Collection("Session").OrderBy("Id", firestore.Asc).Offset(offset).Limit(limit).Documents(context)
+	for {
+		snap, err := iter.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, fmt.Errorf("next session: %w", err)
+		}
+		var session store.Session
+		if err = snap.DataTo(&session); err != nil {
+			return nil, fmt.Errorf("map session: %w", err)
+		}
+		session.LastUpdated = snap.UpdateTime.Format("2006-01-02T15:04:05Z")
+		sessions = append(sessions, &session)
+	}
+	if sessions == nil {
+		sessions = make([]*store.Session, 0)
+	}
+	return sessions, nil
 }
