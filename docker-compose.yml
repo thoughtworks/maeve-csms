@@ -123,3 +123,18 @@ services:
       - --host-port=0.0.0.0:8080
     ports:
       - "8080:8080"
+
+  grafana:
+    image: grafana/grafana:7.5.7
+    ports:
+      - 3000:3000
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v2.45.1
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus:/etc/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'

@@ -128,4 +128,7 @@ fabric.properties
 .history
 .ionide
 
+#k6 executable file
+k6
+
 # End of https://www.toptal.com/developers/gitignore/api/goland+all,visualstudiocode,go
