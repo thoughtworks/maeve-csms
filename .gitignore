@@ -131,4 +131,9 @@ fabric.properties
 #k6 executable file
 k6
 
+# Certificates
+config/certificates/*.pem
+config/certificates/*.key
+config/certificates/*.csr
+
 # End of https://www.toptal.com/developers/gitignore/api/goland+all,visualstudiocode,go
