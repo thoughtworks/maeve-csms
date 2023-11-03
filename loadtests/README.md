@@ -43,14 +43,14 @@ xk6 build --with github.com/grafana/xk6-dashboard@latest
 ```
 2. Register a number of charge stations to the CSMS (e.g. cs1, cs2, cs3 etc). Replace 'BASE64_SHA256_PASSWORD' with the base64SHA256Password that was extracted
 ```bash
-curl http://localhost:9410/api/v0/cs/cs1 -H 'content-type: application/json' -d '{"securityProfile":1,"base64SHA256Password":"BASE64_SHA256_PASSWORD"}' &&
-curl http://localhost:9410/api/v0/cs/cs2 -H 'content-type: application/json' -d '{"securityProfile":1,"base64SHA256Password":"BASE64_SHA256_PASSWORD"}' &&
-curl http://localhost:9410/api/v0/cs/cs3 -H 'content-type: application/json' -d '{"securityProfile":1,"base64SHA256Password":"BASE64_SHA256_PASSWORD"}'
+curl http://localhost:9410/api/v0/cs/cs1 -H 'content-type: application/json' -d '{"securityProfile":0,"base64SHA256Password":"BASE64_SHA256_PASSWORD"}' &&
+curl http://localhost:9410/api/v0/cs/cs2 -H 'content-type: application/json' -d '{"securityProfile":0,"base64SHA256Password":"BASE64_SHA256_PASSWORD"}' &&
+curl http://localhost:9410/api/v0/cs/cs3 -H 'content-type: application/json' -d '{"securityProfile":0,"base64SHA256Password":"BASE64_SHA256_PASSWORD"}'
 ```
 
-3. Register the contract token to the CSMS
+3. Register the contract token to the CSMS. Replace 'UID' with the value of the idTag that is found in loadtests/ws_load_test.js. This is used in the websocket messages: Authorise, StartTransaction and StopTransaction.
 ```bash 
-curl -i http://localhost:9410/api/v0/token -H 'content-type: application/json' -d '{"countryCode": "GB","partyId": "TWK","type": "RFID","uid": "38748383L7337848H823","contractId": "GBTWK012345678V","issuer": "Thoughtworks","valid": true,"cacheMode": "ALWAYS"}'
+curl -i http://localhost:9410/api/v0/token -H 'content-type: application/json' -d '{"countryCode": "GB","partyId": "TWK","type": "RFID","uid": "UID","contractId": "GBTWK012345678V","issuer": "Thoughtworks","valid": true,"cacheMode": "ALWAYS"}'
 ```
 
 4. Set the load simulation for ramping virtual users in loadtests/ws_load_test.js. Please refer to https://k6.io/docs/using-k6/scenarios/executors/ramping-vus/ for guidance. Please note that 1 virtual user is the equivalent to 1 charge station.

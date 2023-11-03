@@ -1,8 +1,8 @@
 import ws from 'k6/ws';
-import { check } from 'k6';
+import {check} from 'k6';
 import encoding from 'k6/encoding';
 import exec from 'k6/execution';
-import { sleep } from 'k6';
+import {sleep} from 'k6';
 
 export const options = {
     discardResponseBodies: true,
@@ -11,23 +11,23 @@ export const options = {
             executor: 'ramping-vus',
             startVUs: 2,
             stages: [
-                { duration: '5m', target: 50 },
-                { duration: '5m', target: 100 },
-                { duration: '10m', target: 200 },
-                { duration: '10m', target: 300 },
-                { duration: '10m', target: 400 },
-                { duration: '10m', target: 500 },
-                { duration: '10m', target: 600 },
-                { duration: '5m', target: 550 },
-                { duration: '5m', target: 600 },
-                { duration: '5m', target: 550 },
-                { duration: '5m', target: 600 },
-                { duration: '10m', target: 500 },
-                { duration: '10m', target: 400 },
-                { duration: '10m', target: 300 },
-                { duration: '10m', target: 100 },
-                { duration: '5m', target: 50 },
-                { duration: '5m', target: 0 }
+                {duration: '5m', target: 50},
+                {duration: '5m', target: 100},
+                {duration: '10m', target: 200},
+                {duration: '10m', target: 300},
+                {duration: '10m', target: 400},
+                {duration: '10m', target: 500},
+                {duration: '10m', target: 600},
+                {duration: '5m', target: 550},
+                {duration: '5m', target: 600},
+                {duration: '5m', target: 550},
+                {duration: '5m', target: 600},
+                {duration: '10m', target: 500},
+                {duration: '10m', target: 400},
+                {duration: '10m', target: 300},
+                {duration: '10m', target: 100},
+                {duration: '5m', target: 50},
+                {duration: '5m', target: 0}
             ],
             gracefulRampDown: '0s',
         },
@@ -80,5 +80,5 @@ export default function () {
     }
     );
 
-    check(res, { 'status is 101': (r) => r && r.status === 101 });
+    check(res, {'status is 101': (r) => r && r.status === 101});
 }
