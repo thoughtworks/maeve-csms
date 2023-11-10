@@ -30,7 +30,13 @@ brew install k6
 go install go.k6.io/xk6/cmd/xk6@latest
 ```
 
-3. Build the binary
+3. Set up the PATH and GOPATH environment variables on the mac
+```bash
+export GOPATH="/path/to/go"
+export PATH=$GOPATH/bin"
+```
+
+4. Build the binary
 ```bash
 xk6 build --with github.com/grafana/xk6-dashboard@latest
 ```
