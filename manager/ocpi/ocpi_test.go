@@ -176,3 +176,49 @@ func TestPushLocation(t *testing.T) {
 
 	require.NoError(t, err)
 }
+
+func TestPushSession(t *testing.T) {
+	engine := inmemory.NewStore(clock.RealClock{})
+	ocpiApi := ocpi.NewOCPI(engine, http.DefaultClient, "GB", "TWK")
+	mux := http.NewServeMux()
+	receiverServer := httptest.NewServer(mux)
+	defer receiverServer.Close()
+	mux.HandleFunc("/ocpi/versions", func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(fmt.Sprintf(`{"data":[{"version":"2.2","url":"%s/ocpi/2.2"}], "status_code":1000}`, receiverServer.URL)))
+	})
+	mux.HandleFunc("/ocpi/2.2", func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(fmt.Sprintf(`{"data":{
+				"version":"2.2",
+				"endpoints":[{"identifier":"locations","role":"RECEIVER","url":"%s/ocpi/receiver/2.2/locations"}]},
+				"status_code":1000}`,
+			receiverServer.URL)))
+	})
+	mux.HandleFunc("/ocpi/receiver/2.2/sessions/GB/TWK/s001", func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodPut, r.Method)
+		assert.Equal(t, r.Header.Get("X-Correlation-ID"), "some-correlation-id")
+		var got []byte
+		r.Body.Read(got)
+		assert.Equal(t, []byte(nil), got)
+		w.WriteHeader(http.StatusCreated)
+	})
+	err := ocpiApi.SetCredentials(context.Background(), "some-token-123", ocpi.Credentials{
+		Roles: []ocpi.CredentialsRole{
+			{
+				CountryCode: "GB",
+				PartyId:     "TWK",
+				Role:        ocpi.CredentialsRoleRoleEMSP,
+			},
+		},
+		Token: "some-token-456",
+		Url:   receiverServer.URL + "/ocpi/versions",
+	})
+	require.NoError(t, err)
+	token, _ := engine.LookupToken(context.Background(), "some-token-123")
+	err = ocpiApi.PushSession(context.Background(), *token)
+
+	require.NoError(t, err)
+}
