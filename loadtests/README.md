@@ -68,5 +68,30 @@ curl -i http://localhost:9410/api/v0/token -H 'content-type: application/json' -
 ```
 
 
+## Additional Information
+
+As well as viewing the outputs from the k6 dashboard, you also can observe the outputs of the csms services using prometheus and grafana dashboard.
+
+### How to view services (targets) on prometheus
+
+1. Go to http://locahost:9090/targets
+
+This will display three targets (host.docker.internal, gateway, manager) and their current statuses. 
+
+
+### How to include prometheus metrics in grafana
+
+1. Go to http://localhost:3000
+2. If using grafana for the first time, you will need to include the login credentials (username: admin, password: admin). Reset the password.
+3. Add prometheus as a data source (use http://prometheus:9090 as the URL)
+4. Create a dashboard and add some prometheus metrics. These are the following examples for memory metrics
+```bash 
+go_memstats_mspan_inuse_bytes
+```
+```bash 
+go_memstats_mspan_sys_bytes
+```
+
+
 
 
