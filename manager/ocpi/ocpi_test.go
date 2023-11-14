@@ -217,8 +217,8 @@ func TestPushSession(t *testing.T) {
 		Url:   receiverServer.URL + "/ocpi/versions",
 	})
 	require.NoError(t, err)
-	token, _ := engine.LookupToken(context.Background(), "some-token-123")
-	err = ocpiApi.PutSession(context.Background(), *token)
 
+	ctxWithCorrelationId := context.WithValue(context.Background(), ocpi.ContextKeyCorrelationId, "some-correlation-id")
+	err = ocpiApi.PushSession(ctxWithCorrelationId, ocpi.Session{Id: "s001"})
 	require.NoError(t, err)
 }
