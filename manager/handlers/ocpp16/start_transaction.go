@@ -3,6 +3,7 @@
 package ocpp16
 
 import (
+	//"github.com/thoughtworks/maeve-csms/manager/ocpi" //circular dependencies, how do we interact without this import?
 	"context"
 	"math/rand"
 	"time"
@@ -19,6 +20,8 @@ type StartTransactionHandler struct {
 	Clock            clock.PassiveClock
 	TokenStore       store.TokenStore
 	TransactionStore store.TransactionStore
+	//OcpiApi          ocpi.Api
+
 }
 
 func (t StartTransactionHandler) HandleCall(ctx context.Context, chargeStationId string, request ocpp.Request) (ocpp.Response, error) {
@@ -58,6 +61,11 @@ func (t StartTransactionHandler) HandleCall(ctx context.Context, chargeStationId
 				},
 			},
 		}, 0, false)
+	if err != nil {
+		return nil, err
+	}
+
+	//err = t.OcpiApi.PutSession(ctx, *tok)
 	if err != nil {
 		return nil, err
 	}

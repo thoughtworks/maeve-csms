@@ -7,16 +7,17 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/santhosh-tekuri/jsonschema"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp/has2be"
 	"io/fs"
 	"reflect"
 	"time"
 
-	"github.com/santhosh-tekuri/jsonschema"
 	"github.com/thoughtworks/maeve-csms/manager/handlers"
 	handlersHasToBe "github.com/thoughtworks/maeve-csms/manager/handlers/has2be"
 	handlers16 "github.com/thoughtworks/maeve-csms/manager/handlers/ocpp16"
 	handlers201 "github.com/thoughtworks/maeve-csms/manager/handlers/ocpp201"
+	//"github.com/thoughtworks/maeve-csms/manager/ocpi"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp16"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
@@ -35,6 +36,7 @@ type Router struct {
 func NewV16Router(emitter Emitter,
 	clk clock.PassiveClock,
 	engine store.Engine,
+	//api ocpi.Api,
 	certValidationService services.CertificateValidationService,
 	chargeStationCertProvider services.ChargeStationCertificateProvider,
 	contractCertProvider services.ContractCertificateProvider,
@@ -91,6 +93,7 @@ func NewV16Router(emitter Emitter,
 					Clock:            clk,
 					TokenStore:       engine,
 					TransactionStore: engine,
+					//OcpiApi:          api,
 				},
 			},
 			"StopTransaction": {

@@ -193,7 +193,7 @@ func TestPushSession(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(fmt.Sprintf(`{"data":{
 				"version":"2.2",
-				"endpoints":[{"identifier":"locations","role":"RECEIVER","url":"%s/ocpi/receiver/2.2/locations"}]},
+				"endpoints":[{"identifier":"sessions","role":"RECEIVER","url":"%s/ocpi/receiver/2.2/sessions"}]},
 				"status_code":1000}`,
 			receiverServer.URL)))
 	})
@@ -218,7 +218,7 @@ func TestPushSession(t *testing.T) {
 	})
 	require.NoError(t, err)
 	token, _ := engine.LookupToken(context.Background(), "some-token-123")
-	err = ocpiApi.PushSession(context.Background(), *token)
+	err = ocpiApi.PutSession(context.Background(), *token)
 
 	require.NoError(t, err)
 }

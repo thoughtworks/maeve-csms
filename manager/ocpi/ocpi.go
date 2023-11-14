@@ -24,7 +24,7 @@ type Api interface {
 	SetToken(ctx context.Context, token Token) error
 	GetToken(ctx context.Context, countryCode string, partyID string, tokenUID string) (*Token, error)
 	PushLocation(ctx context.Context, location Location) error
-	PushSession(ctx context.Context, token store.Token) error
+	PutSession(ctx context.Context, token store.Token) error
 }
 
 type OCPI struct {
@@ -180,6 +180,21 @@ func (o *OCPI) PushLocation(ctx context.Context, location Location) error {
 	return nil
 }
 
+func (o *OCPI) PushSession(ctx context.Context, session Session) error {
+	parties, err := o.store.ListPartyDetailsForRole(ctx, "EMSP")
+	if err != nil {
+		return err
+	}
+	for _, party := range parties {
+		err, _ = o.pushSessionToParty(ctx, party, session)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (o *OCPI) pushLocationToParty(ctx context.Context, party *store.OcpiParty, location Location) error {
 	// TODO: retrieve endpoints from store, not via OCPI exchange
 	versions, err := o.getVersions(ctx, party.Url, party.Token)
@@ -208,6 +223,36 @@ func (o *OCPI) pushLocationToParty(ctx context.Context, party *store.OcpiParty, 
 	}
 
 	return nil
+}
+
+func (o *OCPI) pushSessionToParty(ctx context.Context, party *store.OcpiParty, session Session) (error, string) {
+	// TODO: retrieve endpoints from store, not via OCPI exchange
+	versions, err := o.getVersions(ctx, party.Url, party.Token)
+	if err != nil {
+		return err, ""
+	}
+
+	endpointUrl, err := getEndpointUrl(versions)
+	if err != nil {
+		return err, ""
+	}
+
+	endpoints, err := o.getEndpoints(ctx, endpointUrl, party.Token)
+	if err != nil {
+		return err, ""
+	}
+
+	sessionsUrl, err := o.getSessionsUrl(endpoints)
+	if err != nil {
+		return err, ""
+	}
+	//Call our function
+	//err = o.putLocation(ctx, sessionsUrl, party.CountryCode, party.PartyId, party.Token, location)
+	//if err != nil {
+	//	return err
+	//}
+
+	return nil, sessionsUrl
 }
 
 func (o *OCPI) getLocationsUrl(endpoints []Endpoint) (string, error) {
@@ -266,10 +311,10 @@ func (o *OCPI) getSessionsUrl(endpoints []Endpoint) (string, error) {
 			return fmt.Sprintf("%s/%s/%s", endpoint.Url, o.countryCode, o.partyId), nil
 		}
 	}
-	return "", errors.New("no locations endpoint for receiver found")
+	return "", errors.New("no sessions endpoint for receiver found")
 }
 
-func (o *OCPI) PushSession(ctx context.Context, token store.Token) error {
+func (o *OCPI) PutSession(ctx context.Context, token store.Token) error {
 	// will post the session to the emsp
 	// we need partyId and CountryCode (how do we map chargeStationId with the emps that will need this info).
 	// we'll use these to look up the party url and the api token
