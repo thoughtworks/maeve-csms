@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/thoughtworks/maeve-csms/manager/ocpi"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp16"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
 	"go.opentelemetry.io/otel"
@@ -48,6 +49,7 @@ type Handler struct {
 	schemaFS                  fs.FS
 	storageEngine             store.Engine
 	tracer                    trace.Tracer
+	opciApi                   ocpi.Api
 }
 
 type HandlerOpt func(h *Handler)
@@ -137,6 +139,11 @@ func WithOtelTracer(tracer trace.Tracer) HandlerOpt {
 		h.tracer = tracer
 	}
 }
+func WithOcpiApi(ocpiApi ocpi.Api) HandlerOpt {
+	return func(h *Handler) {
+		h.opciApi = ocpiApi
+	}
+}
 
 func NewHandler(opts ...HandlerOpt) *Handler {
 	h := new(Handler)
@@ -197,7 +204,7 @@ func (h *Handler) Connect(errCh chan error) {
 	v16Emitter := &ProxyEmitter{}
 	v201Emitter := &ProxyEmitter{}
 
-	v16Router := NewV16Router(v16Emitter, h.clock, h.storageEngine, h.certValidationService, h.chargeStationCertProvider, h.contractCertProvider, h.heartbeatInterval, h.schemaFS)
+	v16Router := NewV16Router(v16Emitter, h.clock, h.storageEngine, h.opciApi, h.certValidationService, h.chargeStationCertProvider, h.contractCertProvider, h.heartbeatInterval, h.schemaFS)
 	v201Router := NewV201Router(h.clock, h.storageEngine, h.tariffService, h.certValidationService, h.chargeStationCertProvider, h.contractCertProvider, h.heartbeatInterval)
 
 	mqttV16Topic := fmt.Sprintf("$share/%s/%s/in/ocpp1.6/#", h.mqttGroup, h.mqttPrefix)

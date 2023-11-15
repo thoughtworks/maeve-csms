@@ -8,7 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/go-chi/render"
-	"github.com/thoughtworks/maeve-csms/manager/mqtt"
+	"github.com/thoughtworks/maeve-csms/manager/ocpp"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp16"
 	"golang.org/x/exp/slog"
 	"k8s.io/utils/clock"
@@ -18,13 +18,17 @@ import (
 	"time"
 )
 
+type queue interface {
+	Send(ctx context.Context, chargeStationId string, request ocpp.Request) error
+}
+
 type Server struct {
 	ocpi         Api
 	clock        clock.PassiveClock
-	v16CallMaker mqtt.BasicCallMaker
+	v16CallMaker queue
 }
 
-func NewServer(ocpi Api, clock clock.PassiveClock, v16CallMaker mqtt.BasicCallMaker) (*Server, error) {
+func NewServer(ocpi Api, clock clock.PassiveClock, v16CallMaker queue) (*Server, error) {
 	return &Server{
 		ocpi:         ocpi,
 		clock:        clock,

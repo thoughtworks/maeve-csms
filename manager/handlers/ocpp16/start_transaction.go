@@ -3,8 +3,8 @@
 package ocpp16
 
 import (
-	//"github.com/thoughtworks/maeve-csms/manager/ocpi" //circular dependencies, how do we interact without this import?
 	"context"
+	"github.com/thoughtworks/maeve-csms/manager/ocpi"
 	"github.com/thoughtworks/maeve-csms/manager/store/firestore"
 	"math/rand"
 	"time"
@@ -21,8 +21,7 @@ type StartTransactionHandler struct {
 	Clock            clock.PassiveClock
 	TokenStore       store.TokenStore
 	TransactionStore store.TransactionStore
-	//OcpiApi          ocpi.Api
-
+	OcpiApi          ocpi.Api
 }
 
 func (t StartTransactionHandler) HandleCall(ctx context.Context, chargeStationId string, request ocpp.Request) (ocpp.Response, error) {
@@ -82,8 +81,16 @@ func (t StartTransactionHandler) HandleCall(ctx context.Context, chargeStationId
 	}
 	//gCloudProject ?
 	sessionStore, _ := firestore.NewStore(ctx, "gcloud-project", clock.RealClock{})
+
 	err = sessionStore.SetSession(ctx, session)
-	//err = t.OcpiApi.PutSession(ctx, session)
+
+	err = t.OcpiApi.PushSession(ctx, ocpi.Session{
+		CountryCode:   session.CountryCode,
+		PartyId:       session.PartyId,
+		Id:            session.Id,
+		StartDateTime: session.StartDateTime,
+		Status:        ocpi.SessionStatus(session.Status),
+	})
 	if err != nil {
 		return nil, err
 	}

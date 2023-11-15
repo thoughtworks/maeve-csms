@@ -58,7 +58,8 @@ the gateway and send appropriate responses.`,
 			mqtt.WithContractCertificateProvider(settings.ContractCertProviderService),
 			mqtt.WithChargeStationCertificateProvider(settings.ChargeStationCertProviderService),
 			mqtt.WithTariffService(settings.TariffService),
-			mqtt.WithOtelTracer(tracer))
+			mqtt.WithOtelTracer(tracer),
+			mqtt.WithOcpiApi(settings.OcpiApi))
 
 		errCh := make(chan error, 1)
 		apiServer.Start(errCh)
