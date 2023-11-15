@@ -83,6 +83,9 @@ func (t StartTransactionHandler) HandleCall(ctx context.Context, chargeStationId
 	sessionStore, _ := firestore.NewStore(ctx, "gcloud-project", clock.RealClock{})
 
 	err = sessionStore.SetSession(ctx, session)
+	if err != nil {
+		return nil, err
+	}
 
 	err = t.OcpiApi.PushSession(ctx, ocpi.Session{
 		CountryCode:   session.CountryCode,
