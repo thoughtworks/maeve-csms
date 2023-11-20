@@ -34,9 +34,10 @@ func TestSetAndLookupSession(t *testing.T) {
 			Type:       "RFID",
 			Uid:        "MYRFIDTAG",
 		},
-		AuthMethod: "AUTH_REQUEST", //may cause issue
-		Currency:   "GBP",
-		Status:     "ACTIVE",
+		AuthMethod:  "AUTH_REQUEST", //may cause issue
+		Currency:    "GBP",
+		Status:      "ACTIVE",
+		LastUpdated: "",
 	}
 	err = sessionStore.SetSession(ctx, want)
 	require.NoError(t, err)
