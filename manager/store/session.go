@@ -9,27 +9,45 @@ type Price struct {
 
 type CdrToken struct {
 	ContractId string
-	Type       string
+	Type       CdrTokenType
 	Uid        string
 }
 
+type ChargingPeriod struct {
+	Dimensions    []CdrDimension `json:"dimensions"`
+	StartDateTime string         `json:"start_date_time"`
+	TariffId      *string        `json:"tariff_id,omitempty"`
+}
+
+type CdrDimension struct {
+	Type   CdrDimensionType `json:"type"`
+	Volume float32          `json:"volume"`
+}
+type CdrTokenType string
+type CdrDimensionType string
+type SessionStatus string
+
+type SessionAuthMethod string
+
 type Session struct {
-	CountryCode   string
-	PartyId       string
-	Id            string
-	StartDateTime string
-	EndDateTime   string
-	Kwh           float32
-	CdrToken      CdrToken
-	AuthMethod    string
-	AuthReference *string
-	LocationId    *string
-	EvseId        *string
-	ConnectorId   *string
-	Currency      string
-	TotalCost     Price //can be omitted/optional
-	Status        string
-	LastUpdated   string
+	AuthMethod             SessionAuthMethod
+	AuthorizationReference *string
+	CdrToken               CdrToken
+	ChargingPeriods        *[]ChargingPeriod
+	ConnectorId            string
+	CountryCode            string
+	Currency               string
+	EndDateTime            *string
+	EvseUid                string
+	Id                     string
+	Kwh                    float32
+	LastUpdated            string
+	LocationId             string
+	MeterId                *string
+	PartyId                string
+	StartDateTime          string
+	Status                 SessionStatus
+	TotalCost              *Price
 }
 
 type SessionStore interface {

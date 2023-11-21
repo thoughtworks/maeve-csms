@@ -181,6 +181,35 @@ func (o *OCPI) PushLocation(ctx context.Context, location Location) error {
 }
 
 func (o *OCPI) PushSession(ctx context.Context, session Session) error {
+
+	storeSession := &store.Session{
+		AuthMethod:             store.SessionAuthMethod(session.AuthMethod),
+		AuthorizationReference: session.AuthorizationReference,
+		CdrToken: store.CdrToken{
+			ContractId: session.CdrToken.ContractId,
+			Type:       store.CdrTokenType(session.CdrToken.Type),
+			Uid:        session.CdrToken.Uid,
+		},
+		ConnectorId:   session.ConnectorId,
+		CountryCode:   session.CountryCode,
+		Currency:      session.Currency,
+		EndDateTime:   session.EndDateTime,
+		EvseUid:       session.EvseUid,
+		Id:            session.Id,
+		Kwh:           session.Kwh,
+		LastUpdated:   session.LastUpdated,
+		LocationId:    session.LocationId,
+		MeterId:       session.MeterId,
+		PartyId:       session.PartyId,
+		StartDateTime: session.StartDateTime,
+		Status:        store.SessionStatus(session.Status),
+	})
+
+	err := o.store.SetSession(ctx, storeSession)
+	if err != nil {
+		return nil, err
+	}
+
 	parties, err := o.store.ListPartyDetailsForRole(ctx, "EMSP")
 	if err != nil {
 		return err

@@ -5,7 +5,6 @@ package ocpp16
 import (
 	"context"
 	"github.com/thoughtworks/maeve-csms/manager/ocpi"
-	"github.com/thoughtworks/maeve-csms/manager/store/firestore"
 	"math/rand"
 	"time"
 
@@ -65,35 +64,23 @@ func (t StartTransactionHandler) HandleCall(ctx context.Context, chargeStationId
 		return nil, err
 	}
 	timeNow := time.Now()
-	session := &store.Session{
+	session := ocpi.Session{
 		CountryCode: tok.CountryCode,
 		PartyId:     tok.PartyId,
 		//id?
 		Id:            "s" + uuid.NewString(),
 		StartDateTime: timeNow.String(),
-		CdrToken: store.CdrToken{
+		CdrToken: ocpi.CdrToken{
 			ContractId: tok.ContractId,
-			Type:       tok.Type,
+			Type:       "tok.Type", //unsting in a min
 			Uid:        tok.Uid,
 		},
 		// enum?
-		Status: "ACTIVE",
-	}
-	//gCloudProject ?
-	sessionStore, _ := firestore.NewStore(ctx, "gcloud-project", clock.RealClock{})
-
-	err = sessionStore.SetSession(ctx, session)
-	if err != nil {
-		return nil, err
+		Status:      "ACTIVE",
+		LastUpdated: timeNow.String(),
 	}
 
-	err = t.OcpiApi.PushSession(ctx, ocpi.Session{
-		CountryCode:   session.CountryCode,
-		PartyId:       session.PartyId,
-		Id:            session.Id,
-		StartDateTime: session.StartDateTime,
-		Status:        ocpi.SessionStatus(session.Status),
-	})
+	err = t.OcpiApi.PushSession(ctx, session)
 	if err != nil {
 		return nil, err
 	}
