@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/thoughtworks/maeve-csms/manager/store"
-	"log"
 	"net/http"
 )
 
@@ -182,8 +181,6 @@ func (o *OCPI) PushLocation(ctx context.Context, location Location) error {
 }
 
 func (o *OCPI) PushSession(ctx context.Context, session Session) error {
-	ses := "ses"
-	log.Printf(ses)
 	storeSession := store.Session{
 		AuthMethod:             store.SessionAuthMethod(session.AuthMethod),
 		AuthorizationReference: session.AuthorizationReference,
