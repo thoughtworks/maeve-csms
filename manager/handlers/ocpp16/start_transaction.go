@@ -65,18 +65,17 @@ func (t StartTransactionHandler) HandleCall(ctx context.Context, chargeStationId
 	}
 	timeNow := time.Now()
 	session := ocpi.Session{
-		CountryCode: tok.CountryCode,
-		PartyId:     tok.PartyId,
-		//id?
-		Id:            "s" + uuid.NewString(),
+		AuthMethod:    ocpi.SessionAuthMethodAUTHREQUEST,
+		CountryCode:   tok.CountryCode,
+		PartyId:       tok.PartyId,
+		Id:            "s" + uuid.NewString(), //id correct?
 		StartDateTime: timeNow.String(),
 		CdrToken: ocpi.CdrToken{
 			ContractId: tok.ContractId,
-			Type:       "tok.Type", //unsting in a min
+			Type:       ocpi.CdrTokenType(tok.Type),
 			Uid:        tok.Uid,
 		},
-		// enum?
-		Status:      "ACTIVE",
+		Status:      ocpi.SessionStatusACTIVE,
 		LastUpdated: timeNow.String(),
 	}
 

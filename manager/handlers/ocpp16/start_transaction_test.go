@@ -53,7 +53,7 @@ func TestStartTransaction(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	resp, err := handler.HandleCall(ctx, "cs001", req)
+	resp, err := handler.HandleCall(ctx, "cs001", req) //causes nil pointer error
 	require.NoError(t, err)
 	got := resp.(*types.StartTransactionResponseJson)
 

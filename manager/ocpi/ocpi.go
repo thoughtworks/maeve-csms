@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/thoughtworks/maeve-csms/manager/store"
+	"log"
 	"net/http"
 )
 
@@ -181,8 +182,9 @@ func (o *OCPI) PushLocation(ctx context.Context, location Location) error {
 }
 
 func (o *OCPI) PushSession(ctx context.Context, session Session) error {
-
-	storeSession := &store.Session{
+	ses := "ses"
+	log.Printf(ses)
+	storeSession := store.Session{
 		AuthMethod:             store.SessionAuthMethod(session.AuthMethod),
 		AuthorizationReference: session.AuthorizationReference,
 		CdrToken: store.CdrToken{
@@ -203,11 +205,11 @@ func (o *OCPI) PushSession(ctx context.Context, session Session) error {
 		PartyId:       session.PartyId,
 		StartDateTime: session.StartDateTime,
 		Status:        store.SessionStatus(session.Status),
-	})
+	}
 
-	err := o.store.SetSession(ctx, storeSession)
+	err := o.store.SetSession(ctx, &storeSession)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	parties, err := o.store.ListPartyDetailsForRole(ctx, "EMSP")
