@@ -38,6 +38,27 @@ func (t StartTransactionHandler) HandleCall(ctx context.Context, chargeStationId
 		status = types.StartTransactionResponseJsonIdTagInfoStatusAccepted
 		//#nosec G404 - transaction id does not require secure random number generator
 		transactionId = int(rand.Int31())
+
+		timeNow := time.Now()
+		session := ocpi.Session{
+			AuthMethod:    ocpi.SessionAuthMethodAUTHREQUEST,
+			CountryCode:   tok.CountryCode,
+			PartyId:       tok.PartyId,
+			Id:            "s" + uuid.NewString(), //id correct?
+			StartDateTime: timeNow.String(),
+			CdrToken: ocpi.CdrToken{
+				ContractId: tok.ContractId,
+				Type:       ocpi.CdrTokenType(tok.Type),
+				Uid:        tok.Uid,
+			},
+			Status:      ocpi.SessionStatusACTIVE,
+			LastUpdated: timeNow.String(),
+		}
+
+		err = t.OcpiApi.PushSession(ctx, session)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	contextTransactionBegin := types.MeterValuesJsonMeterValueElemSampledValueElemContextTransactionBegin
@@ -60,26 +81,6 @@ func (t StartTransactionHandler) HandleCall(ctx context.Context, chargeStationId
 				},
 			},
 		}, 0, false)
-	if err != nil {
-		return nil, err
-	}
-	timeNow := time.Now()
-	session := ocpi.Session{
-		AuthMethod:    ocpi.SessionAuthMethodAUTHREQUEST,
-		CountryCode:   tok.CountryCode,
-		PartyId:       tok.PartyId,
-		Id:            "s" + uuid.NewString(), //id correct?
-		StartDateTime: timeNow.String(),
-		CdrToken: ocpi.CdrToken{
-			ContractId: tok.ContractId,
-			Type:       ocpi.CdrTokenType(tok.Type),
-			Uid:        tok.Uid,
-		},
-		Status:      ocpi.SessionStatusACTIVE,
-		LastUpdated: timeNow.String(),
-	}
-
-	err = t.OcpiApi.PushSession(ctx, session)
 	if err != nil {
 		return nil, err
 	}

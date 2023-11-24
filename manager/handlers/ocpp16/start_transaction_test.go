@@ -4,7 +4,9 @@ package ocpp16_test
 
 import (
 	"context"
+	"github.com/thoughtworks/maeve-csms/manager/ocpi"
 	"k8s.io/utils/clock"
+	"net/http"
 	"testing"
 	"time"
 
@@ -38,10 +40,13 @@ func TestStartTransaction(t *testing.T) {
 	now, err := time.Parse(time.RFC3339, "2023-06-15T15:05:00+01:00")
 	require.NoError(t, err)
 
+	ocpiApi := ocpi.NewOCPI(engine, http.DefaultClient, "GB", "TWK")
+
 	handler := handlers.StartTransactionHandler{
 		Clock:            clockTest.NewFakePassiveClock(now),
 		TokenStore:       engine,
 		TransactionStore: transactionStore,
+		OcpiApi:          ocpiApi,
 	}
 
 	req := &types.StartTransactionJson{
@@ -125,10 +130,12 @@ func TestStartTransactionWithInvalidRFID(t *testing.T) {
 	now, err := time.Parse(time.RFC3339, "2023-06-15T15:05:00+01:00")
 	require.NoError(t, err)
 
+	ocpiApi := ocpi.NewOCPI(engine, http.DefaultClient, "GB", "TWK")
 	handler := handlers.StartTransactionHandler{
 		Clock:            clockTest.NewFakePassiveClock(now),
 		TokenStore:       engine,
 		TransactionStore: transactionStore,
+		OcpiApi:          ocpiApi,
 	}
 
 	req := &types.StartTransactionJson{
