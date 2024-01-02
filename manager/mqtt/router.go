@@ -285,8 +285,9 @@ func NewV201Router(clk clock.PassiveClock,
 				RequestSchema:  "ocpp201/BootNotificationRequest.json",
 				ResponseSchema: "ocpp201/BootNotificationResponse.json",
 				Handler: handlers201.BootNotificationHandler{
-					Clock:             clk,
-					HeartbeatInterval: int(heartbeatInterval.Seconds()),
+					Clock:               clk,
+					HeartbeatInterval:   int(heartbeatInterval.Seconds()),
+					RuntimeDetailsStore: engine,
 				},
 			},
 			"Heartbeat": {
