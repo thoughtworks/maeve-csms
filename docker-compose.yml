@@ -105,12 +105,13 @@ services:
         read_only: true
     expose:
       - "9410"
-      - "9411"
     healthcheck:
       test: ["CMD", "/usr/bin/curl", "-s", "--fail", "http://localhost:9410/health"]
       interval: 10s
       timeout: 10s
       retries: 3
+    ports:
+      - "9910:9410"
     user: "10000:10000"
 
   firestore:
