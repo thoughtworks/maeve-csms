@@ -10,7 +10,7 @@ require (
 	github.com/go-chi/chi/v5 v5.0.8
 	github.com/go-chi/render v1.0.2
 	github.com/google/uuid v1.3.0
-	github.com/lestrrat-go/jwx v1.2.27
+	github.com/lestrrat-go/jwx v1.2.28
 	github.com/mochi-co/mqtt/v2 v2.2.13
 	github.com/pelletier/go-toml/v2 v2.0.9
 	github.com/prometheus/client_golang v1.15.1
