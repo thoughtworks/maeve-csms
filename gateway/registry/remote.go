@@ -61,7 +61,7 @@ type CertificateResponse struct {
 
 func (r RemoteRegistry) LookupCertificate(certHash string) (*x509.Certificate, error) {
 	certHash = strings.Replace(certHash, "/", "_", -1)
-	certHash = strings.Replace(certHash, "-", "+", -1)
+	certHash = strings.Replace(certHash, "+", "-", -1)
 
 	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/api/v0/certificate/%s", r.ManagerApiAddr, certHash), nil)
 	if err != nil {
