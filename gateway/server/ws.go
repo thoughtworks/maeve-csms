@@ -136,6 +136,7 @@ func NewWebsocketHandler(opts ...WebsocketOpt) http.Handler {
 
 	r := chi.NewRouter()
 	r.Use(middleware.Recoverer)
+	r.Use(TraceRequest(s.tracer))
 	if s.trustProxyHeaders {
 		r.Use(TLSOffload(s.deviceRegistry))
 	}
@@ -177,13 +178,7 @@ func (s *WebsocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	slog.Info("websocket connection received", "path", r.URL.Path, "method", r.Method)
 	slog.Info("processing connection", "uri", r.RequestURI)
 
-	newCtx, span := s.tracer.Start(r.Context(), "GET /ws/{id}", trace.WithSpanKind(trace.SpanKindServer),
-		trace.WithAttributes(
-			semconv.HTTPScheme(getScheme(r)),
-			semconv.HTTPMethod("GET"),
-			semconv.HTTPURL(r.URL.String()),
-			semconv.HTTPRoute("/ws/{id}")))
-	defer span.End()
+	span := trace.SpanFromContext(r.Context())
 
 	clientId := chi.URLParam(r, "id")
 	if clientId == "" {
@@ -213,7 +208,7 @@ func (s *WebsocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	switch cs.SecurityProfile {
 	case registry.UnsecuredTransportWithBasicAuth:
-		if r.TLS != nil || !checkAuthorization(newCtx, r, cs) {
+		if r.TLS != nil || !checkAuthorization(r.Context(), r, cs) {
 			if r.TLS != nil {
 				span.SetAttributes(attribute.String("auth.failure_reason", "tls for unsecured transport"))
 			}
@@ -223,7 +218,7 @@ func (s *WebsocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	case registry.TLSWithBasicAuth:
-		if r.TLS == nil || !checkAuthorization(newCtx, r, cs) {
+		if r.TLS == nil || !checkAuthorization(r.Context(), r, cs) {
 			if r.TLS == nil {
 				span.SetAttributes(attribute.String("auth.failure_reason", "no tls for secured transport"))
 			}
@@ -233,7 +228,7 @@ func (s *WebsocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	case registry.TLSWithClientSideCertificates:
-		if r.TLS == nil || !checkCertificate(newCtx, r, s.orgNames, cs) {
+		if r.TLS == nil || !checkCertificate(r.Context(), r, s.orgNames, cs) {
 			if r.TLS == nil {
 				span.SetAttributes(attribute.String("auth.failure_reason", "no tls for secured transport"))
 			}
@@ -265,7 +260,7 @@ func (s *WebsocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	p.Start()
 	defer p.Close()
 
-	ctx, cancel := context.WithCancel(newCtx)
+	ctx, cancel := context.WithCancel(r.Context())
 	defer cancel()
 
 	mqttBrokerURLStrings := make([]string, len(s.mqttBrokerURLs))
