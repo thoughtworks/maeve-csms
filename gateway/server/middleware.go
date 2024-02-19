@@ -20,10 +20,8 @@ import (
 func TraceRequest(tracer trace.Tracer) func(http.Handler) http.Handler {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			slog.Info("websocket connection received", "path", r.URL.Path, "method", r.Method)
-			slog.Info("processing connection", "uri", r.RequestURI)
-
-			newCtx, span := tracer.Start(r.Context(), fmt.Sprintf("%s %s", r.Method, r.URL.String()), trace.WithSpanKind(trace.SpanKindServer),
+			newCtx, span := tracer.Start(r.Context(),
+				fmt.Sprintf("%s %s", r.Method, r.URL.String()), trace.WithSpanKind(trace.SpanKindServer),
 				trace.WithAttributes(
 					semconv.HTTPScheme(getScheme(r)),
 					semconv.HTTPMethod(r.Method),
@@ -35,11 +33,11 @@ func TraceRequest(tracer trace.Tracer) func(http.Handler) http.Handler {
 			routePattern := chi.RouteContext(r.Context()).RoutePattern()
 			if routePattern != "" {
 				span.SetName(fmt.Sprintf("%s %s", r.Method, routePattern))
+				span.SetAttributes(semconv.HTTPRoute(chi.RouteContext(r.Context()).RoutePattern()))
 			} else {
 				span.SetStatus(codes.Error, "not found")
 				span.SetAttributes(semconv.HTTPStatusCode(http.StatusNotFound))
 			}
-			span.SetAttributes(semconv.HTTPRoute(chi.RouteContext(r.Context()).RoutePattern()))
 		})
 	}
 }
@@ -77,6 +75,9 @@ func TLSOffload(registry registry.DeviceRegistry) func(http.Handler) http.Handle
 							span.SetAttributes(attribute.String("cert.lookup.error", "NotFound"))
 							slog.Warn("certificate not found", "clientCertHashHeader", clientCertHashHeader)
 						}
+					} else {
+						clientCertErrHeader := r.Header.Get("X-Client-Cert-Error")
+						span.SetAttributes(attribute.String("cert.valid.error", clientCertErrHeader))
 					}
 				}
 			}

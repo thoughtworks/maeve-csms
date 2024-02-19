@@ -66,6 +66,48 @@ func TestLookupCertificate(t *testing.T) {
 	assert.Equal(t, want.Raw, got.Raw)
 }
 
+func TestLookupCertificateWithSlashesAndPlusesInHash(t *testing.T) {
+	var want *x509.Certificate
+	var certHash [32]byte
+	var b64CertHash string
+
+	count := 0
+	for {
+		count++
+		want = generateCertificate(t)
+		certHash = sha256.Sum256(want.Raw)
+		b64CertHash = base64.StdEncoding.EncodeToString(certHash[:])
+
+		if strings.Contains(b64CertHash, "/") && strings.Contains(b64CertHash, "+") {
+			break
+		}
+	}
+	t.Logf("Generated %d certificates before finding one with slashes and pluses in the hash", count)
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		hashToMatch := strings.Replace(b64CertHash, "/", "_", -1)
+		hashToMatch = strings.Replace(hashToMatch, "+", "-", -1)
+		if r.URL.Path != fmt.Sprintf("/api/v0/certificate/%s", hashToMatch) {
+			http.NotFound(w, r)
+			return
+		}
+		block := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: want.Raw})
+		blockWithNewlinesReplaced := strings.Replace(string(block), "\n", "\\n", -1)
+		_, _ = w.Write([]byte(fmt.Sprintf(`{"certificate":"%s"}`, blockWithNewlinesReplaced)))
+	}))
+	defer server.Close()
+
+	reg := registry.RemoteRegistry{
+		ManagerApiAddr: server.URL,
+	}
+
+	got, err := reg.LookupCertificate(b64CertHash)
+	require.NoError(t, err)
+	require.NotNil(t, got)
+
+	assert.Equal(t, want.Raw, got.Raw)
+}
+
 func generateCertificate(t *testing.T) *x509.Certificate {
 	keyPair, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	require.NoError(t, err)

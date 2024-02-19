@@ -12,6 +12,48 @@ import (
 	"testing"
 )
 
+func TestTraceMatchedRequest(t *testing.T) {
+	tracer, traceExporter := server.GetTracer()
+
+	r := chi.NewRouter()
+	r.Use(server.TraceRequest(tracer))
+	r.HandleFunc("/id/{id}", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/id/1234", nil)
+	rr := httptest.NewRecorder()
+	r.ServeHTTP(rr, req)
+
+	server.AssertSpan(t, &traceExporter.GetSpans()[0], "GET /id/{id}", map[string]any{
+		"http.scheme": "ws",
+		"http.method": "GET",
+		"http.url":    "/id/1234",
+		"http.route":  "/id/{id}",
+	})
+}
+
+func TestTraceUnmatchedRequest(t *testing.T) {
+	tracer, traceExporter := server.GetTracer()
+
+	r := chi.NewRouter()
+	r.Use(server.TraceRequest(tracer))
+	r.HandleFunc("/something", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/other", nil)
+	rr := httptest.NewRecorder()
+	r.ServeHTTP(rr, req)
+
+	server.AssertSpan(t, &traceExporter.GetSpans()[0], "GET /other", map[string]any{
+		"http.scheme":      "ws",
+		"http.method":      "GET",
+		"http.url":         "/other",
+		"http.status_code": http.StatusNotFound,
+	})
+}
+
 func TestTLSOffloadWithNoClientCert(t *testing.T) {
 	r := chi.NewRouter()
 	r.Use(server.TLSOffload(registry.NewMockRegistry()))
