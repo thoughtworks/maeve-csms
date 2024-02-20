@@ -5,15 +5,22 @@ package services
 import (
 	"bytes"
 	"context"
+	"crypto"
+	"crypto/rand"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/asn1"
 	"encoding/base64"
 	"encoding/pem"
 	"fmt"
 	"go.mozilla.org/pkcs7"
 	"go.opentelemetry.io/otel/codes"
-	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
+	semconv "go.opentelemetry.io/otel/semconv/v1.19.0"
 	"go.opentelemetry.io/otel/trace"
 	"io"
+	"math/big"
 	"net/http"
+	"time"
 )
 
 type CertificateType int
@@ -237,4 +244,186 @@ type DefaultChargeStationCertificateProvider struct{}
 
 func (n DefaultChargeStationCertificateProvider) ProvideCertificate(context.Context, CertificateType, string) (pemEncodedCertificateChain string, err error) {
 	return "", fmt.Errorf("not implemented")
+}
+
+// LocalChargeStationCertificateProvider issues CSO certificates using local data
+type LocalChargeStationCertificateProvider struct {
+	CertificateReader io.Reader
+	PrivateKeyReader  io.Reader
+}
+
+func (l *LocalChargeStationCertificateProvider) ProvideCertificate(_ context.Context, typ CertificateType, pemEncodedCSR string) (pemEncodedCertificateChain string, err error) {
+	if typ != CertificateTypeCSO {
+		return "", fmt.Errorf("local provider cannot provide V2G certificate")
+	}
+
+	certificate, err := readSigningCertificate(l.CertificateReader)
+	if err != nil {
+		return "", err
+	}
+
+	privateKey, err := readPrivateKey(l.PrivateKeyReader)
+	if err != nil {
+		return "", err
+	}
+
+	csr, err := readCsr(pemEncodedCSR)
+	if err != nil {
+		return "", err
+	}
+
+	serial, err := rand.Int(rand.Reader, (&big.Int{}).Exp(big.NewInt(2), big.NewInt(159), nil))
+	if err != nil {
+		return "", fmt.Errorf("creating serial number: %w", err)
+	}
+
+	now := time.Now()
+
+	var extensions []pkix.Extension
+	ekuExt, err := marshalExtKeyUsage([]asn1.ObjectIdentifier{oidExtKeyUsageClientAuth, oidExtKeyUsageServerAuth})
+	if err != nil {
+		return "", fmt.Errorf("marshalling ext key usage: %v", err)
+	}
+	extensions = append(extensions, ekuExt)
+
+	template := x509.Certificate{
+		SerialNumber:          serial,
+		Subject:               csr.Subject,
+		NotBefore:             now,
+		NotAfter:              now.Add(time.Minute),
+		BasicConstraintsValid: true,
+		IsCA:                  false,
+		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
+		ExtraExtensions:       extensions,
+	}
+
+	signedCert, err := x509.CreateCertificate(rand.Reader, &template, certificate, csr.PublicKey, privateKey)
+	if err != nil {
+		return "", fmt.Errorf("creating certificate: %v", err)
+	}
+
+	pemSigningCert := string(pem.EncodeToMemory(&pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: certificate.Raw,
+	}))
+
+	pemSignedCert := string(pem.EncodeToMemory(&pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: signedCert,
+	}))
+
+	return pemSignedCert + pemSigningCert, nil
+}
+
+func readSigningCertificate(certificateReader io.Reader) (*x509.Certificate, error) {
+	pemCertificate, err := io.ReadAll(certificateReader)
+	if err != nil {
+		return nil, fmt.Errorf("reading certificate: %v", err)
+	}
+
+	var certificate *x509.Certificate
+	block, r := pem.Decode(pemCertificate)
+	for certificate == nil && block != nil {
+		if block.Type == "CERTIFICATE" {
+			certificate, err = x509.ParseCertificate(block.Bytes)
+			if err != nil {
+				return nil, fmt.Errorf("cannot parse certificate: %v", err)
+			}
+		}
+		block, r = pem.Decode(r)
+	}
+
+	if certificate == nil {
+		return nil, fmt.Errorf("no signing certificate")
+	}
+
+	return certificate, nil
+}
+
+func readPrivateKey(privateKeyReader io.Reader) (crypto.PrivateKey, error) {
+	pemPrivateKey, err := io.ReadAll(privateKeyReader)
+	if err != nil {
+		return "", fmt.Errorf("reading private key: %v", err)
+	}
+
+	var privateKey crypto.PrivateKey
+	block, r := pem.Decode(pemPrivateKey)
+	for privateKey == nil && block != nil {
+		if block.Type == "PRIVATE KEY" {
+			privateKey, err = x509.ParsePKCS8PrivateKey(block.Bytes)
+			if err != nil {
+				return "", fmt.Errorf("cannot parse private key: %v", err)
+			}
+		}
+		if block.Type == "RSA PRIVATE KEY" {
+			privateKey, err = x509.ParsePKCS1PrivateKey(block.Bytes)
+			if err != nil {
+				return "", fmt.Errorf("cannot parse rsa private key: %v", err)
+			}
+		}
+		if block.Type == "EC PRIVATE KEY" {
+			privateKey, err = x509.ParseECPrivateKey(block.Bytes)
+			if err != nil {
+				return "", fmt.Errorf("cannot parse ec private key: %v", err)
+			}
+		}
+		block, r = pem.Decode(r)
+	}
+
+	if privateKey == nil {
+		return "", fmt.Errorf("no private key")
+	}
+
+	return privateKey, nil
+}
+
+func readCsr(pemEncodedCSR string) (*x509.CertificateRequest, error) {
+	var csr *x509.CertificateRequest
+	block, r := pem.Decode([]byte(pemEncodedCSR))
+	for csr == nil && block != nil {
+		var err error
+		if block.Type == "CERTIFICATE REQUEST" {
+			csr, err = x509.ParseCertificateRequest(block.Bytes)
+			if err != nil {
+				return nil, fmt.Errorf("cannot parse csr: %v", err)
+			}
+		}
+		block, r = pem.Decode(r)
+	}
+
+	if csr == nil {
+		return nil, fmt.Errorf("no csr")
+	}
+
+	return csr, nil
+}
+
+var (
+	oidExtensionExtendedKeyUsage = asn1.ObjectIdentifier{2, 5, 29, 37}
+
+	oidExtKeyUsageServerAuth = asn1.ObjectIdentifier{1, 3, 6, 1, 5, 5, 7, 3, 1}
+	oidExtKeyUsageClientAuth = asn1.ObjectIdentifier{1, 3, 6, 1, 5, 5, 7, 3, 2}
+)
+
+func marshalExtKeyUsage(oids []asn1.ObjectIdentifier) (pkix.Extension, error) {
+	ext := pkix.Extension{Id: oidExtensionExtendedKeyUsage}
+
+	var err error
+	ext.Value, err = asn1.Marshal(oids)
+	return ext, err
+}
+
+type DelegatingChargeStationCertificateProvider struct {
+	V2GChargeStationCertificateProvider ChargeStationCertificateProvider
+	CSOChargeStationCertificateProvider ChargeStationCertificateProvider
+}
+
+func (d *DelegatingChargeStationCertificateProvider) ProvideCertificate(ctx context.Context, typ CertificateType, pemEncodedCSR string) (pemEncodedCertificateChain string, err error) {
+	if typ == CertificateTypeV2G {
+		return d.V2GChargeStationCertificateProvider.ProvideCertificate(ctx, typ, pemEncodedCSR)
+	} else if typ == CertificateTypeCSO {
+		return d.CSOChargeStationCertificateProvider.ProvideCertificate(ctx, typ, pemEncodedCSR)
+	} else {
+		return "", fmt.Errorf("unknown certificate type: %d", typ)
+	}
 }

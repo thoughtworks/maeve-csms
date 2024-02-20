@@ -39,12 +39,24 @@ fileignoreconfig:
     checksum: 7b5688335f7ad1b5339fc7cc8deaf08e10f42e03cbe086810d2bd70567f923c5
   - filename: manager/cmd/serve.go
     checksum: d9dffb164eba9be301938a6a4c665ac3ac48a3b52019f42372123f550d17ca4a
+  - filename: manager/config/README.md
+    checksum: f1d25023b78f405ca72cc07cd11602efcd7124132e7801ab8323f93ee924a74e
   - filename: manager/config/base_config_test.go
     checksum: 1da75b3709b5bf69b251690199fc2e19fbb4d5c1996b703f2c01fb23b140ee1b
+  - filename: manager/config/charge_station_cert_provider_config.go
+    checksum: ba937840fb90c0ef13c79e611f9b9ff69e7b028d31892fd410fd5ce1f319d72d
   - filename: manager/config/config.go
-    checksum: e82e6fbcd7f9076abc6dc7582e8ca79094f5e1637fc428fe636a6080a670e13a
+    checksum: 7cb9bc42ab6ff8d485d18ef0a33e7e2fea0a9a80c9b7d44fb0840dd42f67e190
+  - filename: manager/config/config_test.go
+    checksum: b0a56dd29f6d43114700522313ba351741e4f2e466cbc5d7203bdcf70a9ff01f
+  - filename: manager/config/http_token_config.go
+    checksum: a49d33538ca625df3d5706e0143750f87dcded44ae085788e1a64519ef95c70c
   - filename: manager/config/settings_config.go
     checksum: cd96899088c1ab4ae43ff2635bb9a9b97b64d1e624acf4a0ff8bcca1c2f08c46
+  - filename: manager/config/testdata/ca.key
+    checksum: c6304e88f782d77d78be784ec82710714c38e94639966ae1ae85b5eb95a16e60
+  - filename: manager/config/testdata/ca.pem
+    checksum: 647f3e46c6060e140a9f0eadf00d35513123d9931dc673bb2c69f24f3c043ff3
   - filename: manager/config/testdata/config.toml
     checksum: 609645675cbd566896921b9f80861b142048c26c4e322f0dee7ccb9d87461625
   - filename: manager/config/testdata/root_ca.pem
@@ -148,9 +160,17 @@ fileignoreconfig:
   - filename: manager/services/certificate_validation_hubject_test.go
     checksum: 6a0f464624416815d5f97cdb9c4f3600c1f0407b466ac4db48b6f6295eb23323
   - filename: manager/services/certificate_validation_test.go
-    checksum: 5e207ccc347d453d0352e1dcbc6ca129f9a0b7f1ae8a54469d870845ba046b77
+    checksum: 46eca00f657751f23fbb221043e404955a246dfbe033ace2f4d05b253d88a443
+  - filename: manager/services/charge_station_certificate_provider.go
+    checksum: 95514c58b5ba1857bf2cf0a8fd6bfb76c6d37620f4cef7c62398fa5f8c4b558f
+  - filename: manager/services/charge_station_certificate_provider_test.go
+    checksum: 4ff130fcc25f7fbd783f3363c43af0e6f01f70de147d12f007e9f4f97a7092d9
   - filename: manager/services/http_token_hubject_test.go
     checksum: 8c86e20c1bc4a233db56055dde20f62d90fc24e6f4981465cbcb638571cc07db
+  - filename: manager/services/http_token_service.go
+    checksum: 48b6df7650d0d445f29669540142f29ec4469aef6322b617d52475b97dacbd7e
+  - filename: manager/services/http_token_service_test.go
+    checksum: 6e2e2491396472324d9f6dca6284bc5dae20ee71c7275fd0d37ab6a63cf94455
   - filename: manager/services/root_certificate_provider.go
     checksum: 2a6600b180491790f406abfd5feb1e5325bf06c2632dfd62d8652fc62151ad9b
   - filename: manager/services/root_certificate_provider_hubject_test.go

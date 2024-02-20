@@ -3,6 +3,8 @@
 package config
 
 import (
+	secretmanager "cloud.google.com/go/secretmanager/apiv1"
+	"cloud.google.com/go/secretmanager/apiv1/secretmanagerpb"
 	"context"
 	"crypto/tls"
 	"fmt"
@@ -19,14 +21,16 @@ import (
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
-	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
+	semconv "go.opentelemetry.io/otel/semconv/v1.19.0"
 	"golang.org/x/exp/slog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"io"
 	"k8s.io/utils/clock"
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -128,7 +132,7 @@ func Configure(ctx context.Context, cfg *BaseConfig) (c *Config, err error) {
 		return nil, err
 	}
 
-	c.ChargeStationCertProviderService, err = getChargeStationCertProvider(&cfg.ChargeStationCertProvider, httpClient)
+	c.ChargeStationCertProviderService, err = getChargeStationCertProvider(ctx, &cfg.ChargeStationCertProvider, httpClient)
 	if err != nil {
 		return nil, err
 	}
@@ -287,7 +291,7 @@ func getContractCertProvider(cfg *ContractCertProviderConfig, httpClient *http.C
 	return
 }
 
-func getChargeStationCertProvider(cfg *ChargeStationCertProviderConfig, httpClient *http.Client) (chargeStationCertProvider services.ChargeStationCertificateProvider, err error) {
+func getChargeStationCertProvider(ctx context.Context, cfg *ChargeStationCertProviderConfig, httpClient *http.Client) (chargeStationCertProvider services.ChargeStationCertificateProvider, err error) {
 	switch cfg.Type {
 	case "opcp":
 		httpTokenService, err := getHttpTokenService(&cfg.Opcp.HttpAuth, httpClient)
@@ -300,6 +304,36 @@ func getChargeStationCertProvider(cfg *ChargeStationCertProviderConfig, httpClie
 			ISOVersion:       services.ISO15118V2,
 			HttpTokenService: httpTokenService,
 			HttpClient:       httpClient,
+		}
+	case "local":
+		certificateSource, err := getLocalSource(ctx, cfg.Local.CertificateSource)
+		if err != nil {
+			return nil, fmt.Errorf("create local source: %w", err)
+		}
+		privateKeySource, err := getLocalSource(ctx, cfg.Local.PrivateKeySource)
+		if err != nil {
+			return nil, fmt.Errorf("create private key source: %w", err)
+		}
+
+		chargeStationCertProvider = &services.LocalChargeStationCertificateProvider{
+			CertificateReader: certificateSource,
+			PrivateKeyReader:  privateKeySource,
+		}
+	case "delegating":
+		var v2gChargeStationCertProvider services.ChargeStationCertificateProvider
+		v2gChargeStationCertProvider, err = getChargeStationCertProvider(ctx, cfg.Delegating.V2G, httpClient)
+		if err != nil {
+			return
+		}
+		var csoChargeStationCertProvider services.ChargeStationCertificateProvider
+		csoChargeStationCertProvider, err = getChargeStationCertProvider(ctx, cfg.Delegating.CSO, httpClient)
+		if err != nil {
+			return
+		}
+
+		chargeStationCertProvider = &services.DelegatingChargeStationCertificateProvider{
+			V2GChargeStationCertificateProvider: v2gChargeStationCertProvider,
+			CSOChargeStationCertificateProvider: csoChargeStationCertProvider,
 		}
 	case "default":
 		chargeStationCertProvider = &services.DefaultChargeStationCertificateProvider{}
@@ -316,6 +350,16 @@ func getHttpTokenService(cfg *HttpAuthConfig, httpClient *http.Client) (httpToke
 		httpTokenService, err = services.NewEnvHttpTokenService(cfg.EnvToken.EnvVar)
 	case "fixed_token":
 		httpTokenService = services.NewFixedHttpTokenService(cfg.FixedToken.Token)
+	case "oauth2_token":
+		var clientSecret string
+		if cfg.OAuth2Token.ClientSecret != nil {
+			clientSecret = *cfg.OAuth2Token.ClientSecret
+		} else if cfg.OAuth2Token.ClientSecretEnvVar != nil {
+			clientSecret = os.Getenv(*cfg.OAuth2Token.ClientSecretEnvVar)
+		} else {
+			return nil, fmt.Errorf("client_secret or client_secret_env_var must be provided")
+		}
+		httpTokenService = services.NewOAuth2HttpTokenService(cfg.OAuth2Token.Url, cfg.OAuth2Token.ClientId, clientSecret, httpClient, clock.RealClock{})
 	case "hubject_test_token":
 		ttl := 24 * time.Hour
 		if cfg.HubjectTestToken.Ttl != "" {
@@ -328,6 +372,34 @@ func getHttpTokenService(cfg *HttpAuthConfig, httpClient *http.Client) (httpToke
 			services.NewHubjectTestHttpTokenService(cfg.HubjectTestToken.Url, httpClient), ttl, clock.RealClock{})
 	default:
 		return nil, fmt.Errorf("unknown http auth service type: %s", cfg.Type)
+	}
+
+	return
+}
+
+func getLocalSource(ctx context.Context, cfg *LocalSourceConfig) (reader io.Reader, err error) {
+	switch cfg.Type {
+	case "file":
+		reader, err = os.Open(cfg.File)
+	case "google_cloud_secret":
+		var client *secretmanager.Client
+		client, err = secretmanager.NewClient(ctx)
+		defer func() {
+			_ = client.Close()
+		}()
+		if err != nil {
+			return
+		}
+		var resp *secretmanagerpb.AccessSecretVersionResponse
+		resp, err = client.AccessSecretVersion(ctx, &secretmanagerpb.AccessSecretVersionRequest{
+			Name: cfg.GoogleCloudSecret,
+		})
+		if err != nil {
+			return
+		}
+		reader = strings.NewReader(string(resp.Payload.GetData()))
+	default:
+		return nil, fmt.Errorf("unknown local source type: %s", cfg.Type)
 	}
 
 	return

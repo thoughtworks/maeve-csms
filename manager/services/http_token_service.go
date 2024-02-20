@@ -3,6 +3,7 @@
 package services
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -125,4 +126,87 @@ func (h *HubjectTestHttpTokenService) GetToken(ctx context.Context, _ bool) (str
 	}
 
 	return matches[1], nil
+}
+
+type OAuth2HttpTokenService struct {
+	sync.Mutex
+
+	url          string
+	clientId     string
+	clientSecret string
+	client       *http.Client
+	clock        clock.PassiveClock
+
+	cachedValue  string
+	cachedExpiry time.Time
+}
+
+func NewOAuth2HttpTokenService(url, clientId, clientSecret string, httpClient *http.Client, clk clock.PassiveClock) *OAuth2HttpTokenService {
+	return &OAuth2HttpTokenService{
+		url:          url,
+		client:       httpClient,
+		clientId:     clientId,
+		clientSecret: clientSecret,
+		clock:        clk,
+	}
+}
+
+type OAuth2TokenRequest struct {
+	GrantType    string `json:"grant_type"`
+	ClientId     string `json:"client_id"`
+	ClientSecret string `json:"client_secret"`
+}
+
+type OAuth2TokenResponse struct {
+	AccessToken string `json:"access_token"`
+	ExpiresIn   int    `json:"expires_in"`
+	TokenType   string `json:"token_type"`
+}
+
+func (o *OAuth2HttpTokenService) GetToken(ctx context.Context, refresh bool) (string, error) {
+	o.Lock()
+	defer o.Unlock()
+
+	if refresh || o.clock.Now().After(o.cachedExpiry) {
+		// create the http request
+		body := OAuth2TokenRequest{
+			GrantType:    "client_credentials",
+			ClientId:     o.clientId,
+			ClientSecret: o.clientSecret,
+		}
+		b, err := json.Marshal(body)
+		if err != nil {
+			return "", err
+		}
+		req, err := http.NewRequestWithContext(ctx, http.MethodPost, o.url, bytes.NewReader(b))
+		if err != nil {
+			return "", err
+		}
+		req.Header.Set("Content-Type", "application/json")
+
+		// execute the request
+		resp, err := o.client.Do(req)
+		if err != nil {
+			return "", err
+		}
+		defer func() {
+			_ = resp.Body.Close()
+		}()
+
+		// parse the response
+		if resp.StatusCode != http.StatusOK {
+			return "", fmt.Errorf("http request %s %s %w", http.MethodPost, o.url, HttpError(resp.StatusCode))
+		}
+
+		// decode the response
+		var tokenResponse OAuth2TokenResponse
+		if err := json.NewDecoder(resp.Body).Decode(&tokenResponse); err != nil {
+			return "", err
+		}
+
+		o.cachedValue = tokenResponse.AccessToken
+		o.cachedExpiry = o.clock.Now().Add(time.Duration(tokenResponse.ExpiresIn) * time.Second)
+	}
+
+	return o.cachedValue, nil
 }

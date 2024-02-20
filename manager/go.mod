@@ -4,6 +4,7 @@ go 1.20
 
 require (
 	cloud.google.com/go/firestore v1.14.0
+	cloud.google.com/go/secretmanager v1.11.4
 	github.com/deepmap/oapi-codegen v1.13.0
 	github.com/eclipse/paho.golang v0.11.0
 	github.com/getkin/kin-openapi v0.118.0
@@ -41,6 +42,7 @@ require (
 	cloud.google.com/go v0.111.0 // indirect
 	cloud.google.com/go/compute v1.23.3 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
+	cloud.google.com/go/iam v1.1.5 // indirect
 	cloud.google.com/go/longrunning v0.5.4 // indirect
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect

@@ -135,7 +135,92 @@ func TestConfigureOpcpChargeStationCertProvider(t *testing.T) {
 
 	settings, err := config.Configure(context.TODO(), cfg)
 	require.NoError(t, err)
-	require.NotNil(t, settings.ContractCertProviderService)
+	require.NotNil(t, settings.ChargeStationCertProviderService)
+}
+
+func TestConfigureLocalChargeStationCertProviderWithFile(t *testing.T) {
+	cfg := &config.DefaultConfig
+	cfg.ChargeStationCertProvider.Type = "local"
+	cfg.ChargeStationCertProvider.Local = &config.LocalChargeStationCertProviderConfig{
+		CertificateSource: &config.LocalSourceConfig{
+			Type: "file",
+			File: "testdata/ca.pem",
+		},
+		PrivateKeySource: &config.LocalSourceConfig{
+			Type: "file",
+			File: "testdata/ca.key",
+		},
+	}
+
+	settings, err := config.Configure(context.TODO(), cfg)
+	require.NoError(t, err)
+	require.NotNil(t, settings.ChargeStationCertProviderService)
+}
+
+func TestConfigureLocalChargeStationCertProviderWithGoogleCloudSecret(t *testing.T) {
+	certificateSecretName := os.Getenv("TEST_GOOGLE_CLOUD_CERT_SECRET_NAME")
+	privateKeySecretName := os.Getenv("TEST_GOOGLE_CLOUD_KEY_SECRET_NAME")
+	if certificateSecretName == "" || privateKeySecretName == "" {
+		t.Skip("no test google cloud secrets configured")
+	}
+	t.Logf("Using %s and %s", certificateSecretName, privateKeySecretName)
+	cfg := &config.DefaultConfig
+	cfg.ChargeStationCertProvider.Type = "local"
+	cfg.ChargeStationCertProvider.Local = &config.LocalChargeStationCertProviderConfig{
+		CertificateSource: &config.LocalSourceConfig{
+			Type:              "google_cloud_secret",
+			GoogleCloudSecret: certificateSecretName,
+		},
+		PrivateKeySource: &config.LocalSourceConfig{
+			Type:              "google_cloud_secret",
+			GoogleCloudSecret: privateKeySecretName,
+		},
+	}
+
+	settings, err := config.Configure(context.TODO(), cfg)
+	require.NoError(t, err)
+	require.NotNil(t, settings.ChargeStationCertProviderService)
+}
+
+func TestConfigureDelegatingChargeStationCertProvider(t *testing.T) {
+	_ = os.Setenv("TEST_OPCP_TOKEN", "test-token")
+	defer func() {
+		_ = os.Unsetenv("TEST_OPCP_TOKEN")
+	}()
+
+	cfg := &config.DefaultConfig
+	cfg.ChargeStationCertProvider.Type = "delegating"
+	cfg.ChargeStationCertProvider.Delegating = &config.DelegatingChargeStationCertProviderConfig{
+		V2G: &config.ChargeStationCertProviderConfig{
+			Type: "opcp",
+			Opcp: &config.OpcpChargeStationCertProviderConfig{
+				Url: "http://localhost:8080",
+				HttpAuth: config.HttpAuthConfig{
+					Type: "env_token",
+					EnvToken: &config.EnvHttpTokenConfig{
+						EnvVar: "TEST_OPCP_TOKEN",
+					},
+				},
+			},
+		},
+		CSO: &config.ChargeStationCertProviderConfig{
+			Type: "local",
+			Local: &config.LocalChargeStationCertProviderConfig{
+				CertificateSource: &config.LocalSourceConfig{
+					Type: "file",
+					File: "testdata/ca.pem",
+				},
+				PrivateKeySource: &config.LocalSourceConfig{
+					Type: "file",
+					File: "testdata/ca.key",
+				},
+			},
+		},
+	}
+
+	settings, err := config.Configure(context.TODO(), cfg)
+	require.NoError(t, err)
+	require.NotNil(t, settings.ChargeStationCertProviderService)
 }
 
 func TestConfigureDefaultChargeStationCertProvider(t *testing.T) {
@@ -145,7 +230,7 @@ func TestConfigureDefaultChargeStationCertProvider(t *testing.T) {
 
 	settings, err := config.Configure(context.TODO(), cfg)
 	require.NoError(t, err)
-	require.NotNil(t, settings.ContractCertProviderService)
+	require.NotNil(t, settings.ChargeStationCertProviderService)
 }
 
 func TestConfigureKwHTariffService(t *testing.T) {

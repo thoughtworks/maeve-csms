@@ -9,6 +9,7 @@ import (
 	"crypto/rand"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"encoding/asn1"
 	"encoding/base64"
 	"encoding/pem"
 	"fmt"
@@ -20,6 +21,7 @@ import (
 	"math/big"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 )
@@ -143,7 +145,7 @@ func TestOPCPChargeStationCertificateProvider(t *testing.T) {
 	block, pemBytes := pem.Decode(pemBytes)
 	leafCert, err := x509.ParseCertificate(block.Bytes)
 	require.NoError(t, err)
-	assert.Equal(t, "CN=cs001,O=Thoughtworks", leafCert.Subject.String())
+	assert.Equal(t, "CN=cs001,O=Thoughtworks,C=GB", leafCert.Subject.String())
 
 	require.NotNil(t, pemBytes)
 	block, pemBytes = pem.Decode(pemBytes)
@@ -156,16 +158,247 @@ func TestOPCPChargeStationCertificateProvider(t *testing.T) {
 	require.Nil(t, block)
 }
 
+func TestLocalChargeStationCertificateProvider(t *testing.T) {
+	caCert, caKey := createRootCACertificate(t, "test")
+	intCert, intKey := createIntermediateCACertificate(t, "int", "", caCert, caKey)
+
+	privateKey, err := x509.MarshalPKCS8PrivateKey(intKey)
+	require.NoError(t, err)
+
+	pemCertificate := pem.EncodeToMemory(&pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: intCert.Raw,
+	})
+
+	pemPrivateKey := pem.EncodeToMemory(&pem.Block{
+		Type:  "PRIVATE KEY",
+		Bytes: privateKey,
+	})
+
+	certificateProvider := &services.LocalChargeStationCertificateProvider{
+		CertificateReader: strings.NewReader(string(pemCertificate)),
+		PrivateKeyReader:  strings.NewReader(string(pemPrivateKey)),
+	}
+
+	pemCsr := createCertificateSigningRequest(t)
+
+	ctx := context.TODO()
+	chain, err := certificateProvider.ProvideCertificate(ctx, services.CertificateTypeCSO, string(pemCsr))
+	require.NoError(t, err)
+
+	require.NotEmpty(t, chain)
+
+	block, r := pem.Decode([]byte(chain))
+	count := 0
+	issuerDN := ""
+	for block != nil {
+		if block.Type == "CERTIFICATE" {
+			x509Cert, err := x509.ParseCertificate(block.Bytes)
+			require.NoError(t, err)
+			if count != 0 {
+				require.Equal(t, issuerDN, x509Cert.Subject.String())
+			}
+			issuerDN = x509Cert.Issuer.String()
+			count++
+		}
+		block, r = pem.Decode(r)
+	}
+	require.Equal(t, 2, count)
+}
+
+func TestLocalChargeStationCertificateProviderWithRSAKey(t *testing.T) {
+	caCert, caKey := createRootCACertificate(t, "test")
+	intCert, intKey := createIntermediateRSACACertificate(t, "int", "", caCert, caKey)
+
+	privateKey := x509.MarshalPKCS1PrivateKey(intKey)
+
+	pemCertificate := pem.EncodeToMemory(&pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: intCert.Raw,
+	})
+
+	pemPrivateKey := pem.EncodeToMemory(&pem.Block{
+		Type:  "RSA PRIVATE KEY",
+		Bytes: privateKey,
+	})
+
+	certificateProvider := &services.LocalChargeStationCertificateProvider{
+		CertificateReader: strings.NewReader(string(pemCertificate)),
+		PrivateKeyReader:  strings.NewReader(string(pemPrivateKey)),
+	}
+
+	pemCsr := createCertificateSigningRequest(t)
+
+	ctx := context.TODO()
+	chain, err := certificateProvider.ProvideCertificate(ctx, services.CertificateTypeCSO, string(pemCsr))
+	require.NoError(t, err)
+
+	require.NotEmpty(t, chain)
+
+	block, r := pem.Decode([]byte(chain))
+	count := 0
+	issuerDN := ""
+	for block != nil {
+		if block.Type == "CERTIFICATE" {
+			x509Cert, err := x509.ParseCertificate(block.Bytes)
+			require.NoError(t, err)
+			if count != 0 {
+				require.Equal(t, issuerDN, x509Cert.Subject.String())
+			}
+			issuerDN = x509Cert.Issuer.String()
+			count++
+		}
+		block, r = pem.Decode(r)
+	}
+	require.Equal(t, 2, count)
+}
+
+func TestLocalChargeStationCertificateProviderWithECKey(t *testing.T) {
+	caCert, caKey := createRootCACertificate(t, "test")
+	intCert, intKey := createIntermediateCACertificate(t, "int", "", caCert, caKey)
+
+	privateKey, err := x509.MarshalECPrivateKey(intKey)
+	require.NoError(t, err)
+
+	pemCertificate := pem.EncodeToMemory(&pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: intCert.Raw,
+	})
+
+	pemPrivateKey := pem.EncodeToMemory(&pem.Block{
+		Type:  "EC PRIVATE KEY",
+		Bytes: privateKey,
+	})
+
+	certificateProvider := &services.LocalChargeStationCertificateProvider{
+		CertificateReader: strings.NewReader(string(pemCertificate)),
+		PrivateKeyReader:  strings.NewReader(string(pemPrivateKey)),
+	}
+
+	pemCsr := createCertificateSigningRequest(t)
+
+	ctx := context.TODO()
+	chain, err := certificateProvider.ProvideCertificate(ctx, services.CertificateTypeCSO, string(pemCsr))
+	require.NoError(t, err)
+
+	require.NotEmpty(t, chain)
+
+	block, r := pem.Decode([]byte(chain))
+	count := 0
+	issuerDN := ""
+	for block != nil {
+		if block.Type == "CERTIFICATE" {
+			x509Cert, err := x509.ParseCertificate(block.Bytes)
+			require.NoError(t, err)
+			if count != 0 {
+				require.Equal(t, issuerDN, x509Cert.Subject.String())
+			}
+			issuerDN = x509Cert.Issuer.String()
+			count++
+		}
+		block, r = pem.Decode(r)
+	}
+	require.Equal(t, 2, count)
+}
+
+var (
+	oidExtensionKeyUsage         = asn1.ObjectIdentifier{2, 5, 29, 15}
+	oidExtensionExtendedKeyUsage = asn1.ObjectIdentifier{2, 5, 29, 37}
+	oidExtensionBasicConstraints = asn1.ObjectIdentifier{2, 5, 29, 19}
+
+	oidExtKeyUsageServerAuth = asn1.ObjectIdentifier{1, 3, 6, 1, 5, 5, 7, 3, 1}
+	oidExtKeyUsageClientAuth = asn1.ObjectIdentifier{1, 3, 6, 1, 5, 5, 7, 3, 2}
+)
+
+type basicConstraints struct {
+	IsCA       bool `asn1:"optional"`
+	MaxPathLen int  `asn1:"optional,default:-1"`
+}
+
+func reverseBitsInAByte(in byte) byte {
+	b1 := in>>4 | in<<4
+	b2 := b1>>2&0x33 | b1<<2&0xcc
+	b3 := b2>>1&0x55 | b2<<1&0xaa
+	return b3
+}
+
+// asn1BitLength returns the bit-length of bitString by considering the
+// most-significant bit in a byte to be the "first" bit. This convention
+// matches ASN.1, but differs from almost everything else.
+func asn1BitLength(bitString []byte) int {
+	bitLen := len(bitString) * 8
+
+	for i := range bitString {
+		b := bitString[len(bitString)-i-1]
+
+		for bit := uint(0); bit < 8; bit++ {
+			if (b>>bit)&1 == 1 {
+				return bitLen
+			}
+			bitLen--
+		}
+	}
+
+	return 0
+}
+
+func marshalKeyUsage() (pkix.Extension, error) {
+	ext := pkix.Extension{Id: oidExtensionKeyUsage, Critical: true}
+	ku := x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment
+
+	var a [2]byte
+	a[0] = reverseBitsInAByte(byte(ku))
+	a[1] = reverseBitsInAByte(byte(ku >> 8))
+
+	l := 1
+	if a[1] != 0 {
+		l = 2
+	}
+
+	bitString := a[:l]
+	var err error
+	ext.Value, err = asn1.Marshal(asn1.BitString{Bytes: bitString, BitLength: asn1BitLength(bitString)})
+	return ext, err
+}
+
+func marshalExtKeyUsage(oids []asn1.ObjectIdentifier) (pkix.Extension, error) {
+	ext := pkix.Extension{Id: oidExtensionExtendedKeyUsage}
+
+	var err error
+	ext.Value, err = asn1.Marshal(oids)
+	return ext, err
+}
+
+func marshalBasicConstraints() (pkix.Extension, error) {
+	ext := pkix.Extension{Id: oidExtensionBasicConstraints, Critical: true}
+	var err error
+	ext.Value, err = asn1.Marshal(basicConstraints{false, -1})
+	return ext, err
+}
+
 func createCertificateSigningRequest(t *testing.T) []byte {
 	keyPair, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	require.NoError(t, err)
+
+	var extensions []pkix.Extension
+	bcExt, err := marshalBasicConstraints()
+	require.NoError(t, err)
+	extensions = append(extensions, bcExt)
+	kuExt, err := marshalKeyUsage()
+	require.NoError(t, err)
+	extensions = append(extensions, kuExt)
+	ekuExt, err := marshalExtKeyUsage([]asn1.ObjectIdentifier{oidExtKeyUsageClientAuth, oidExtKeyUsageServerAuth})
+	require.NoError(t, err)
+	extensions = append(extensions, ekuExt)
 
 	csrTemplate := x509.CertificateRequest{
 		Subject: pkix.Name{
 			CommonName:   "cs001",
 			Organization: []string{"Thoughtworks"},
+			Country:      []string{"GB"},
 		},
 		SignatureAlgorithm: x509.ECDSAWithSHA256,
+		ExtraExtensions:    extensions,
 	}
 
 	csrCertificate, err := x509.CreateCertificateRequest(rand.Reader, &csrTemplate, keyPair)

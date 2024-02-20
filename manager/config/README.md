@@ -96,8 +96,10 @@ There is no additional configuration for the default contract certificate provid
 
 ### Charge station certificate provider
 
-There are two charge station certificate provider implementations:
+There are four charge station certificate provider implementations:
 * [`opcp`](#opcp-charge-station-certificate-provider) - charge station certificates are issued using the EST service from the Open Plug&Charge Protocol (OPCP)
+* [`local`](#local-charge-station-certificate-provider) - charge station certificates are issued using a CA implemented by the CSMS
+* [`delegating`](#delegating-charge-station-certificate-provider) - supports different charge station certificate providers for issuing V2G and CSO certificates
 * [`default`](#default-charge-station-certificate-provider) - returns an error for all requests
 
 #### OPCP charge station certificate provider
@@ -106,6 +108,20 @@ There are two charge station certificate provider implementations:
 |------------|---------------------------------------|---------------------------------------------------------|
 | url        | string                                | Base URL for OPCP service that provides the EST service |
 | auth       | [HttpAuthService](#http-auth-service) | Configures how to authenticate with the OPCP service    |
+
+#### Local charge station certificate provider
+
+| Key  | Type                         | Description                                                                         |
+|------|------------------------------|-------------------------------------------------------------------------------------|
+| cert | [LocalSource](#local-source) | The source that provides the signing certificate, must be a PEM encoded certificate |
+| key  | [LocalSource](#local-source) | The source that provides the signing key, must be a PEM encoded private key         |
+
+#### Delegating charge station certificate provider
+
+| Key | Type                                                                     | Description                                                  |
+|-----|--------------------------------------------------------------------------|--------------------------------------------------------------|
+| v2g | [ChargeStationCertificateProvider](#charge-station-certificate-provider) | The charge station certificate provider for V2G certificates |
+| cso | [ChargeStationCertificateProvider](#charge-station-certificate-provider) | The charge station certificate provider for CSO certificates |
 
 #### Default charge station certificate provider
 
@@ -145,6 +161,7 @@ There are several implementations of RootCertProvider:
 There are several implementation of HttpAuthService:
 * [`env_token`](#environment-token-auth-service) - token is read from an environment variable
 * [`fixed_token`](#fixed-token-auth-service) - token is read from the configuration
+* [`oauth2_token`](#oauth2-token-auth-service) - token is retrieved using OAuth2 client credentials grant
 * [`hubject_test_token`](#hubject-test-token-auth-service) - token is scraped from the Hubject test environment authorization page
 
 #### Environment token auth service
@@ -159,12 +176,39 @@ There are several implementation of HttpAuthService:
 |-------|--------|-----------------|
 | token | string | The token value |
 
+#### OAuth2 token auth service
+
+| Key                   | Type   | Description                                                                                    |
+|-----------------------|--------|------------------------------------------------------------------------------------------------|
+| url                   | string | The URL of the OAuth2 Authorization Server token endpoint                                      |
+| client_id             | string | The client id to use in the client credentials grant                                           |
+| client_secret         | string | The client secret to use in the client credentials grant                                       |
+| client_secret_env_var | string | The environment variable to read the client secret from to use in the client credentials grant |
+
 #### Hubject test token auth service
 
 | Key | Type   | Description                                            |
 |-----|--------|--------------------------------------------------------|
 | url | string | URL of the Hubject test environment authorization page |
 | ttl | string | The duration for which the token is valid, e.g. "1h"   |
+
+### Local source
+
+There are two different local source implementations:
+* [`file`](#file-local-source) - data is read from a file
+* [`google_cloud_secret`](#google-cloud-secret-local-source) - data is read from a google cloud secret
+
+#### File local source
+
+The value is a file to be read from the operating system.
+
+#### Google cloud secret local source
+
+The value is the name of a secret to be read from google cloud secrets. The name must be of the form:
+
+```
+projects/<project-number>/secrets/<secret-name>/[latest|<version>]
+```
 
 ## Example configuration
 

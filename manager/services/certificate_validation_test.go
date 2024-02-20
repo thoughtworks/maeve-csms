@@ -7,6 +7,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
+	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/x509"
 	"crypto/x509/pkix"
@@ -573,6 +574,46 @@ func createRootCACertificate(t *testing.T, commonName string) (*x509.Certificate
 
 func createIntermediateCACertificate(t *testing.T, commonName, ocspResponderUrl string, rootCA *x509.Certificate, rootKey *ecdsa.PrivateKey) (*x509.Certificate, *ecdsa.PrivateKey) {
 	caKeyPair, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		t.Fatalf("generating intermediate CA key pair: %v", err)
+	}
+
+	caSerialNumber, err := rand.Int(rand.Reader, big.NewInt(math.MaxInt64))
+	if err != nil {
+		t.Fatalf("generating intermediate CA serial number: %v", err)
+	}
+
+	caCertTemplate := x509.Certificate{
+		SerialNumber: caSerialNumber,
+		Subject: pkix.Name{
+			CommonName:   commonName,
+			Organization: []string{"Thoughtworks"},
+		},
+		KeyUsage:              x509.KeyUsageCertSign | x509.KeyUsageCRLSign,
+		BasicConstraintsValid: true,
+		IsCA:                  true,
+		NotBefore:             time.Now(),
+		NotAfter:              time.Now().Add(time.Minute),
+	}
+	if ocspResponderUrl != "" {
+		caCertTemplate.OCSPServer = []string{ocspResponderUrl}
+	}
+
+	caCertBytes, err :=
+		x509.CreateCertificate(rand.Reader, &caCertTemplate, rootCA, &caKeyPair.PublicKey, rootKey)
+	if err != nil {
+		t.Fatalf("creating intermediate CA certificate: %v", err)
+	}
+	caCert, err := x509.ParseCertificate(caCertBytes)
+	if err != nil {
+		t.Fatalf("parsing intermediate CA certificate: %v", err)
+	}
+
+	return caCert, caKeyPair
+}
+
+func createIntermediateRSACACertificate(t *testing.T, commonName, ocspResponderUrl string, rootCA *x509.Certificate, rootKey *ecdsa.PrivateKey) (*x509.Certificate, *rsa.PrivateKey) {
+	caKeyPair, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		t.Fatalf("generating intermediate CA key pair: %v", err)
 	}
