@@ -126,12 +126,16 @@ services:
 
   grafana:
     image: grafana/grafana:7.5.7
+    profiles:
+      - perf
     ports:
       - 3000:3000
     restart: unless-stopped
 
   prometheus:
     image: prom/prometheus:v2.45.1
+    profiles:
+      - perf
     ports:
       - "9090:9090"
     volumes:
