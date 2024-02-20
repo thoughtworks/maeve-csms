@@ -18,7 +18,7 @@ import (
 
 type mockCertificateProvider struct{}
 
-func (m mockCertificateProvider) ProvideCertificate(context.Context, services.CertificateType, string) (pemEncodedCertificateChain string, err error) {
+func (m mockCertificateProvider) ProvideCertificate(context.Context, services.CertificateType, string, string) (pemEncodedCertificateChain string, err error) {
 	block := pem.Block{
 		Type:  "CERTIFICATE",
 		Bytes: []byte("test"),

@@ -31,7 +31,7 @@ const (
 )
 
 type ChargeStationCertificateProvider interface {
-	ProvideCertificate(ctx context.Context, typ CertificateType, pemEncodedCSR string) (pemEncodedCertificateChain string, err error)
+	ProvideCertificate(ctx context.Context, typ CertificateType, pemEncodedCSR string, csId string) (pemEncodedCertificateChain string, err error)
 }
 
 type ISOVersion string
@@ -55,8 +55,17 @@ func (h HttpError) Error() string {
 	return fmt.Sprintf("http status: %d", h)
 }
 
-func (h OpcpChargeStationCertificateProvider) ProvideCertificate(ctx context.Context, typ CertificateType, pemEncodedCSR string) (string, error) {
+func (h OpcpChargeStationCertificateProvider) ProvideCertificate(ctx context.Context, typ CertificateType, pemEncodedCSR string, csId string) (string, error) {
 	if typ == CertificateTypeV2G {
+		cn, err := getCommonNameFromCSR(pemEncodedCSR)
+		if err != nil {
+			return "", err
+		}
+
+		if cn != csId {
+			return "", fmt.Errorf("certificate common name does not match charge station id")
+		}
+
 		csr, err := convertCSR(pemEncodedCSR)
 		if err != nil {
 			return "", err
@@ -242,7 +251,7 @@ func encodeLeafAndChain(leaf, chain []byte) (string, error) {
 
 type DefaultChargeStationCertificateProvider struct{}
 
-func (n DefaultChargeStationCertificateProvider) ProvideCertificate(context.Context, CertificateType, string) (pemEncodedCertificateChain string, err error) {
+func (n DefaultChargeStationCertificateProvider) ProvideCertificate(context.Context, CertificateType, string, string) (pemEncodedCertificateChain string, err error) {
 	return "", fmt.Errorf("not implemented")
 }
 
@@ -252,9 +261,18 @@ type LocalChargeStationCertificateProvider struct {
 	PrivateKeyReader  io.Reader
 }
 
-func (l *LocalChargeStationCertificateProvider) ProvideCertificate(_ context.Context, typ CertificateType, pemEncodedCSR string) (pemEncodedCertificateChain string, err error) {
+func (l *LocalChargeStationCertificateProvider) ProvideCertificate(ctx context.Context, typ CertificateType, pemEncodedCSR string, csId string) (pemEncodedCertificateChain string, err error) {
 	if typ != CertificateTypeCSO {
 		return "", fmt.Errorf("local provider cannot provide V2G certificate")
+	}
+
+	cn, err := getCommonNameFromCSR(pemEncodedCSR)
+	if err != nil {
+		return "", err
+	}
+
+	if cn != csId {
+		return "", fmt.Errorf("certificate common name does not match charge station id")
 	}
 
 	certificate, err := readSigningCertificate(l.CertificateReader)
@@ -418,12 +436,24 @@ type DelegatingChargeStationCertificateProvider struct {
 	CSOChargeStationCertificateProvider ChargeStationCertificateProvider
 }
 
-func (d *DelegatingChargeStationCertificateProvider) ProvideCertificate(ctx context.Context, typ CertificateType, pemEncodedCSR string) (pemEncodedCertificateChain string, err error) {
+func (d *DelegatingChargeStationCertificateProvider) ProvideCertificate(ctx context.Context, typ CertificateType, pemEncodedCSR string, csId string) (pemEncodedCertificateChain string, err error) {
 	if typ == CertificateTypeV2G {
-		return d.V2GChargeStationCertificateProvider.ProvideCertificate(ctx, typ, pemEncodedCSR)
+		return d.V2GChargeStationCertificateProvider.ProvideCertificate(ctx, typ, pemEncodedCSR, csId)
 	} else if typ == CertificateTypeCSO {
-		return d.CSOChargeStationCertificateProvider.ProvideCertificate(ctx, typ, pemEncodedCSR)
+		return d.CSOChargeStationCertificateProvider.ProvideCertificate(ctx, typ, pemEncodedCSR, csId)
 	} else {
 		return "", fmt.Errorf("unknown certificate type: %d", typ)
 	}
+}
+
+func getCommonNameFromCSR(csr string) (string, error) {
+	block, _ := pem.Decode([]byte(csr))
+	if block != nil && block.Type == "CERTIFICATE REQUEST" {
+		csr, err := x509.ParseCertificateRequest(block.Bytes)
+		if err != nil {
+			return "", fmt.Errorf("parsing certificate request: %w", err)
+		}
+		return csr.Subject.CommonName, nil
+	}
+	return "", fmt.Errorf("no certificate request in PEM block")
 }

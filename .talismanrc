@@ -164,7 +164,7 @@ fileignoreconfig:
   - filename: manager/services/charge_station_certificate_provider.go
     checksum: 95514c58b5ba1857bf2cf0a8fd6bfb76c6d37620f4cef7c62398fa5f8c4b558f
   - filename: manager/services/charge_station_certificate_provider_test.go
-    checksum: 4ff130fcc25f7fbd783f3363c43af0e6f01f70de147d12f007e9f4f97a7092d9
+    checksum: e8c87d9210c77cf14e165971312785ad682a0c9aaf8639878aba974c3910b48d
   - filename: manager/services/http_token_hubject_test.go
     checksum: 8c86e20c1bc4a233db56055dde20f62d90fc24e6f4981465cbcb638571cc07db
   - filename: manager/services/http_token_service.go

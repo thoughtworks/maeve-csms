@@ -44,7 +44,7 @@ func (s SignCertificateHandler) HandleCall(ctx context.Context, chargeStationId 
 			storeType = store.CertificateTypeEVCC
 		}
 
-		pemChain, err := s.ChargeStationCertificateProvider.ProvideCertificate(ctx, certType, req.Csr)
+		pemChain, err := s.ChargeStationCertificateProvider.ProvideCertificate(ctx, certType, req.Csr, chargeStationId)
 		if err != nil {
 			slog.Error("failed to sign certificate", "err", err)
 			span.AddEvent("failed to sign certificate", trace.WithAttributes(attribute.String("err", err.Error())))

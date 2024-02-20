@@ -138,7 +138,7 @@ func TestOPCPChargeStationCertificateProvider(t *testing.T) {
 
 	csr := createCertificateSigningRequest(t)
 
-	pemChain, err := provider.ProvideCertificate(context.TODO(), services.CertificateTypeV2G, string(csr))
+	pemChain, err := provider.ProvideCertificate(context.TODO(), services.CertificateTypeV2G, string(csr), "cs001")
 	require.NoError(t, err)
 
 	pemBytes := []byte(pemChain)
@@ -156,6 +156,26 @@ func TestOPCPChargeStationCertificateProvider(t *testing.T) {
 	require.NotNil(t, pemBytes)
 	block, _ = pem.Decode(pemBytes)
 	require.Nil(t, block)
+}
+
+func TestOPCPChargeStationCertificateProviderWithWrongId(t *testing.T) {
+	opcp := newOPCPHttpHandler(t)
+
+	server := httptest.NewServer(opcp)
+	defer server.Close()
+
+	provider := services.OpcpChargeStationCertificateProvider{
+		BaseURL:          server.URL,
+		HttpTokenService: services.NewFixedHttpTokenService("TestToken"),
+		ISOVersion:       services.ISO15118V2,
+		HttpClient:       http.DefaultClient,
+	}
+
+	csr := createCertificateSigningRequest(t)
+
+	pemChain, err := provider.ProvideCertificate(context.TODO(), services.CertificateTypeV2G, string(csr), "not-cs001")
+	assert.Error(t, err)
+	assert.Equal(t, "", pemChain)
 }
 
 func TestLocalChargeStationCertificateProvider(t *testing.T) {
@@ -183,7 +203,7 @@ func TestLocalChargeStationCertificateProvider(t *testing.T) {
 	pemCsr := createCertificateSigningRequest(t)
 
 	ctx := context.TODO()
-	chain, err := certificateProvider.ProvideCertificate(ctx, services.CertificateTypeCSO, string(pemCsr))
+	chain, err := certificateProvider.ProvideCertificate(ctx, services.CertificateTypeCSO, string(pemCsr), "cs001")
 	require.NoError(t, err)
 
 	require.NotEmpty(t, chain)
@@ -204,6 +224,36 @@ func TestLocalChargeStationCertificateProvider(t *testing.T) {
 		block, r = pem.Decode(r)
 	}
 	require.Equal(t, 2, count)
+}
+
+func TestLocalChargeStationCertificateProviderWithWrongId(t *testing.T) {
+	caCert, caKey := createRootCACertificate(t, "test")
+	intCert, intKey := createIntermediateCACertificate(t, "int", "", caCert, caKey)
+
+	privateKey, err := x509.MarshalPKCS8PrivateKey(intKey)
+	require.NoError(t, err)
+
+	pemCertificate := pem.EncodeToMemory(&pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: intCert.Raw,
+	})
+
+	pemPrivateKey := pem.EncodeToMemory(&pem.Block{
+		Type:  "PRIVATE KEY",
+		Bytes: privateKey,
+	})
+
+	certificateProvider := &services.LocalChargeStationCertificateProvider{
+		CertificateReader: strings.NewReader(string(pemCertificate)),
+		PrivateKeyReader:  strings.NewReader(string(pemPrivateKey)),
+	}
+
+	pemCsr := createCertificateSigningRequest(t)
+
+	ctx := context.TODO()
+	chain, err := certificateProvider.ProvideCertificate(ctx, services.CertificateTypeCSO, string(pemCsr), "not-cs001")
+	assert.Error(t, err)
+	assert.Equal(t, "", chain)
 }
 
 func TestLocalChargeStationCertificateProviderWithRSAKey(t *testing.T) {
@@ -230,7 +280,7 @@ func TestLocalChargeStationCertificateProviderWithRSAKey(t *testing.T) {
 	pemCsr := createCertificateSigningRequest(t)
 
 	ctx := context.TODO()
-	chain, err := certificateProvider.ProvideCertificate(ctx, services.CertificateTypeCSO, string(pemCsr))
+	chain, err := certificateProvider.ProvideCertificate(ctx, services.CertificateTypeCSO, string(pemCsr), "cs001")
 	require.NoError(t, err)
 
 	require.NotEmpty(t, chain)
@@ -278,7 +328,7 @@ func TestLocalChargeStationCertificateProviderWithECKey(t *testing.T) {
 	pemCsr := createCertificateSigningRequest(t)
 
 	ctx := context.TODO()
-	chain, err := certificateProvider.ProvideCertificate(ctx, services.CertificateTypeCSO, string(pemCsr))
+	chain, err := certificateProvider.ProvideCertificate(ctx, services.CertificateTypeCSO, string(pemCsr), "cs001")
 	require.NoError(t, err)
 
 	require.NotEmpty(t, chain)

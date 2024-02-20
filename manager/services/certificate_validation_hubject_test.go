@@ -30,7 +30,7 @@ func TestCertificateValidationServiceWithHubjectCertificate(t *testing.T) {
 	}
 
 	csr := createCertificateSigningRequest(t)
-	chain, err := certSignerService.ProvideCertificate(ctx, services.CertificateTypeV2G, string(csr))
+	chain, err := certSignerService.ProvideCertificate(ctx, services.CertificateTypeV2G, string(csr), "")
 	require.NoError(t, err)
 
 	certificateValidationService := services.OnlineCertificateValidationService{
@@ -64,7 +64,7 @@ func TestCertificateValidationServiceWithHubjectCertificateHashes(t *testing.T) 
 	}
 
 	csr := createCertificateSigningRequest(t)
-	chain, err := certSignerService.ProvideCertificate(ctx, services.CertificateTypeV2G, string(csr))
+	chain, err := certSignerService.ProvideCertificate(ctx, services.CertificateTypeV2G, string(csr), "")
 	require.NoError(t, err)
 
 	certificateValidationService := services.OnlineCertificateValidationService{
