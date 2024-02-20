@@ -15,6 +15,7 @@ import (
 	"go.opentelemetry.io/otel/propagation"
 	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
 	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/trace/noop"
 	"io/fs"
 	"math/rand"
 	"net/http"
@@ -185,7 +186,7 @@ func ensureDefaults(h *Handler) {
 		h.schemaFS = schemas.OcppSchemas
 	}
 	if h.tracer == nil {
-		h.tracer = trace.NewNoopTracerProvider().Tracer("")
+		h.tracer = noop.NewTracerProvider().Tracer("")
 	}
 }
 
