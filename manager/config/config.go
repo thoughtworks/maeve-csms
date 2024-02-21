@@ -132,7 +132,7 @@ func Configure(ctx context.Context, cfg *BaseConfig) (c *Config, err error) {
 		return nil, err
 	}
 
-	c.ChargeStationCertProviderService, err = getChargeStationCertProvider(ctx, &cfg.ChargeStationCertProvider, httpClient)
+	c.ChargeStationCertProviderService, err = getChargeStationCertProvider(ctx, &cfg.ChargeStationCertProvider, c.Storage, httpClient)
 	if err != nil {
 		return nil, err
 	}
@@ -291,7 +291,7 @@ func getContractCertProvider(cfg *ContractCertProviderConfig, httpClient *http.C
 	return
 }
 
-func getChargeStationCertProvider(ctx context.Context, cfg *ChargeStationCertProviderConfig, httpClient *http.Client) (chargeStationCertProvider services.ChargeStationCertificateProvider, err error) {
+func getChargeStationCertProvider(ctx context.Context, cfg *ChargeStationCertProviderConfig, engine store.Engine, httpClient *http.Client) (chargeStationCertProvider services.ChargeStationCertificateProvider, err error) {
 	switch cfg.Type {
 	case "opcp":
 		httpTokenService, err := getHttpTokenService(&cfg.Opcp.HttpAuth, httpClient)
@@ -316,17 +316,18 @@ func getChargeStationCertProvider(ctx context.Context, cfg *ChargeStationCertPro
 		}
 
 		chargeStationCertProvider = &services.LocalChargeStationCertificateProvider{
+			Store:             engine,
 			CertificateReader: certificateSource,
 			PrivateKeyReader:  privateKeySource,
 		}
 	case "delegating":
 		var v2gChargeStationCertProvider services.ChargeStationCertificateProvider
-		v2gChargeStationCertProvider, err = getChargeStationCertProvider(ctx, cfg.Delegating.V2G, httpClient)
+		v2gChargeStationCertProvider, err = getChargeStationCertProvider(ctx, cfg.Delegating.V2G, engine, httpClient)
 		if err != nil {
 			return
 		}
 		var csoChargeStationCertProvider services.ChargeStationCertificateProvider
-		csoChargeStationCertProvider, err = getChargeStationCertProvider(ctx, cfg.Delegating.CSO, httpClient)
+		csoChargeStationCertProvider, err = getChargeStationCertProvider(ctx, cfg.Delegating.CSO, engine, httpClient)
 		if err != nil {
 			return
 		}

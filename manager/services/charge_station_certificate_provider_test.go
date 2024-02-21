@@ -7,6 +7,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
+	"crypto/sha256"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/asn1"
@@ -16,8 +17,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/thoughtworks/maeve-csms/manager/services"
+	"github.com/thoughtworks/maeve-csms/manager/store/inmemory"
 	"go.mozilla.org/pkcs7"
 	"io"
+	"k8s.io/utils/clock"
 	"math/big"
 	"net/http"
 	"net/http/httptest"
@@ -179,6 +182,8 @@ func TestOPCPChargeStationCertificateProviderWithWrongId(t *testing.T) {
 }
 
 func TestLocalChargeStationCertificateProvider(t *testing.T) {
+	store := inmemory.NewStore(clock.RealClock{})
+
 	caCert, caKey := createRootCACertificate(t, "test")
 	intCert, intKey := createIntermediateCACertificate(t, "int", "", caCert, caKey)
 
@@ -196,6 +201,7 @@ func TestLocalChargeStationCertificateProvider(t *testing.T) {
 	})
 
 	certificateProvider := &services.LocalChargeStationCertificateProvider{
+		Store:             store,
 		CertificateReader: strings.NewReader(string(pemCertificate)),
 		PrivateKeyReader:  strings.NewReader(string(pemPrivateKey)),
 	}
@@ -227,6 +233,8 @@ func TestLocalChargeStationCertificateProvider(t *testing.T) {
 }
 
 func TestLocalChargeStationCertificateProviderWithWrongId(t *testing.T) {
+	store := inmemory.NewStore(clock.RealClock{})
+
 	caCert, caKey := createRootCACertificate(t, "test")
 	intCert, intKey := createIntermediateCACertificate(t, "int", "", caCert, caKey)
 
@@ -244,6 +252,7 @@ func TestLocalChargeStationCertificateProviderWithWrongId(t *testing.T) {
 	})
 
 	certificateProvider := &services.LocalChargeStationCertificateProvider{
+		Store:             store,
 		CertificateReader: strings.NewReader(string(pemCertificate)),
 		PrivateKeyReader:  strings.NewReader(string(pemPrivateKey)),
 	}
@@ -257,6 +266,8 @@ func TestLocalChargeStationCertificateProviderWithWrongId(t *testing.T) {
 }
 
 func TestLocalChargeStationCertificateProviderWithRSAKey(t *testing.T) {
+	store := inmemory.NewStore(clock.RealClock{})
+
 	caCert, caKey := createRootCACertificate(t, "test")
 	intCert, intKey := createIntermediateRSACACertificate(t, "int", "", caCert, caKey)
 
@@ -273,6 +284,7 @@ func TestLocalChargeStationCertificateProviderWithRSAKey(t *testing.T) {
 	})
 
 	certificateProvider := &services.LocalChargeStationCertificateProvider{
+		Store:             store,
 		CertificateReader: strings.NewReader(string(pemCertificate)),
 		PrivateKeyReader:  strings.NewReader(string(pemPrivateKey)),
 	}
@@ -304,6 +316,8 @@ func TestLocalChargeStationCertificateProviderWithRSAKey(t *testing.T) {
 }
 
 func TestLocalChargeStationCertificateProviderWithECKey(t *testing.T) {
+	store := inmemory.NewStore(clock.RealClock{})
+
 	caCert, caKey := createRootCACertificate(t, "test")
 	intCert, intKey := createIntermediateCACertificate(t, "int", "", caCert, caKey)
 
@@ -321,6 +335,7 @@ func TestLocalChargeStationCertificateProviderWithECKey(t *testing.T) {
 	})
 
 	certificateProvider := &services.LocalChargeStationCertificateProvider{
+		Store:             store,
 		CertificateReader: strings.NewReader(string(pemCertificate)),
 		PrivateKeyReader:  strings.NewReader(string(pemPrivateKey)),
 	}
@@ -349,6 +364,59 @@ func TestLocalChargeStationCertificateProviderWithECKey(t *testing.T) {
 		block, r = pem.Decode(r)
 	}
 	require.Equal(t, 2, count)
+}
+
+func TestLocalChargeStationCertificateIsAddedToStore(t *testing.T) {
+	store := inmemory.NewStore(clock.RealClock{})
+
+	caCert, caKey := createRootCACertificate(t, "test")
+	intCert, intKey := createIntermediateCACertificate(t, "int", "", caCert, caKey)
+
+	privateKey, err := x509.MarshalPKCS8PrivateKey(intKey)
+	require.NoError(t, err)
+
+	pemCertificate := pem.EncodeToMemory(&pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: intCert.Raw,
+	})
+
+	pemPrivateKey := pem.EncodeToMemory(&pem.Block{
+		Type:  "PRIVATE KEY",
+		Bytes: privateKey,
+	})
+
+	certificateProvider := &services.LocalChargeStationCertificateProvider{
+		Store:             store,
+		CertificateReader: strings.NewReader(string(pemCertificate)),
+		PrivateKeyReader:  strings.NewReader(string(pemPrivateKey)),
+	}
+
+	pemCsr := createCertificateSigningRequest(t)
+
+	ctx := context.TODO()
+	chain, err := certificateProvider.ProvideCertificate(ctx, services.CertificateTypeCSO, string(pemCsr), "cs001")
+	require.NoError(t, err)
+
+	var x509Certificate *x509.Certificate
+	block, r := pem.Decode([]byte(chain))
+	for x509Certificate == nil && block != nil {
+		if block.Type == "CERTIFICATE" {
+			x509Certificate, err = x509.ParseCertificate(block.Bytes)
+			require.NoError(t, err)
+		}
+		block, r = pem.Decode(r)
+	}
+	require.NotNil(t, x509Certificate)
+
+	cert, err := store.LookupCertificate(ctx, getCertificateHash(x509Certificate))
+	require.NoError(t, err)
+	require.NotEqual(t, "", cert)
+}
+
+func getCertificateHash(cert *x509.Certificate) string {
+	hash := sha256.Sum256(cert.Raw)
+	b64Hash := base64.RawURLEncoding.EncodeToString(hash[:])
+	return b64Hash
 }
 
 var (

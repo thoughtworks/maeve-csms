@@ -13,6 +13,7 @@ import (
 	"encoding/base64"
 	"encoding/pem"
 	"fmt"
+	"github.com/thoughtworks/maeve-csms/manager/store"
 	"go.mozilla.org/pkcs7"
 	"go.opentelemetry.io/otel/codes"
 	semconv "go.opentelemetry.io/otel/semconv/v1.19.0"
@@ -257,6 +258,7 @@ func (n DefaultChargeStationCertificateProvider) ProvideCertificate(context.Cont
 
 // LocalChargeStationCertificateProvider issues CSO certificates using local data
 type LocalChargeStationCertificateProvider struct {
+	Store             store.CertificateStore
 	CertificateReader io.Reader
 	PrivateKeyReader  io.Reader
 }
@@ -329,6 +331,11 @@ func (l *LocalChargeStationCertificateProvider) ProvideCertificate(ctx context.C
 		Type:  "CERTIFICATE",
 		Bytes: signedCert,
 	}))
+
+	err = l.Store.SetCertificate(ctx, pemSignedCert)
+	if err != nil {
+		return "", fmt.Errorf("adding certificate to store: %w", err)
+	}
 
 	return pemSignedCert + pemSigningCert, nil
 }
