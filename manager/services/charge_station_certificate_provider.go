@@ -259,8 +259,8 @@ func (n DefaultChargeStationCertificateProvider) ProvideCertificate(context.Cont
 // LocalChargeStationCertificateProvider issues CSO certificates using local data
 type LocalChargeStationCertificateProvider struct {
 	Store             store.CertificateStore
-	CertificateReader io.Reader
-	PrivateKeyReader  io.Reader
+	CertificateReader LocalSource
+	PrivateKeyReader  LocalSource
 }
 
 func (l *LocalChargeStationCertificateProvider) ProvideCertificate(ctx context.Context, typ CertificateType, pemEncodedCSR string, csId string) (pemEncodedCertificateChain string, err error) {
@@ -277,12 +277,12 @@ func (l *LocalChargeStationCertificateProvider) ProvideCertificate(ctx context.C
 		return "", fmt.Errorf("certificate common name does not match charge station id")
 	}
 
-	certificate, err := readSigningCertificate(l.CertificateReader)
+	certificate, err := readSigningCertificate(ctx, l.CertificateReader)
 	if err != nil {
 		return "", err
 	}
 
-	privateKey, err := readPrivateKey(l.PrivateKeyReader)
+	privateKey, err := readPrivateKey(ctx, l.PrivateKeyReader)
 	if err != nil {
 		return "", err
 	}
@@ -340,14 +340,14 @@ func (l *LocalChargeStationCertificateProvider) ProvideCertificate(ctx context.C
 	return pemSignedCert + pemSigningCert, nil
 }
 
-func readSigningCertificate(certificateReader io.Reader) (*x509.Certificate, error) {
-	pemCertificate, err := io.ReadAll(certificateReader)
+func readSigningCertificate(ctx context.Context, certificateSource LocalSource) (*x509.Certificate, error) {
+	pemCertificate, err := certificateSource.GetData(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("reading certificate: %v", err)
 	}
 
 	var certificate *x509.Certificate
-	block, r := pem.Decode(pemCertificate)
+	block, r := pem.Decode([]byte(pemCertificate))
 	for certificate == nil && block != nil {
 		if block.Type == "CERTIFICATE" {
 			certificate, err = x509.ParseCertificate(block.Bytes)
@@ -365,14 +365,14 @@ func readSigningCertificate(certificateReader io.Reader) (*x509.Certificate, err
 	return certificate, nil
 }
 
-func readPrivateKey(privateKeyReader io.Reader) (crypto.PrivateKey, error) {
-	pemPrivateKey, err := io.ReadAll(privateKeyReader)
+func readPrivateKey(ctx context.Context, privateKeySource LocalSource) (crypto.PrivateKey, error) {
+	pemPrivateKey, err := privateKeySource.GetData(ctx)
 	if err != nil {
 		return "", fmt.Errorf("reading private key: %v", err)
 	}
 
 	var privateKey crypto.PrivateKey
-	block, r := pem.Decode(pemPrivateKey)
+	block, r := pem.Decode([]byte(pemPrivateKey))
 	for privateKey == nil && block != nil {
 		if block.Type == "PRIVATE KEY" {
 			privateKey, err = x509.ParsePKCS8PrivateKey(block.Bytes)

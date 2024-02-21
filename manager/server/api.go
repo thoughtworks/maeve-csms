@@ -4,8 +4,11 @@ package server
 
 import (
 	"github.com/rs/cors"
+	"github.com/thoughtworks/maeve-csms/manager/adminui"
 	"github.com/thoughtworks/maeve-csms/manager/api"
+	"github.com/thoughtworks/maeve-csms/manager/config"
 	"github.com/thoughtworks/maeve-csms/manager/ocpi"
+	"github.com/thoughtworks/maeve-csms/manager/services"
 	"github.com/thoughtworks/maeve-csms/manager/store"
 	"github.com/unrolled/secure"
 	"k8s.io/utils/clock"
@@ -19,7 +22,7 @@ import (
 	"github.com/thoughtworks/maeve-csms/manager/templates"
 )
 
-func NewApiHandler(engine store.Engine, ocpi ocpi.Api) http.Handler {
+func NewApiHandler(settings config.ApiSettings, engine store.Engine, ocpi ocpi.Api, csCertProvider services.ChargeStationCertificateProvider) http.Handler {
 	apiServer, err := api.NewServer(engine, clock.RealClock{}, ocpi)
 	if err != nil {
 		panic(err)
@@ -47,6 +50,7 @@ func NewApiHandler(engine store.Engine, ocpi ocpi.Api) http.Handler {
 	r.Handle("/metrics", promhttp.Handler())
 	r.Get("/api/openapi.json", getApiSwaggerJson)
 	r.With(logger).Mount("/api/v0", api.Handler(apiServer))
+	r.Mount("/adminui", adminui.NewServer(settings.ExternalAddr, settings.OrgName, engine, csCertProvider))
 	return r
 }
 

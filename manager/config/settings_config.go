@@ -3,7 +3,9 @@
 package config
 
 type ApiSettingsConfig struct {
-	Addr string `mapstructure:"addr" toml:"addr"`
+	Addr         string `mapstructure:"addr" toml:"addr"`
+	ExternalAddr string `mapstructure:"external_addr,omitempty" toml:"external_addr,omitempty"`
+	OrgName      string `mapstructure:"org_name,omitempty" toml:"org_name,omitempty"`
 }
 
 type MqttSettingsConfig struct {

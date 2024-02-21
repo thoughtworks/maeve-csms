@@ -46,7 +46,8 @@ the gateway and send appropriate responses.`,
 
 		tracer := otel.Tracer("manager")
 
-		apiServer := server.New("api", cfg.Api.Addr, nil, server.NewApiHandler(settings.Storage, settings.OcpiApi))
+		apiServer := server.New("api", cfg.Api.Addr, nil,
+			server.NewApiHandler(settings.Api, settings.Storage, settings.OcpiApi, settings.ChargeStationCertProviderService))
 
 		mqttHandler := mqtt.NewHandler(
 			mqtt.WithMqttBrokerUrls(settings.Mqtt.Urls),

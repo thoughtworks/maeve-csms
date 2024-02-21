@@ -3,8 +3,6 @@
 package config
 
 import (
-	secretmanager "cloud.google.com/go/secretmanager/apiv1"
-	"cloud.google.com/go/secretmanager/apiv1/secretmanagerpb"
 	"context"
 	"crypto/tls"
 	"fmt"
@@ -25,17 +23,17 @@ import (
 	"golang.org/x/exp/slog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"io"
 	"k8s.io/utils/clock"
 	"net/http"
 	"net/url"
 	"os"
-	"strings"
 	"time"
 )
 
 type ApiSettings struct {
-	Addr string
+	Addr         string
+	ExternalAddr string
+	OrgName      string
 }
 
 type MqttSettings struct {
@@ -86,7 +84,9 @@ func Configure(ctx context.Context, cfg *BaseConfig) (c *Config, err error) {
 
 	c = &Config{
 		Api: ApiSettings{
-			Addr: cfg.Api.Addr,
+			Addr:         cfg.Api.Addr,
+			ExternalAddr: cfg.Api.ExternalAddr,
+			OrgName:      cfg.Api.OrgName,
 		},
 		Mqtt: MqttSettings{
 			Urls:              mqttUrls,
@@ -306,11 +306,11 @@ func getChargeStationCertProvider(ctx context.Context, cfg *ChargeStationCertPro
 			HttpClient:       httpClient,
 		}
 	case "local":
-		certificateSource, err := getLocalSource(ctx, cfg.Local.CertificateSource)
+		certificateSource, err := getLocalSource(cfg.Local.CertificateSource)
 		if err != nil {
 			return nil, fmt.Errorf("create local source: %w", err)
 		}
-		privateKeySource, err := getLocalSource(ctx, cfg.Local.PrivateKeySource)
+		privateKeySource, err := getLocalSource(cfg.Local.PrivateKeySource)
 		if err != nil {
 			return nil, fmt.Errorf("create private key source: %w", err)
 		}
@@ -378,27 +378,16 @@ func getHttpTokenService(cfg *HttpAuthConfig, httpClient *http.Client) (httpToke
 	return
 }
 
-func getLocalSource(ctx context.Context, cfg *LocalSourceConfig) (reader io.Reader, err error) {
+func getLocalSource(cfg *LocalSourceConfig) (source services.LocalSource, err error) {
 	switch cfg.Type {
 	case "file":
-		reader, err = os.Open(cfg.File)
+		source = services.FileSource{
+			FileName: cfg.File,
+		}
 	case "google_cloud_secret":
-		var client *secretmanager.Client
-		client, err = secretmanager.NewClient(ctx)
-		defer func() {
-			_ = client.Close()
-		}()
-		if err != nil {
-			return
+		source = services.GoogleSecretSource{
+			SecretName: cfg.GoogleCloudSecret,
 		}
-		var resp *secretmanagerpb.AccessSecretVersionResponse
-		resp, err = client.AccessSecretVersion(ctx, &secretmanagerpb.AccessSecretVersionRequest{
-			Name: cfg.GoogleCloudSecret,
-		})
-		if err != nil {
-			return
-		}
-		reader = strings.NewReader(string(resp.Payload.GetData()))
 	default:
 		return nil, fmt.Errorf("unknown local source type: %s", cfg.Type)
 	}

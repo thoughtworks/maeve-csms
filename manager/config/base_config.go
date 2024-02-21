@@ -23,7 +23,9 @@ type BaseConfig struct {
 
 var DefaultConfig = BaseConfig{
 	Api: ApiSettingsConfig{
-		Addr: "localhost:9410",
+		Addr:         "localhost:9410",
+		ExternalAddr: "localhost:9410",
+		OrgName:      "Thoughtworks",
 	},
 	Mqtt: MqttSettingsConfig{
 		Urls:              []string{"mqtt://localhost:1883"},

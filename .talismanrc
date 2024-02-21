@@ -8,7 +8,7 @@ fileignoreconfig:
   - filename: config/envoy/envoy.yaml
     checksum: ecc0939110080350677a0b99d71d47f4cfb341cbcc2dedd212a52b8e350311d4
   - filename: config/manager/config.toml
-    checksum: 103e08cb1d9507cbeb377f4212606e52375d2f77c079aaad7465873ebb5fdd98
+    checksum: d28fa545deef6c383ac1cf401b2a9561a02ed17ffa6efdf665922580acf3e3e9
   - filename: docker-compose.yml
     checksum: bebfd6c63f4d2a688fdda876093b7f4a95e38c331cb70bcec548b43b80c93cd7
   - filename: gateway/cmd/serve.go
@@ -25,6 +25,18 @@ fileignoreconfig:
     checksum: 4a9379d10dc5a63bb6af399f77ef8598f6a6a289f60b4a634a9150c5cec03dcf
   - filename: manager/Dockerfile
     checksum: db69536d308b905d6214db1fb0e10442fe3e770ef3fed47809ca1f3ec099409d
+  - filename: manager/adminui/server.go
+    checksum: 8a882524c08b1a63cd3c0fcc1c754e36b341774269b4762af5823d431ce82674
+  - filename: manager/adminui/server_test.go
+    checksum: 3a2329f89ca93816c474c0407eacd79f02bbcb7f3f6a3340fa7b3a44a71826ff
+  - filename: manager/adminui/templates/connect.gohtml
+    checksum: d127a65b7f328d5aee708e4967f921ad5c96bb9e797d4307a0cdb9666a05e2a3
+  - filename: manager/adminui/templates/error.gohtml
+    checksum: 6d3d9c83e3695503827425db037f691162a08c20febd8bbc3b8bb88cd20dd49d
+  - filename: manager/adminui/templates/index.gohtml
+    checksum: 20375a64031a6076edd9e4d5d926eb3cec7e67b1372e3713c26e976f5b8fa90b
+  - filename: manager/adminui/templates/post-connect.gohtml
+    checksum: bf3922d5e15aeb8255d60b75c7e4fd1fcd3d45122d676df21126853b8d44d85a
   - filename: manager/api/API.md
     checksum: c9a715fef138947fcaa341a4ee531a1c87216f180de576565ff5edb42cec936e
   - filename: manager/api/api.gen.go
@@ -46,9 +58,9 @@ fileignoreconfig:
   - filename: manager/config/charge_station_cert_provider_config.go
     checksum: ba937840fb90c0ef13c79e611f9b9ff69e7b028d31892fd410fd5ce1f319d72d
   - filename: manager/config/config.go
-    checksum: 7cb9bc42ab6ff8d485d18ef0a33e7e2fea0a9a80c9b7d44fb0840dd42f67e190
+    checksum: 3841ea99861b8064e6a127e092a400df3f5d1c986995047aec8eb1d9200ccdb4
   - filename: manager/config/config_test.go
-    checksum: b0a56dd29f6d43114700522313ba351741e4f2e466cbc5d7203bdcf70a9ff01f
+    checksum: 10a323c13c371fed4229424597ccab80aaebbe4b696d88c17763dda64062baf0
   - filename: manager/config/http_token_config.go
     checksum: a49d33538ca625df3d5706e0143750f87dcded44ae085788e1a64519ef95c70c
   - filename: manager/config/settings_config.go
@@ -162,15 +174,19 @@ fileignoreconfig:
   - filename: manager/services/certificate_validation_test.go
     checksum: 46eca00f657751f23fbb221043e404955a246dfbe033ace2f4d05b253d88a443
   - filename: manager/services/charge_station_certificate_provider.go
-    checksum: 95514c58b5ba1857bf2cf0a8fd6bfb76c6d37620f4cef7c62398fa5f8c4b558f
+    checksum: 3865ed0f6bb839cae026651b11839399aa4bd76476a973022a88c09f8cb491e0
   - filename: manager/services/charge_station_certificate_provider_test.go
-    checksum: 6a3b492c667a769e3196258461a672a5bebc74ff2a702fff53e563c7d4025df8
+    checksum: 96505b6d7f2aa497f30982671d3c09a8988c02df5228beafe7aff5628d4dc025
   - filename: manager/services/http_token_hubject_test.go
     checksum: 8c86e20c1bc4a233db56055dde20f62d90fc24e6f4981465cbcb638571cc07db
   - filename: manager/services/http_token_service.go
     checksum: 48b6df7650d0d445f29669540142f29ec4469aef6322b617d52475b97dacbd7e
   - filename: manager/services/http_token_service_test.go
     checksum: 6e2e2491396472324d9f6dca6284bc5dae20ee71c7275fd0d37ab6a63cf94455
+  - filename: manager/services/local_source.go
+    checksum: 3c49d28929adafd46a7da91a45f4aef147f0078ea3c7c2b4dd0e81c2a777dbd4
+  - filename: manager/services/local_source_test.go
+    checksum: 904446fc10b9557ff5734a57d36c785fc5bc5d6e99e2b28d0d89c8eeaa234134
   - filename: manager/services/root_certificate_provider.go
     checksum: 2a6600b180491790f406abfd5feb1e5325bf06c2632dfd62d8652fc62151ad9b
   - filename: manager/services/root_certificate_provider_hubject_test.go

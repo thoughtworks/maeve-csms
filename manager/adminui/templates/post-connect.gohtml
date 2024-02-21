@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>MaEVe Admin UI</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+</head>
+<body>
+<div class="container">
+    <h1>Connection Details</h1>
+    <div class="form-group">
+        <label for="csid">Charge Station Id:</label>
+        <input type="text" class="form-control" id="csid" name="csid" value="{{ .csid }}" readonly>
+    </div>
+    <div class="form-group">
+        <label for="auth">Security Profile:</label>
+        <input type="text" class="form-control" id="auth" name="auth" value="{{- if (eq .auth "unsecured") }}Unsecured with basic auth{{- else if (eq .auth "basic") }}TLS with basic auth{{- else if (eq .auth "mtls") }}TLS with client certificates{{- end }}" readonly>
+    </div>
+    <div class="form-group">
+        <label for="url">URL:</label>
+        <input type="text" class="form-control" id="url" name="url" value="{{ .url }}" readonly>
+    </div>
+    {{- if .password }}
+    <div class="form-group">
+        <label for="password">Password:</label>
+        <input type="text" class="form-control" id="password" name="password" value="{{ .password }}" readonly>
+    </div>
+    {{ end }}
+    {{- if .clientCert }}
+    <div class="form-group">
+        <label for="cert">Client Certificate:</label>
+        <textarea id="cert" class="form-control-plaintext" rows="20" readonly>{{ .clientCert }}</textarea>
+    </div>
+    {{ end }}
+    {{ if .clientKey }}
+    <div class="form-group">
+        <label for="cert">Client Key:</label>
+        <textarea id="cert" class="form-control-plaintext" rows="10" readonly>{{ .clientKey }}</textarea>
+    </div>
+    {{- end }}
+</div>
+</body>
+</html>

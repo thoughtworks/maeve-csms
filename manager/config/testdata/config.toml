@@ -1,5 +1,7 @@
 [api]
 addr = ":9410"
+org_name = "Example"
+external_addr = "https://example.com/"
 
 [mqtt]
 urls = ["mqtt://127.0.0.1:1883"]

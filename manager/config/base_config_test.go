@@ -16,7 +16,9 @@ func TestParseConfig(t *testing.T) {
 
 	want := config.BaseConfig{
 		Api: config.ApiSettingsConfig{
-			Addr: ":9410",
+			Addr:         ":9410",
+			ExternalAddr: "https://example.com/",
+			OrgName:      "Example",
 		},
 		Mqtt: config.MqttSettingsConfig{
 			Urls:   []string{"mqtt://127.0.0.1:1883"},

@@ -24,7 +24,6 @@ import (
 	"math/big"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 	"time"
 )
@@ -202,8 +201,8 @@ func TestLocalChargeStationCertificateProvider(t *testing.T) {
 
 	certificateProvider := &services.LocalChargeStationCertificateProvider{
 		Store:             store,
-		CertificateReader: strings.NewReader(string(pemCertificate)),
-		PrivateKeyReader:  strings.NewReader(string(pemPrivateKey)),
+		CertificateReader: services.StringSource{Data: string(pemCertificate)},
+		PrivateKeyReader:  services.StringSource{Data: string(pemPrivateKey)},
 	}
 
 	pemCsr := createCertificateSigningRequest(t)
@@ -253,8 +252,8 @@ func TestLocalChargeStationCertificateProviderWithWrongId(t *testing.T) {
 
 	certificateProvider := &services.LocalChargeStationCertificateProvider{
 		Store:             store,
-		CertificateReader: strings.NewReader(string(pemCertificate)),
-		PrivateKeyReader:  strings.NewReader(string(pemPrivateKey)),
+		CertificateReader: services.StringSource{Data: string(pemCertificate)},
+		PrivateKeyReader:  services.StringSource{Data: string(pemPrivateKey)},
 	}
 
 	pemCsr := createCertificateSigningRequest(t)
@@ -285,8 +284,8 @@ func TestLocalChargeStationCertificateProviderWithRSAKey(t *testing.T) {
 
 	certificateProvider := &services.LocalChargeStationCertificateProvider{
 		Store:             store,
-		CertificateReader: strings.NewReader(string(pemCertificate)),
-		PrivateKeyReader:  strings.NewReader(string(pemPrivateKey)),
+		CertificateReader: services.StringSource{Data: string(pemCertificate)},
+		PrivateKeyReader:  services.StringSource{Data: string(pemPrivateKey)},
 	}
 
 	pemCsr := createCertificateSigningRequest(t)
@@ -336,8 +335,8 @@ func TestLocalChargeStationCertificateProviderWithECKey(t *testing.T) {
 
 	certificateProvider := &services.LocalChargeStationCertificateProvider{
 		Store:             store,
-		CertificateReader: strings.NewReader(string(pemCertificate)),
-		PrivateKeyReader:  strings.NewReader(string(pemPrivateKey)),
+		CertificateReader: services.StringSource{Data: string(pemCertificate)},
+		PrivateKeyReader:  services.StringSource{Data: string(pemPrivateKey)},
 	}
 
 	pemCsr := createCertificateSigningRequest(t)
@@ -387,8 +386,8 @@ func TestLocalChargeStationCertificateIsAddedToStore(t *testing.T) {
 
 	certificateProvider := &services.LocalChargeStationCertificateProvider{
 		Store:             store,
-		CertificateReader: strings.NewReader(string(pemCertificate)),
-		PrivateKeyReader:  strings.NewReader(string(pemPrivateKey)),
+		CertificateReader: services.StringSource{Data: string(pemCertificate)},
+		PrivateKeyReader:  services.StringSource{Data: string(pemPrivateKey)},
 	}
 
 	pemCsr := createCertificateSigningRequest(t)

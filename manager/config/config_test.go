@@ -24,7 +24,9 @@ func TestConfigure(t *testing.T) {
 	require.NoError(t, err)
 
 	wantApiSettings := config.ApiSettings{
-		Addr: "localhost:9410",
+		Addr:         "localhost:9410",
+		ExternalAddr: "localhost:9410",
+		OrgName:      "Thoughtworks",
 	}
 
 	wantMqttSettings := config.MqttSettings{
@@ -158,22 +160,16 @@ func TestConfigureLocalChargeStationCertProviderWithFile(t *testing.T) {
 }
 
 func TestConfigureLocalChargeStationCertProviderWithGoogleCloudSecret(t *testing.T) {
-	certificateSecretName := os.Getenv("TEST_GOOGLE_CLOUD_CERT_SECRET_NAME")
-	privateKeySecretName := os.Getenv("TEST_GOOGLE_CLOUD_KEY_SECRET_NAME")
-	if certificateSecretName == "" || privateKeySecretName == "" {
-		t.Skip("no test google cloud secrets configured")
-	}
-	t.Logf("Using %s and %s", certificateSecretName, privateKeySecretName)
 	cfg := &config.DefaultConfig
 	cfg.ChargeStationCertProvider.Type = "local"
 	cfg.ChargeStationCertProvider.Local = &config.LocalChargeStationCertProviderConfig{
 		CertificateSource: &config.LocalSourceConfig{
 			Type:              "google_cloud_secret",
-			GoogleCloudSecret: certificateSecretName,
+			GoogleCloudSecret: "project/12345678/secrets/certificate/versions/1",
 		},
 		PrivateKeySource: &config.LocalSourceConfig{
 			Type:              "google_cloud_secret",
-			GoogleCloudSecret: privateKeySecretName,
+			GoogleCloudSecret: "project/12345678/secrets/privatekey/versions/1",
 		},
 	}
 
