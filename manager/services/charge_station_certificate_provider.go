@@ -310,7 +310,7 @@ func (l *LocalChargeStationCertificateProvider) ProvideCertificate(ctx context.C
 		SerialNumber:          serial,
 		Subject:               csr.Subject,
 		NotBefore:             now,
-		NotAfter:              now.Add(time.Minute),
+		NotAfter:              now.AddDate(1, 0, 0),
 		BasicConstraintsValid: true,
 		IsCA:                  false,
 		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
