@@ -20,7 +20,7 @@ type LocalChargeStationCertProviderConfig struct {
 
 type DelegatingChargeStationCertProviderConfig struct {
 	V2G *ChargeStationCertProviderConfig `mapstructure:"v2g" toml:"v2g"`
-	CSO *ChargeStationCertProviderConfig `mapstructure:"cso" toml:"csp"`
+	CSO *ChargeStationCertProviderConfig `mapstructure:"cso" toml:"cso"`
 }
 
 type ChargeStationCertProviderConfig struct {
