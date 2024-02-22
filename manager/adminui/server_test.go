@@ -160,6 +160,90 @@ func TestConnectWithMTLS(t *testing.T) {
 	}
 }
 
+func TestRegisterTokenWithShortUid(t *testing.T) {
+	engine := inmemory.NewStore(clock.RealClock{})
+
+	server := NewServer("localhost:9410", "Example", engine, nil)
+
+	r := chi.NewRouter()
+	r.Mount("/adminui", server)
+
+	uid := "ABC1"
+
+	form := url.Values{}
+	form.Set("uid", uid)
+
+	req := httptest.NewRequest(http.MethodPost, "/adminui/token", strings.NewReader(form.Encode()))
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	rr := httptest.NewRecorder()
+
+	r.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("request failed with status: %d", rr.Code)
+	}
+
+	data, err := io.ReadAll(rr.Result().Body)
+	if err != nil {
+		t.Fatalf("unable to read response body: %v", err)
+	}
+	t.Log(string(data))
+
+	tok, err := engine.LookupToken(context.TODO(), uid)
+	if err != nil {
+		t.Fatalf("unable to read token from db: %v", err)
+	}
+
+	if tok.Uid != uid {
+		t.Errorf("wrong uid, want %s got %s", uid, tok.Uid)
+	}
+	if tok.ContractId != "GBTWK00000ABC1R" {
+		t.Errorf("wrong contract id, want GBTWK00000ABC1R got %s", tok.ContractId)
+	}
+}
+
+func TestRegisterTokenWithLongUid(t *testing.T) {
+	engine := inmemory.NewStore(clock.RealClock{})
+
+	server := NewServer("localhost:9410", "Example", engine, nil)
+
+	r := chi.NewRouter()
+	r.Mount("/adminui", server)
+
+	uid := "ABC1234567890"
+
+	form := url.Values{}
+	form.Set("uid", uid)
+
+	req := httptest.NewRequest(http.MethodPost, "/adminui/token", strings.NewReader(form.Encode()))
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	rr := httptest.NewRecorder()
+
+	r.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("request failed with status: %d", rr.Code)
+	}
+
+	data, err := io.ReadAll(rr.Result().Body)
+	if err != nil {
+		t.Fatalf("unable to read response body: %v", err)
+	}
+	t.Log(string(data))
+
+	tok, err := engine.LookupToken(context.TODO(), uid)
+	if err != nil {
+		t.Fatalf("unable to read token from db: %v", err)
+	}
+
+	if tok.Uid != uid {
+		t.Errorf("wrong uid, want %s got %s", uid, tok.Uid)
+	}
+	if tok.ContractId != "GBTWKABC123456Y" {
+		t.Errorf("wrong contract id, want GBTWKABC123456Y got %s", tok.ContractId)
+	}
+}
+
 func generateCA(t *testing.T) (string, string) {
 	caKeyPair, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {

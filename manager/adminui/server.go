@@ -12,10 +12,12 @@ import (
 	"encoding/pem"
 	"fmt"
 	"github.com/go-chi/chi/v5"
+	"github.com/thoughtworks/maeve-csms/manager/ocpp"
 	"github.com/thoughtworks/maeve-csms/manager/services"
 	"github.com/thoughtworks/maeve-csms/manager/store"
 	"golang.org/x/exp/slog"
 	"html/template"
+	"math"
 	"net/http"
 )
 
@@ -29,23 +31,23 @@ func NewServer(externalAddr, orgName string, engine store.Engine, certificatePro
 
 	templates := template.Must(template.ParseFS(res, "templates/*.gohtml"))
 
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/html")
-		err := templates.ExecuteTemplate(w, "index.gohtml", nil)
-		if err != nil {
-			slog.Error("rendering template", "err", err)
-			_ = templates.ExecuteTemplate(w, "error.gohtml", nil)
-		}
-	})
+	pages := map[string]string{
+		"/":        "index.gohtml",
+		"/connect": "connect.gohtml",
+		"/token":   "token.gohtml",
+	}
 
-	r.Get("/connect", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/html")
-		err := templates.ExecuteTemplate(w, "connect.gohtml", nil)
-		if err != nil {
-			slog.Error("rendering template", "err", err)
-			_ = templates.ExecuteTemplate(w, "error.gohtml", nil)
-		}
-	})
+	for path, templ := range pages {
+		templCopy := templ
+		r.Get(path, func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "text/html")
+			err := templates.ExecuteTemplate(w, templCopy, nil)
+			if err != nil {
+				slog.Error("rendering template", "err", err)
+				_ = templates.ExecuteTemplate(w, "error.gohtml", nil)
+			}
+		})
+	}
 
 	r.Post("/connect", func(w http.ResponseWriter, r *http.Request) {
 		err := r.ParseForm()
@@ -135,7 +137,61 @@ func NewServer(externalAddr, orgName string, engine store.Engine, certificatePro
 		}
 	})
 
+	r.Post("/token", func(w http.ResponseWriter, r *http.Request) {
+		err := r.ParseForm()
+		if err != nil {
+			slog.Error("parsing form", "err", err)
+			_ = templates.ExecuteTemplate(w, "error.gohtml", nil)
+			return
+		}
+
+		uid := r.PostFormValue("uid")
+
+		if uid == "" {
+			slog.Error("missing form parameters")
+			_ = templates.ExecuteTemplate(w, "error.gohtml", nil)
+			return
+		}
+
+		var data = map[string]string{
+			"uid": uid,
+		}
+
+		err = registerToken(r.Context(), engine, uid)
+		if err != nil {
+			slog.Error("unable to register token", "token", uid, "err", err)
+			_ = templates.ExecuteTemplate(w, "error.gohtml", nil)
+			return
+		}
+
+		w.Header().Set("Content-Type", "text/html")
+		err = templates.ExecuteTemplate(w, "post-token.gohtml", data)
+		if err != nil {
+			slog.Error("rendering template", "err", err)
+			_ = templates.ExecuteTemplate(w, "error.gohtml", nil)
+		}
+	})
+
 	return r
+}
+
+func registerToken(ctx context.Context, engine store.Engine, uid string) error {
+	// at present, the only thing used about a token is the uid - but we
+	// need to fill in all the other fields to support OCPI.
+	contractId, err := ocpp.NormalizeEmaid(fmt.Sprintf("GBTWK%09s", uid[:int(math.Min(9, float64(len(uid))))]))
+	if err != nil {
+		return fmt.Errorf("emaid: %s: %v", "GBTWK", err)
+	}
+	return engine.SetToken(ctx, &store.Token{
+		Uid:         uid,
+		CountryCode: "GB",
+		PartyId:     "TWK",
+		Type:        "OTHER",
+		Valid:       true,
+		ContractId:  contractId,
+		Issuer:      "Thoughtworks",
+		CacheMode:   "ALWAYS",
+	})
 }
 
 func createPassword() (string, error) {
