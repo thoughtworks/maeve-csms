@@ -7,6 +7,7 @@ type Engine interface {
 	ChargeStationSettingsStore
 	ChargeStationRuntimeDetailsStore
 	ChargeStationInstallCertificatesStore
+	ChargeStationTriggerMessageStore
 	TokenStore
 	TransactionStore
 	CertificateStore

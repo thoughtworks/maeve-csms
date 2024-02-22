@@ -133,6 +133,31 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Status"
+  /cs/{csId}/trigger:
+    post:
+      operationId: "triggerChargeStation"
+      parameters:
+        - name: "csId"
+          in: "path"
+          description: "The charge station identifier"
+          schema:
+            type: "string"
+            maxLength: 28
+      requestBody:
+        required: true
+        content:
+          "application/json":
+            schema:
+              $ref: "#/components/schemas/ChargeStationTrigger"
+      responses:
+        "200":
+          description: "OK"
+        default:
+          description: "Unexpected error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Status"
   /token:
     post:
       summary: "Create/update an authorization token"
@@ -418,6 +443,20 @@ components:
                   - Accepted
                   - Rejected
                   - Pending
+    ChargeStationTrigger:
+      type: "object"
+      description: "Trigger a charge station action"
+      required:
+        - "trigger"
+      properties:
+        trigger:
+          type: "string"
+          enum:
+            - "BootNotification"
+            - "StatusNotification"
+            - "SignV2GCertificate"
+            - "SignChargingStationCertificate"
+            - "SignCombinedCertificate"
     Token:
       type: "object"
       description: "An authorization token"

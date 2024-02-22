@@ -226,6 +226,49 @@ the charge station
 This operation does not require authentication
 </aside>
 
+## triggerChargeStation
+
+<a id="opIdtriggerChargeStation"></a>
+
+`POST /cs/{csId}/trigger`
+
+> Body parameter
+
+```json
+{
+  "trigger": "BootNotification"
+}
+```
+
+<h3 id="triggerchargestation-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|csId|path|string|false|The charge station identifier|
+|body|body|[ChargeStationTrigger](#schemachargestationtrigger)|true|none|
+
+> Example responses
+
+> default Response
+
+```json
+{
+  "status": "string",
+  "error": "string"
+}
+```
+
+<h3 id="triggerchargestation-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|OK|None|
+|default|Default|Unexpected error|[Status](#schemastatus)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
 ## setToken
 
 <a id="opIdsetToken"></a>
@@ -758,6 +801,38 @@ to the charge station asynchronously.
 |status|Accepted|
 |status|Rejected|
 |status|Pending|
+
+<h2 id="tocS_ChargeStationTrigger">ChargeStationTrigger</h2>
+<!-- backwards compatibility -->
+<a id="schemachargestationtrigger"></a>
+<a id="schema_ChargeStationTrigger"></a>
+<a id="tocSchargestationtrigger"></a>
+<a id="tocschargestationtrigger"></a>
+
+```json
+{
+  "trigger": "BootNotification"
+}
+
+```
+
+Trigger a charge station action
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|trigger|string|true|none|none|
+
+#### Enumerated Values
+
+|Property|Value|
+|---|---|
+|trigger|BootNotification|
+|trigger|StatusNotification|
+|trigger|SignV2GCertificate|
+|trigger|SignChargingStationCertificate|
+|trigger|SignCombinedCertificate|
 
 <h2 id="tocS_Token">Token</h2>
 <!-- backwards compatibility -->

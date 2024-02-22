@@ -249,3 +249,81 @@ func (s *Store) LookupChargeStationRuntimeDetails(ctx context.Context, chargeSta
 		OcppVersion: csData.OcppVersion,
 	}, nil
 }
+
+type chargeStationTriggerMessage struct {
+	Type      string    `firestore:"t"`
+	Status    string    `firestore:"s"`
+	SendAfter time.Time `firestore:"u"`
+}
+
+func (s *Store) SetChargeStationTriggerMessage(ctx context.Context, chargeStationId string, triggerMessage *store.ChargeStationTriggerMessage) error {
+	csRef := s.client.Doc(fmt.Sprintf("ChargeStationTriggerMessage/%s", chargeStationId))
+	_, err := csRef.Set(ctx, &chargeStationTriggerMessage{
+		Type:      string(triggerMessage.TriggerMessage),
+		Status:    string(triggerMessage.TriggerStatus),
+		SendAfter: triggerMessage.SendAfter,
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *Store) DeleteChargeStationTriggerMessage(ctx context.Context, chargeStationId string) error {
+	csRef := s.client.Doc(fmt.Sprintf("ChargeStationTriggerMessage/%s", chargeStationId))
+	_, err := csRef.Delete(ctx)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *Store) LookupChargeStationTriggerMessage(ctx context.Context, chargeStationId string) (*store.ChargeStationTriggerMessage, error) {
+	csRef := s.client.Doc(fmt.Sprintf("ChargeStationTriggerMessage/%s", chargeStationId))
+	snap, err := csRef.Get(ctx)
+	if err != nil {
+		if status.Code(err) == codes.NotFound {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("lookup charge station trigger message %s: %w", chargeStationId, err)
+	}
+	var csData chargeStationTriggerMessage
+	if err = snap.DataTo(&csData); err != nil {
+		return nil, fmt.Errorf("map charge station trigger message %s: %w", chargeStationId, err)
+	}
+	return &store.ChargeStationTriggerMessage{
+		ChargeStationId: chargeStationId,
+		TriggerMessage:  store.TriggerMessage(csData.Type),
+		TriggerStatus:   store.TriggerStatus(csData.Status),
+		SendAfter:       csData.SendAfter,
+	}, nil
+}
+
+func (s *Store) ListChargeStationTriggerMessages(ctx context.Context, pageSize int, previousCsId string) ([]*store.ChargeStationTriggerMessage, error) {
+	var triggerMessages []*store.ChargeStationTriggerMessage
+	var docIt *firestore.DocumentIterator
+	if previousCsId == "" {
+		docIt = s.client.Collection("ChargeStationTriggerMessage").OrderBy(firestore.DocumentID, firestore.Asc).
+			Limit(pageSize).Documents(ctx)
+	} else {
+		docIt = s.client.Collection("ChargeStationTriggerMessage").OrderBy(firestore.DocumentID, firestore.Asc).
+			StartAfter(previousCsId).Limit(pageSize).Documents(ctx)
+	}
+	snaps, err := docIt.GetAll()
+	if err != nil {
+		return nil, fmt.Errorf("list charge station trigger messages: %w", err)
+	}
+	for _, snap := range snaps {
+		var triggerMessage chargeStationTriggerMessage
+		if err = snap.DataTo(&triggerMessage); err != nil {
+			return nil, fmt.Errorf("map charge station trigger message: %w", err)
+		}
+		triggerMessages = append(triggerMessages, &store.ChargeStationTriggerMessage{
+			ChargeStationId: snap.Ref.ID,
+			TriggerMessage:  store.TriggerMessage(triggerMessage.Type),
+			TriggerStatus:   store.TriggerStatus(triggerMessage.Status),
+			SendAfter:       triggerMessage.SendAfter,
+		})
+	}
+	return triggerMessages, nil
+}

@@ -30,6 +30,7 @@ type Store struct {
 	chargeStationSettings            map[string]*store.ChargeStationSettings
 	chargeStationInstallCertificates map[string]*store.ChargeStationInstallCertificates
 	chargeStationRuntimeDetails      map[string]*store.ChargeStationRuntimeDetails
+	chargeStationTriggerMessage      map[string]*store.ChargeStationTriggerMessage
 	tokens                           map[string]*store.Token
 	transactions                     map[string]*store.Transaction
 	certificates                     map[string]string
@@ -45,6 +46,7 @@ func NewStore(clock clock.PassiveClock) *Store {
 		chargeStationSettings:            make(map[string]*store.ChargeStationSettings),
 		chargeStationInstallCertificates: make(map[string]*store.ChargeStationInstallCertificates),
 		chargeStationRuntimeDetails:      make(map[string]*store.ChargeStationRuntimeDetails),
+		chargeStationTriggerMessage:      make(map[string]*store.ChargeStationTriggerMessage),
 		tokens:                           make(map[string]*store.Token),
 		transactions:                     make(map[string]*store.Transaction),
 		certificates:                     make(map[string]string),
@@ -185,6 +187,48 @@ func (s *Store) LookupChargeStationRuntimeDetails(_ context.Context, chargeStati
 	s.Lock()
 	defer s.Unlock()
 	return s.chargeStationRuntimeDetails[chargeStationId], nil
+}
+
+func (s *Store) SetChargeStationTriggerMessage(ctx context.Context, chargeStationId string, triggerMessage *store.ChargeStationTriggerMessage) error {
+	s.Lock()
+	defer s.Unlock()
+	s.chargeStationTriggerMessage[chargeStationId] = triggerMessage
+	return nil
+}
+
+func (s *Store) DeleteChargeStationTriggerMessage(ctx context.Context, chargeStationId string) error {
+	s.Lock()
+	defer s.Unlock()
+	delete(s.chargeStationTriggerMessage, chargeStationId)
+	return nil
+}
+
+func (s *Store) LookupChargeStationTriggerMessage(ctx context.Context, chargeStationId string) (*store.ChargeStationTriggerMessage, error) {
+	s.Lock()
+	defer s.Unlock()
+	return s.chargeStationTriggerMessage[chargeStationId], nil
+}
+
+func (s *Store) ListChargeStationTriggerMessages(ctx context.Context, pageSize int, previousChargeStationId string) ([]*store.ChargeStationTriggerMessage, error) {
+	s.Lock()
+	defer s.Unlock()
+
+	keys := maps.Keys(s.chargeStationTriggerMessage)
+	sort.Strings(keys)
+
+	i, found := slices.BinarySearch(keys, previousChargeStationId)
+	if !found {
+		i = 0
+	} else {
+		i++
+	}
+
+	var triggerMessages []*store.ChargeStationTriggerMessage
+	max := int(math.Min(float64(i+pageSize), float64(len(keys))))
+	for _, k := range keys[i:max] {
+		triggerMessages = append(triggerMessages, s.chargeStationTriggerMessage[k])
+	}
+	return triggerMessages, nil
 }
 
 func (s *Store) SetToken(_ context.Context, token *store.Token) error {

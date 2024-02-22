@@ -322,3 +322,23 @@ func TestLookupChargeStationRuntimeDetailsWithUnregisteredChargeStation(t *testi
 	require.NoError(t, err)
 	assert.Nil(t, got)
 }
+
+func TestListChargeStationTriggerMessages(t *testing.T) {
+	defer cleanupAllCollections(t, "myproject")
+
+	ctx := context.Background()
+
+	triggerStore, err := firestore.NewStore(ctx, "myproject", clock.RealClock{})
+	require.NoError(t, err)
+
+	err = triggerStore.SetChargeStationTriggerMessage(ctx, "cs001", &store.ChargeStationTriggerMessage{
+		TriggerMessage: store.TriggerMessageBootNotification,
+		TriggerStatus:  store.TriggerStatusPending,
+	})
+	require.NoError(t, err)
+
+	got, err := triggerStore.ListChargeStationTriggerMessages(ctx, 10, "")
+	require.NoError(t, err)
+
+	t.Logf("%+v", got)
+}

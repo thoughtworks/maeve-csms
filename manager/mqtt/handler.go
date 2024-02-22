@@ -280,6 +280,7 @@ func (h *Handler) Connect(errCh chan error) {
 	}
 	go SyncSettings(context.Background(), h.storageEngine, h.clock, v16SyncCallMaker, v201SyncCallMaker, 2*time.Minute, 2*time.Minute)
 	go SyncCertificates(context.Background(), h.storageEngine, h.clock, dataTransferCallMaker, v201SyncCallMaker, 2*time.Minute, 2*time.Minute)
+	go SyncTriggers(context.Background(), h.storageEngine, h.clock, v16SyncCallMaker, v201SyncCallMaker, 2*time.Minute, 2*time.Minute)
 }
 
 func getTopicPattern(topic string) string {

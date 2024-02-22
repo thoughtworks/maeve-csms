@@ -20,6 +20,10 @@ func (c ChargeStationInstallCertificates) Bind(r *http.Request) error {
 	return nil
 }
 
+func (c ChargeStationTrigger) Bind(r *http.Request) error {
+	return nil
+}
+
 func (t Token) Bind(r *http.Request) error {
 	return nil
 }

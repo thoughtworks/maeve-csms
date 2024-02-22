@@ -98,3 +98,41 @@ type ChargeStationInstallCertificatesStore interface {
 	LookupChargeStationInstallCertificates(ctx context.Context, chargeStationId string) (*ChargeStationInstallCertificates, error)
 	ListChargeStationInstallCertificates(ctx context.Context, pageSize int, previousChargeStationId string) ([]*ChargeStationInstallCertificates, error)
 }
+
+type TriggerStatus string
+
+var (
+	TriggerStatusPending        TriggerStatus = "Pending"
+	TriggerStatusAccepted       TriggerStatus = "Accepted"
+	TriggerStatusRejected       TriggerStatus = "Rejected"
+	TriggerStatusNotImplemented TriggerStatus = "NotImplemented"
+)
+
+type TriggerMessage string
+
+var (
+	TriggerMessageBootNotification                  TriggerMessage = "BootNotification"
+	TriggerMessageHeartbeat                         TriggerMessage = "Heartbeat"
+	TriggerMessageStatusNotification                TriggerMessage = "StatusNotification"
+	TriggerMessageFirmwareStatusNotification        TriggerMessage = "FirmwareStatusNotification"
+	TriggerMessageDiagnosticStatusNotification      TriggerMessage = "DiagnosticStatusNotification"
+	TriggerMessageMeterValues                       TriggerMessage = "MeterValues"
+	TriggerMessageSignChargingStationCertificate    TriggerMessage = "SignChargingStationCertificate"
+	TriggerMessageSignV2GCertificate                TriggerMessage = "SignV2GCertificate"
+	TriggerMessageSignCombinedCertificate           TriggerMessage = "SignCombinedCertificate"
+	TriggerMessagePublishFirmwareStatusNotification TriggerMessage = "PublishFirmwareStatusNotification"
+)
+
+type ChargeStationTriggerMessage struct {
+	ChargeStationId string
+	TriggerMessage  TriggerMessage
+	TriggerStatus   TriggerStatus
+	SendAfter       time.Time
+}
+
+type ChargeStationTriggerMessageStore interface {
+	SetChargeStationTriggerMessage(ctx context.Context, chargeStationId string, triggerMessage *ChargeStationTriggerMessage) error
+	DeleteChargeStationTriggerMessage(ctx context.Context, chargeStationId string) error
+	LookupChargeStationTriggerMessage(ctx context.Context, chargeStationId string) (*ChargeStationTriggerMessage, error)
+	ListChargeStationTriggerMessages(ctx context.Context, pageSize int, previousChargeStationId string) ([]*ChargeStationTriggerMessage, error)
+}

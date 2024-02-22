@@ -44,7 +44,7 @@ fileignoreconfig:
   - filename: manager/api/API.md
     checksum: c9a715fef138947fcaa341a4ee531a1c87216f180de576565ff5edb42cec936e
   - filename: manager/api/api.gen.go
-    checksum: 67e6b8201e4be1d494a68ce49fecb5a2910aa624a26b4e4a28a6655ee8937ab4
+    checksum: 7938cf66adf3f3cca66581111dea5b2f9b9ceb28d252493bc78f8746a920b36d
   - filename: manager/api/server.go
     checksum: 98cbd1df522ea428f7e669c01721f3070133062378a4f2e4b167d55eaa8d079b
   - filename: manager/api/server_test.go
@@ -109,6 +109,8 @@ fileignoreconfig:
     checksum: 99db5ba6a8456c7bae42bd1ab98df485a7d742a33171ed03dc92b8a502d4f699
   - filename: manager/mqtt/settings_test.go
     checksum: dd7a956f3e659906c047ae6a0e094c335a273fbe4a3248c8b2687224817f24d8
+  - filename: manager/mqtt/triggers.go
+    checksum: 0f272466fb565103843a81d961800e0909826c743163f67aa4e215fe13722c76
   - filename: manager/ocpi/correlation.go
     checksum: b875df588159233dd77aacdfe0683ce0f1da9a0e17f7b8eb41d1ecc3d1a58a38
   - filename: manager/ocpi/ocpi.gen.go
@@ -208,7 +210,7 @@ fileignoreconfig:
   - filename: manager/store/inmemory/cert_test.go
     checksum: 535591f9b2a347dd1fc00f07aa3742660c96a636dae8f724c9e2842e09b95356
   - filename: manager/store/inmemory/store.go
-    checksum: 94bc86687c5df5703d2fc1a9cf5a9013e802b86ec8c2ab8cc82dafcd17295c6a
+    checksum: f3a283875a4a23a9c8eb703be42785da6602c5780c3d81978aeb29a3836dea33
 scopeconfig:
   - scope: go
 version: ''
