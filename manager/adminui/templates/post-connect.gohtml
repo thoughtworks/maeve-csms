@@ -31,12 +31,14 @@
     <div class="form-group">
         <label for="cert">Client Certificate:</label>
         <textarea id="cert" class="form-control-plaintext" rows="20" readonly>{{ .clientCert }}</textarea>
+        <a class="btn btn-secondary" role="button" href="data:application/pem-certificate-chain,{{ .clientCert }}" title="Download Certificate Chain" download="{{ .csid }}.pem">Download Certificate Chain</a>
     </div>
     {{ end }}
     {{ if .clientKey }}
     <div class="form-group">
         <label for="cert">Client Key:</label>
         <textarea id="cert" class="form-control-plaintext" rows="10" readonly>{{ .clientKey }}</textarea>
+        <a class="btn btn-secondary" role="button" href="data:application/x-pem-file,{{ .clientKey }}" title="Download Private Key" download="{{ .csid }}-key.pem">Download Private Key</a>
     </div>
     {{- end }}
 </div>

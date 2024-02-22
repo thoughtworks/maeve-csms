@@ -36,7 +36,7 @@ fileignoreconfig:
   - filename: manager/adminui/templates/index.gohtml
     checksum: 20375a64031a6076edd9e4d5d926eb3cec7e67b1372e3713c26e976f5b8fa90b
   - filename: manager/adminui/templates/post-connect.gohtml
-    checksum: bf3922d5e15aeb8255d60b75c7e4fd1fcd3d45122d676df21126853b8d44d85a
+    checksum: 80c810487f1cd54c509dd6a2651ae84b5f19def6d60a061c55594993a8971a27
   - filename: manager/adminui/templates/post-token.gohtml
     checksum: b5d54d3b4d4f820e3a08e75418606b3042195893e63ebe28bfc1e19afc3fc589
   - filename: manager/adminui/templates/token.gohtml
