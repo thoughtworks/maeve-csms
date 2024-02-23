@@ -257,6 +257,7 @@ func (h *Handler) Connect(errCh chan error) {
 		E: v16Emitter,
 		Actions: map[reflect.Type]string{
 			reflect.TypeOf(&ocpp16.ChangeConfigurationJson{}): "ChangeConfiguration",
+			reflect.TypeOf(&ocpp16.TriggerMessageJson{}):      "TriggerMessage",
 		},
 	}
 	dataTransferCallMaker := &DataTransferCallMaker{
@@ -270,17 +271,42 @@ func (h *Handler) Connect(errCh chan error) {
 				VendorId:  "org.openchargealliance.iso15118pnc",
 				MessageId: "InstallCertificate",
 			},
+			reflect.TypeOf(&ocpp201.TriggerMessageRequestJson{}): {
+				VendorId:  "org.openchargealliance.iso15118pnc",
+				MessageId: "TriggerMessage",
+			},
 		},
 	}
 	v201SyncCallMaker := &BasicCallMaker{
 		E: v201Emitter,
 		Actions: map[reflect.Type]string{
-			reflect.TypeOf(&ocpp201.SetVariablesRequestJson{}): "SetVariables",
+			reflect.TypeOf(&ocpp201.SetVariablesRequestJson{}):   "SetVariables",
+			reflect.TypeOf(&ocpp201.TriggerMessageRequestJson{}): "TriggerMessage",
 		},
 	}
-	go SyncSettings(context.Background(), h.storageEngine, h.clock, v16SyncCallMaker, v201SyncCallMaker, 2*time.Minute, 2*time.Minute)
-	go SyncCertificates(context.Background(), h.storageEngine, h.clock, dataTransferCallMaker, v201SyncCallMaker, 2*time.Minute, 2*time.Minute)
-	go SyncTriggers(context.Background(), h.storageEngine, h.clock, v16SyncCallMaker, v201SyncCallMaker, 2*time.Minute, 2*time.Minute)
+	go SyncSettings(context.Background(),
+		h.storageEngine,
+		h.clock,
+		v16SyncCallMaker,
+		v201SyncCallMaker,
+		1*time.Minute,
+		2*time.Minute)
+	go SyncCertificates(context.Background(),
+		h.storageEngine,
+		h.clock,
+		dataTransferCallMaker,
+		v201SyncCallMaker,
+		1*time.Minute,
+		2*time.Minute)
+	go SyncTriggers(context.Background(),
+		h.tracer,
+		h.storageEngine,
+		h.clock,
+		v16SyncCallMaker,
+		dataTransferCallMaker,
+		v201SyncCallMaker,
+		1*time.Minute,
+		2*time.Minute)
 }
 
 func getTopicPattern(topic string) string {

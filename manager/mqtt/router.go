@@ -236,6 +236,15 @@ func NewV16Router(emitter Emitter,
 									Store: engine,
 								},
 							},
+							"TriggerMessage": {
+								NewRequest:     func() ocpp.Request { return new(ocpp201.TriggerMessageRequestJson) },
+								NewResponse:    func() ocpp.Response { return new(ocpp201.TriggerMessageResponseJson) },
+								RequestSchema:  "ocpp201/TriggerMessageRequest.json",
+								ResponseSchema: "ocpp201/TriggerMessageResponse.json",
+								Handler: handlers201.TriggerMessageResultHandler{
+									Store: engine,
+								},
+							},
 						},
 						"iso15118": { // has2be extensions
 							"CertificateSigned": {
