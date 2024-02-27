@@ -261,6 +261,19 @@ func getRootCertProvider(cfg *RootCertProviderConfig, httpClient *http.Client) (
 				TokenService: httpTokenService,
 				HttpClient:   httpClient,
 			}, ttl, clock.RealClock{})
+	case "composite":
+		providers := make([]services.RootCertificateProviderService, len(cfg.Composite.Providers))
+		for index, providerCfg := range cfg.Composite.Providers {
+			providerCfg := providerCfg
+			providers[index], err = getRootCertProvider(&providerCfg, httpClient)
+			if err != nil {
+				return nil, fmt.Errorf("creating composite root certificate provider %d: %v", index, err)
+			}
+		}
+
+		rootCertificateProvider = services.CompositeRootCertificateProviderService{
+			Providers: providers,
+		}
 
 	default:
 		return nil, fmt.Errorf("unknown root certificate provider type: %s", cfg.Type)

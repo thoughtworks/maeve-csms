@@ -11,6 +11,7 @@ require (
 	github.com/go-chi/chi/v5 v5.0.8
 	github.com/go-chi/render v1.0.2
 	github.com/google/uuid v1.5.0
+	github.com/huandu/go-clone/generic v1.7.2
 	github.com/lestrrat-go/jwx v1.2.28
 	github.com/mochi-co/mqtt/v2 v2.2.13
 	github.com/pelletier/go-toml/v2 v2.0.9
@@ -86,6 +87,7 @@ require (
 	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.19.0 // indirect
+	github.com/huandu/go-clone v1.7.2 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/invopop/yaml v0.1.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect

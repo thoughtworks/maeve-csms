@@ -24,6 +24,24 @@ type RootCertificateProviderService interface {
 	ProvideCertificates(ctx context.Context) ([]*x509.Certificate, error)
 }
 
+type CompositeRootCertificateProviderService struct {
+	Providers []RootCertificateProviderService
+}
+
+func (c CompositeRootCertificateProviderService) ProvideCertificates(ctx context.Context) ([]*x509.Certificate, error) {
+	var certs []*x509.Certificate
+
+	for _, provider := range c.Providers {
+		providerCerts, err := provider.ProvideCertificates(ctx)
+		if err != nil {
+			return nil, err
+		}
+		certs = append(certs, providerCerts...)
+	}
+
+	return certs, nil
+}
+
 type FileRootCertificateProviderService struct {
 	FilePaths []string
 }

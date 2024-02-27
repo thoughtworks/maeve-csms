@@ -141,3 +141,29 @@ func TestCachingRootCertificateProviderService(t *testing.T) {
 	assert.Equal(t, 2, svc.Count)
 	assert.Equal(t, "V2G Root CA QA G1", certs[0].Issuer.CommonName)
 }
+
+func TestCompositeRootCertificateProviderService(t *testing.T) {
+	fileRetrievalService := services.FileRootCertificateProviderService{
+		FilePaths: []string{"testdata/root_ca.pem"},
+	}
+	rootCA, _ := createRootCACertificate(t, "V2G Root CA QA G2")
+	handler := moRootCertificatePoolHandler{caCert: rootCA}
+	server := httptest.NewServer(handler)
+	opcpService := services.OpcpRootCertificateProviderService{
+		TokenService: services.NewFixedHttpTokenService("Token"),
+		BaseURL:      server.URL,
+		HttpClient:   http.DefaultClient,
+	}
+
+	defer server.Close()
+
+	compositeService := services.CompositeRootCertificateProviderService{
+		Providers: []services.RootCertificateProviderService{fileRetrievalService, opcpService},
+	}
+
+	certs, err := compositeService.ProvideCertificates(context.TODO())
+	require.NoError(t, err)
+	assert.Equal(t, 2, len(certs))
+	assert.Equal(t, "V2G Root CA QA G1", certs[0].Issuer.CommonName)
+	assert.Equal(t, "V2G Root CA QA G2", certs[1].Issuer.CommonName)
+}

@@ -4,6 +4,7 @@ package config_test
 
 import (
 	"context"
+	"github.com/huandu/go-clone/generic"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/thoughtworks/maeve-csms/manager/config"
@@ -14,7 +15,7 @@ import (
 )
 
 func TestConfigure(t *testing.T) {
-	cfg := &config.DefaultConfig
+	cfg := clone.Clone(&config.DefaultConfig)
 	cfg.ContractCertValidator.Ocsp.RootCertProvider.File.FileNames = []string{"testdata/root_ca.pem"}
 
 	settings, err := config.Configure(context.TODO(), cfg)
@@ -51,7 +52,7 @@ func TestConfigure(t *testing.T) {
 func TestConfigureFirestoreStorage(t *testing.T) {
 	_ = os.Setenv("FIRESTORE_EMULATOR_HOST", "localhost:8080")
 
-	cfg := &config.DefaultConfig
+	cfg := clone.Clone(&config.DefaultConfig)
 	cfg.ContractCertValidator.Ocsp.RootCertProvider.File.FileNames = []string{"testdata/root_ca.pem"}
 	cfg.Storage.Type = "firestore"
 	cfg.Storage.FirestoreStorage = &config.FirestoreStorageConfig{
@@ -64,7 +65,7 @@ func TestConfigureFirestoreStorage(t *testing.T) {
 }
 
 func TestConfigureInMemoryStorage(t *testing.T) {
-	cfg := &config.DefaultConfig
+	cfg := clone.Clone(&config.DefaultConfig)
 	cfg.ContractCertValidator.Ocsp.RootCertProvider.File.FileNames = []string{"testdata/root_ca.pem"}
 	cfg.Storage.Type = "in_memory"
 
@@ -74,7 +75,7 @@ func TestConfigureInMemoryStorage(t *testing.T) {
 }
 
 func TestConfigureOcspContractCertValidator(t *testing.T) {
-	cfg := &config.DefaultConfig
+	cfg := clone.Clone(&config.DefaultConfig)
 	cfg.ContractCertValidator.Ocsp.RootCertProvider.File.FileNames = []string{"testdata/root_ca.pem"}
 
 	settings, err := config.Configure(context.TODO(), cfg)
@@ -88,7 +89,7 @@ func TestConfigureOpcpContractCertProvider(t *testing.T) {
 		_ = os.Unsetenv("TEST_OPCP_TOKEN")
 	}()
 
-	cfg := &config.DefaultConfig
+	cfg := clone.Clone(&config.DefaultConfig)
 	cfg.ContractCertValidator.Ocsp.RootCertProvider.File.FileNames = []string{"testdata/root_ca.pem"}
 	cfg.ContractCertProvider.Type = "opcp"
 	cfg.ContractCertProvider.Opcp = &config.OpcpContractCertProviderConfig{
@@ -106,8 +107,33 @@ func TestConfigureOpcpContractCertProvider(t *testing.T) {
 	require.NotNil(t, settings.ContractCertProviderService)
 }
 
+func TestConfigureOcspContractCertProviderWithCompositeRootCertificateProvider(t *testing.T) {
+	cfg := clone.Clone(&config.DefaultConfig)
+	cfg.ContractCertValidator.Ocsp.RootCertProvider.Type = "composite"
+	cfg.ContractCertValidator.Ocsp.RootCertProvider.Composite = &config.CompositeRootCertProviderConfig{
+		Providers: []config.RootCertProviderConfig{
+			{
+				Type: "file",
+				File: &config.FileRootCertProviderConfig{
+					FileNames: []string{"testdata/root_ca.pem"},
+				},
+			},
+			{
+				Type: "file",
+				File: &config.FileRootCertProviderConfig{
+					FileNames: []string{"testdata/ca.pem"},
+				},
+			},
+		},
+	}
+
+	settings, err := config.Configure(context.TODO(), cfg)
+	require.NoError(t, err)
+	require.NotNil(t, settings.ContractCertValidationService)
+}
+
 func TestConfigureDefaultContractCertProvider(t *testing.T) {
-	cfg := &config.DefaultConfig
+	cfg := clone.Clone(&config.DefaultConfig)
 	cfg.ContractCertValidator.Ocsp.RootCertProvider.File.FileNames = []string{"testdata/root_ca.pem"}
 	cfg.ContractCertProvider.Type = "default"
 
@@ -122,7 +148,7 @@ func TestConfigureOpcpChargeStationCertProvider(t *testing.T) {
 		_ = os.Unsetenv("TEST_OPCP_TOKEN")
 	}()
 
-	cfg := &config.DefaultConfig
+	cfg := clone.Clone(&config.DefaultConfig)
 	cfg.ContractCertValidator.Ocsp.RootCertProvider.File.FileNames = []string{"testdata/root_ca.pem"}
 	cfg.ChargeStationCertProvider.Type = "opcp"
 	cfg.ChargeStationCertProvider.Opcp = &config.OpcpChargeStationCertProviderConfig{
@@ -141,7 +167,7 @@ func TestConfigureOpcpChargeStationCertProvider(t *testing.T) {
 }
 
 func TestConfigureLocalChargeStationCertProviderWithFile(t *testing.T) {
-	cfg := &config.DefaultConfig
+	cfg := clone.Clone(&config.DefaultConfig)
 	cfg.ChargeStationCertProvider.Type = "local"
 	cfg.ChargeStationCertProvider.Local = &config.LocalChargeStationCertProviderConfig{
 		CertificateSource: &config.LocalSourceConfig{
@@ -160,7 +186,7 @@ func TestConfigureLocalChargeStationCertProviderWithFile(t *testing.T) {
 }
 
 func TestConfigureLocalChargeStationCertProviderWithGoogleCloudSecret(t *testing.T) {
-	cfg := &config.DefaultConfig
+	cfg := clone.Clone(&config.DefaultConfig)
 	cfg.ChargeStationCertProvider.Type = "local"
 	cfg.ChargeStationCertProvider.Local = &config.LocalChargeStationCertProviderConfig{
 		CertificateSource: &config.LocalSourceConfig{
@@ -184,7 +210,7 @@ func TestConfigureDelegatingChargeStationCertProvider(t *testing.T) {
 		_ = os.Unsetenv("TEST_OPCP_TOKEN")
 	}()
 
-	cfg := &config.DefaultConfig
+	cfg := clone.Clone(&config.DefaultConfig)
 	cfg.ChargeStationCertProvider.Type = "delegating"
 	cfg.ChargeStationCertProvider.Delegating = &config.DelegatingChargeStationCertProviderConfig{
 		V2G: &config.ChargeStationCertProviderConfig{
@@ -220,7 +246,7 @@ func TestConfigureDelegatingChargeStationCertProvider(t *testing.T) {
 }
 
 func TestConfigureDefaultChargeStationCertProvider(t *testing.T) {
-	cfg := &config.DefaultConfig
+	cfg := clone.Clone(&config.DefaultConfig)
 	cfg.ContractCertValidator.Ocsp.RootCertProvider.File.FileNames = []string{"testdata/root_ca.pem"}
 	cfg.ChargeStationCertProvider.Type = "default"
 
@@ -230,7 +256,7 @@ func TestConfigureDefaultChargeStationCertProvider(t *testing.T) {
 }
 
 func TestConfigureKwHTariffService(t *testing.T) {
-	cfg := &config.DefaultConfig
+	cfg := clone.Clone(&config.DefaultConfig)
 	cfg.ContractCertValidator.Ocsp.RootCertProvider.File.FileNames = []string{"testdata/root_ca.pem"}
 	cfg.TariffService.Type = "kwh"
 
