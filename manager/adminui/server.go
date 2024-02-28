@@ -196,7 +196,7 @@ func registerToken(ctx context.Context, engine store.Engine, uid string) error {
 
 func createPassword() (string, error) {
 	const alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
-	var randData = make([]byte, 10)
+	var randData = make([]byte, 16)
 
 	_, err := rand.Reader.Read(randData)
 	if err != nil {

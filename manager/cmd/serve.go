@@ -59,6 +59,7 @@ the gateway and send appropriate responses.`,
 			mqtt.WithContractCertificateProvider(settings.ContractCertProviderService),
 			mqtt.WithChargeStationCertificateProvider(settings.ChargeStationCertProviderService),
 			mqtt.WithTariffService(settings.TariffService),
+			mqtt.WithHeartbeatInterval(time.Minute*5),
 			mqtt.WithOtelTracer(tracer))
 
 		errCh := make(chan error, 1)
