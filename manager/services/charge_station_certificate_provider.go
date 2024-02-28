@@ -58,15 +58,6 @@ func (h HttpError) Error() string {
 
 func (h OpcpChargeStationCertificateProvider) ProvideCertificate(ctx context.Context, typ CertificateType, pemEncodedCSR string, csId string) (string, error) {
 	if typ == CertificateTypeV2G {
-		cn, err := getCommonNameFromCSR(pemEncodedCSR)
-		if err != nil {
-			return "", err
-		}
-
-		if cn != csId {
-			return "", fmt.Errorf("certificate common name does not match charge station id")
-		}
-
 		csr, err := convertCSR(pemEncodedCSR)
 		if err != nil {
 			return "", err

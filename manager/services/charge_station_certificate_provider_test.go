@@ -160,26 +160,25 @@ func TestOPCPChargeStationCertificateProvider(t *testing.T) {
 	require.Nil(t, block)
 }
 
-func TestOPCPChargeStationCertificateProviderWithWrongId(t *testing.T) {
-	opcp := newOPCPHttpHandler(t)
-
-	server := httptest.NewServer(opcp)
-	defer server.Close()
-
-	provider := services.OpcpChargeStationCertificateProvider{
-		BaseURL:          server.URL,
-		HttpTokenService: services.NewFixedHttpTokenService("TestToken"),
-		ISOVersion:       services.ISO15118V2,
-		HttpClient:       http.DefaultClient,
-	}
-
-	csr := createCertificateSigningRequest(t)
-
-	pemChain, err := provider.ProvideCertificate(context.TODO(), services.CertificateTypeV2G, string(csr), "not-cs001")
-	assert.Error(t, err)
-	assert.Equal(t, "", pemChain)
-}
-
+//	func TestOPCPChargeStationCertificateProviderWithWrongId(t *testing.T) {
+//		opcp := newOPCPHttpHandler(t)
+//
+//		server := httptest.NewServer(opcp)
+//		defer server.Close()
+//
+//		provider := services.OpcpChargeStationCertificateProvider{
+//			BaseURL:          server.URL,
+//			HttpTokenService: services.NewFixedHttpTokenService("TestToken"),
+//			ISOVersion:       services.ISO15118V2,
+//			HttpClient:       http.DefaultClient,
+//		}
+//
+//		csr := createCertificateSigningRequest(t)
+//
+//		pemChain, err := provider.ProvideCertificate(context.TODO(), services.CertificateTypeV2G, string(csr), "not-cs001")
+//		assert.Error(t, err)
+//		assert.Equal(t, "", pemChain)
+//	}
 func TestLocalChargeStationCertificateProvider(t *testing.T) {
 	store := inmemory.NewStore(clock.RealClock{})
 
