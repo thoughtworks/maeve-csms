@@ -26,7 +26,7 @@ fileignoreconfig:
   - filename: manager/Dockerfile
     checksum: db69536d308b905d6214db1fb0e10442fe3e770ef3fed47809ca1f3ec099409d
   - filename: manager/adminui/server.go
-    checksum: 8a882524c08b1a63cd3c0fcc1c754e36b341774269b4762af5823d431ce82674
+    checksum: 826cbac1161c5c8b29eeeb7b7caaf6127da578808d2af1b6a941134737ae032b
   - filename: manager/adminui/server_test.go
     checksum: 3a2329f89ca93816c474c0407eacd79f02bbcb7f3f6a3340fa7b3a44a71826ff
   - filename: manager/adminui/templates/connect.gohtml

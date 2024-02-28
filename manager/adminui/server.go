@@ -2,8 +2,9 @@ package adminui
 
 import (
 	"context"
+	"crypto/ecdsa"
+	"crypto/elliptic"
 	"crypto/rand"
-	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/x509"
 	"crypto/x509/pkix"
@@ -211,9 +212,9 @@ func createPassword() (string, error) {
 }
 
 func createSignedKeyPair(ctx context.Context, csId string, orgName string, certificateProvider services.ChargeStationCertificateProvider) (string, string, error) {
-	keyPair, err := rsa.GenerateKey(rand.Reader, 2048)
+	keyPair, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
-		return "", "", fmt.Errorf("generating rsa key: %v", err)
+		return "", "", fmt.Errorf("generating ecdsa key: %v", err)
 	}
 
 	csrTemplate := x509.CertificateRequest{
@@ -221,7 +222,7 @@ func createSignedKeyPair(ctx context.Context, csId string, orgName string, certi
 			CommonName:   csId,
 			Organization: []string{orgName},
 		},
-		SignatureAlgorithm: x509.SHA256WithRSA,
+		SignatureAlgorithm: x509.ECDSAWithSHA256,
 	}
 
 	csr, err := x509.CreateCertificateRequest(rand.Reader, &csrTemplate, keyPair)
@@ -239,9 +240,13 @@ func createSignedKeyPair(ctx context.Context, csId string, orgName string, certi
 		return "", "", fmt.Errorf("providing certificate: %v", err)
 	}
 
+	ecBytes, err := x509.MarshalECPrivateKey(keyPair)
+	if err != nil {
+		return "", "", fmt.Errorf("marshalling private key: %v", err)
+	}
 	pemKey := pem.EncodeToMemory(&pem.Block{
-		Type:  "RSA PRIVATE KEY",
-		Bytes: x509.MarshalPKCS1PrivateKey(keyPair),
+		Type:  "EC PRIVATE KEY",
+		Bytes: ecBytes,
 	})
 
 	return string(pemKey), chain, nil
