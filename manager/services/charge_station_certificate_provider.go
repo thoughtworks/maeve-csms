@@ -21,6 +21,7 @@ import (
 	"io"
 	"math/big"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -174,7 +175,7 @@ func convertCSR(pemEncodedCSR string) ([]byte, error) {
 	if block == nil {
 		return nil, fmt.Errorf("no PEM data in input")
 	}
-	if block.Type != "CERTIFICATE REQUEST" {
+	if !strings.Contains(block.Type, "CERTIFICATE REQUEST") {
 		return nil, fmt.Errorf("no certificate request in PEM block")
 	}
 
