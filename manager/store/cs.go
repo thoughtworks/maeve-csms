@@ -50,6 +50,7 @@ type ChargeStationSettingsStore interface {
 	UpdateChargeStationSettings(ctx context.Context, chargeStationId string, settings *ChargeStationSettings) error
 	LookupChargeStationSettings(ctx context.Context, chargeStationId string) (*ChargeStationSettings, error)
 	ListChargeStationSettings(ctx context.Context, pageSize int, previousChargeStationId string) ([]*ChargeStationSettings, error)
+	DeleteChargeStationSettings(ctx context.Context, chargeStationId string) error
 }
 
 type ChargeStationRuntimeDetails struct {

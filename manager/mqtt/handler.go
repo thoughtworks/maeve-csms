@@ -280,8 +280,10 @@ func (h *Handler) Connect(errCh chan error) {
 	v201SyncCallMaker := &BasicCallMaker{
 		E: v201Emitter,
 		Actions: map[reflect.Type]string{
-			reflect.TypeOf(&ocpp201.SetVariablesRequestJson{}):   "SetVariables",
-			reflect.TypeOf(&ocpp201.TriggerMessageRequestJson{}): "TriggerMessage",
+			reflect.TypeOf(&ocpp201.SetVariablesRequestJson{}):       "SetVariables",
+			reflect.TypeOf(&ocpp201.TriggerMessageRequestJson{}):     "TriggerMessage",
+			reflect.TypeOf(&ocpp201.CertificateSignedRequestJson{}):  "CertificateSigned",
+			reflect.TypeOf(&ocpp201.InstallCertificateRequestJson{}): "InstallCertificate",
 		},
 	}
 	go SyncSettings(context.Background(),

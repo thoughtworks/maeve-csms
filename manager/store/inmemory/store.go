@@ -88,6 +88,13 @@ func (s *Store) UpdateChargeStationSettings(_ context.Context, chargeStationId s
 	return nil
 }
 
+func (s *Store) DeleteChargeStationSettings(_ context.Context, chargeStationId string) error {
+	s.Lock()
+	defer s.Unlock()
+	delete(s.chargeStationSettings, chargeStationId)
+	return nil
+}
+
 func (s *Store) LookupChargeStationSettings(_ context.Context, chargeStationId string) (*store.ChargeStationSettings, error) {
 	s.Lock()
 	defer s.Unlock()

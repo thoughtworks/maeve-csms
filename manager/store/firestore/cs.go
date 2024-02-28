@@ -90,6 +90,15 @@ func (s *Store) LookupChargeStationSettings(ctx context.Context, chargeStationId
 	}, nil
 }
 
+func (s *Store) DeleteChargeStationSettings(ctx context.Context, chargeStationId string) error {
+	csRef := s.client.Doc(fmt.Sprintf("ChargeStationSettings/%s", chargeStationId))
+	_, err := csRef.Delete(ctx)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func mapChargeStationSettings(csData map[string]*chargeStationSetting) map[string]*store.ChargeStationSetting {
 	var settings = make(map[string]*store.ChargeStationSetting)
 	for k, v := range csData {

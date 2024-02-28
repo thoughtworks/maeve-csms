@@ -382,6 +382,24 @@ func NewV201Router(clk clock.PassiveClock,
 					Store: engine,
 				},
 			},
+			"TriggerMessage": {
+				NewRequest:     func() ocpp.Request { return new(ocpp201.TriggerMessageRequestJson) },
+				NewResponse:    func() ocpp.Response { return new(ocpp201.TriggerMessageResponseJson) },
+				RequestSchema:  "ocpp201/TriggerMessageRequest.json",
+				ResponseSchema: "ocpp201/TriggerMessageResponse.json",
+				Handler: handlers201.TriggerMessageResultHandler{
+					Store: engine,
+				},
+			},
+			"SetVariables": {
+				NewRequest:     func() ocpp.Request { return new(ocpp201.SetVariablesRequestJson) },
+				NewResponse:    func() ocpp.Response { return new(ocpp201.SetVariablesResponseJson) },
+				RequestSchema:  "ocpp201/SetVariablesRequest.json",
+				ResponseSchema: "ocpp201/SetVariablesResponse.json",
+				Handler: handlers201.SetVariablesResultHandler{
+					Store: engine,
+				},
+			},
 		},
 	}
 }
