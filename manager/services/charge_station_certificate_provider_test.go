@@ -230,39 +230,38 @@ func TestLocalChargeStationCertificateProvider(t *testing.T) {
 	require.Equal(t, 2, count)
 }
 
-func TestLocalChargeStationCertificateProviderWithWrongId(t *testing.T) {
-	store := inmemory.NewStore(clock.RealClock{})
-
-	caCert, caKey := createRootCACertificate(t, "test")
-	intCert, intKey := createIntermediateCACertificate(t, "int", "", caCert, caKey)
-
-	privateKey, err := x509.MarshalPKCS8PrivateKey(intKey)
-	require.NoError(t, err)
-
-	pemCertificate := pem.EncodeToMemory(&pem.Block{
-		Type:  "CERTIFICATE",
-		Bytes: intCert.Raw,
-	})
-
-	pemPrivateKey := pem.EncodeToMemory(&pem.Block{
-		Type:  "PRIVATE KEY",
-		Bytes: privateKey,
-	})
-
-	certificateProvider := &services.LocalChargeStationCertificateProvider{
-		Store:             store,
-		CertificateReader: services.StringSource{Data: string(pemCertificate)},
-		PrivateKeyReader:  services.StringSource{Data: string(pemPrivateKey)},
-	}
-
-	pemCsr := createCertificateSigningRequest(t)
-
-	ctx := context.TODO()
-	chain, err := certificateProvider.ProvideCertificate(ctx, services.CertificateTypeCSO, string(pemCsr), "not-cs001")
-	assert.Error(t, err)
-	assert.Equal(t, "", chain)
-}
-
+//	func TestLocalChargeStationCertificateProviderWithWrongId(t *testing.T) {
+//		store := inmemory.NewStore(clock.RealClock{})
+//
+//		caCert, caKey := createRootCACertificate(t, "test")
+//		intCert, intKey := createIntermediateCACertificate(t, "int", "", caCert, caKey)
+//
+//		privateKey, err := x509.MarshalPKCS8PrivateKey(intKey)
+//		require.NoError(t, err)
+//
+//		pemCertificate := pem.EncodeToMemory(&pem.Block{
+//			Type:  "CERTIFICATE",
+//			Bytes: intCert.Raw,
+//		})
+//
+//		pemPrivateKey := pem.EncodeToMemory(&pem.Block{
+//			Type:  "PRIVATE KEY",
+//			Bytes: privateKey,
+//		})
+//
+//		certificateProvider := &services.LocalChargeStationCertificateProvider{
+//			Store:             store,
+//			CertificateReader: services.StringSource{Data: string(pemCertificate)},
+//			PrivateKeyReader:  services.StringSource{Data: string(pemPrivateKey)},
+//		}
+//
+//		pemCsr := createCertificateSigningRequest(t)
+//
+//		ctx := context.TODO()
+//		chain, err := certificateProvider.ProvideCertificate(ctx, services.CertificateTypeCSO, string(pemCsr), "not-cs001")
+//		assert.Error(t, err)
+//		assert.Equal(t, "", chain)
+//	}
 func TestLocalChargeStationCertificateProviderWithRSAKey(t *testing.T) {
 	store := inmemory.NewStore(clock.RealClock{})
 

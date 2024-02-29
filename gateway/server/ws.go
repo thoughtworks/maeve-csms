@@ -420,13 +420,13 @@ func checkCertificate(ctx context.Context, r *http.Request, orgNames []string, c
 		return false
 	}
 
-	result := cs.ClientId == leafCertificate.Subject.CommonName
+	//result := cs.ClientId == leafCertificate.Subject.CommonName
+	//
+	//if !result {
+	//	span.SetAttributes(attribute.String("auth.failure_reason", "bad common name"))
+	//}
 
-	if !result {
-		span.SetAttributes(attribute.String("auth.failure_reason", "bad common name"))
-	}
-
-	return result
+	return foundOrg
 }
 
 func goPublishToCSMS(ctx context.Context, tracer trace.Tracer, csmsTx chan *pipe.GatewayMessage, mqttConn *autopaho.ConnectionManager, topicPrefix, protocol, clientId string) {

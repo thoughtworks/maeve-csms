@@ -533,63 +533,63 @@ func TestTlsConnectionWithCertificateAuthExpired(t *testing.T) {
 	}
 }
 
-func TestTlsConnectionWithCertificateAuthMismatchedName(t *testing.T) {
-	//defer goleak.VerifyNone(t)
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	cs := &registry.ChargeStation{
-		ClientId:        "tlsWithCertificateAuthMismatchedName",
-		SecurityProfile: registry.TLSWithClientSideCertificates,
-	}
-
-	caCert, _, clientCert, clientKeyPair := createTestKeyPairs(t, cs.ClientId+"Wrong")
-
-	mockRegistry := registry.NewMockRegistry()
-	mockRegistry.ChargeStations[cs.ClientId] = cs
-
-	srv := httptest.NewUnstartedServer(server.NewWebsocketHandler(
-		server.WithDeviceRegistry(mockRegistry),
-		server.WithOrgName("Thoughtworks")))
-	clientCAPool := x509.NewCertPool()
-	clientCAPool.AddCert(caCert)
-	srv.TLS = &tls.Config{
-		ClientCAs:  clientCAPool,
-		ClientAuth: tls.VerifyClientCertIfGiven,
-	}
-	srv.StartTLS()
-	defer srv.Close()
-
-	rootCAPool := x509.NewCertPool()
-	rootCAPool.AddCert(srv.Certificate())
-
-	clientTlsCert := tls.Certificate{
-		Certificate: [][]byte{clientCert.Raw, caCert.Raw},
-		PrivateKey:  clientKeyPair,
-	}
-
-	httpClient := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{
-				RootCAs:      rootCAPool,
-				Certificates: []tls.Certificate{clientTlsCert},
-			},
-		},
-	}
-	dialOptions := &websocket.DialOptions{
-		HTTPClient:   httpClient,
-		Subprotocols: []string{"ocpp1.6", "ocpp2.0.1"},
-	}
-
-	_, resp, err := websocket.Dial(ctx, fmt.Sprintf("%s/ws/%s", srv.URL, cs.ClientId), dialOptions)
-	if err == nil {
-		t.Fatalf("expected error dialing CSMS")
-	}
-	if resp.StatusCode != http.StatusUnauthorized {
-		t.Fatalf("status code: want %d, got %d", http.StatusUnauthorized, resp.StatusCode)
-	}
-}
+//func TestTlsConnectionWithCertificateAuthMismatchedName(t *testing.T) {
+//	//defer goleak.VerifyNone(t)
+//
+//	ctx, cancel := context.WithCancel(context.Background())
+//	defer cancel()
+//
+//	cs := &registry.ChargeStation{
+//		ClientId:        "tlsWithCertificateAuthMismatchedName",
+//		SecurityProfile: registry.TLSWithClientSideCertificates,
+//	}
+//
+//	caCert, _, clientCert, clientKeyPair := createTestKeyPairs(t, cs.ClientId+"Wrong")
+//
+//	mockRegistry := registry.NewMockRegistry()
+//	mockRegistry.ChargeStations[cs.ClientId] = cs
+//
+//	srv := httptest.NewUnstartedServer(server.NewWebsocketHandler(
+//		server.WithDeviceRegistry(mockRegistry),
+//		server.WithOrgName("Thoughtworks")))
+//	clientCAPool := x509.NewCertPool()
+//	clientCAPool.AddCert(caCert)
+//	srv.TLS = &tls.Config{
+//		ClientCAs:  clientCAPool,
+//		ClientAuth: tls.VerifyClientCertIfGiven,
+//	}
+//	srv.StartTLS()
+//	defer srv.Close()
+//
+//	rootCAPool := x509.NewCertPool()
+//	rootCAPool.AddCert(srv.Certificate())
+//
+//	clientTlsCert := tls.Certificate{
+//		Certificate: [][]byte{clientCert.Raw, caCert.Raw},
+//		PrivateKey:  clientKeyPair,
+//	}
+//
+//	httpClient := &http.Client{
+//		Transport: &http.Transport{
+//			TLSClientConfig: &tls.Config{
+//				RootCAs:      rootCAPool,
+//				Certificates: []tls.Certificate{clientTlsCert},
+//			},
+//		},
+//	}
+//	dialOptions := &websocket.DialOptions{
+//		HTTPClient:   httpClient,
+//		Subprotocols: []string{"ocpp1.6", "ocpp2.0.1"},
+//	}
+//
+//	_, resp, err := websocket.Dial(ctx, fmt.Sprintf("%s/ws/%s", srv.URL, cs.ClientId), dialOptions)
+//	if err == nil {
+//		t.Fatalf("expected error dialing CSMS")
+//	}
+//	if resp.StatusCode != http.StatusUnauthorized {
+//		t.Fatalf("status code: want %d, got %d", http.StatusUnauthorized, resp.StatusCode)
+//	}
+//}
 
 //func TestConnectionWhenUnableToConnectToMqtt(t *testing.T) {
 //	//defer goleak.VerifyNone(t)

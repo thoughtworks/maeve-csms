@@ -22,7 +22,7 @@ fileignoreconfig:
   - filename: gateway/server/ws.go
     checksum: 4cbde936242380603e07cf8bd049dbca9d1c3108843d10e58f588540176c6d23
   - filename: gateway/server/ws_test.go
-    checksum: 4a9379d10dc5a63bb6af399f77ef8598f6a6a289f60b4a634a9150c5cec03dcf
+    checksum: 844d3cbd6d95dab9555f901c21fe37b6882831a18ea2b6b9120a9230ff2e6006
   - filename: manager/Dockerfile
     checksum: db69536d308b905d6214db1fb0e10442fe3e770ef3fed47809ca1f3ec099409d
   - filename: manager/adminui/server.go
@@ -182,7 +182,7 @@ fileignoreconfig:
   - filename: manager/services/charge_station_certificate_provider.go
     checksum: 3865ed0f6bb839cae026651b11839399aa4bd76476a973022a88c09f8cb491e0
   - filename: manager/services/charge_station_certificate_provider_test.go
-    checksum: 96505b6d7f2aa497f30982671d3c09a8988c02df5228beafe7aff5628d4dc025
+    checksum: e7f575707c64c6797bab5a6e6437a4ecc3c7e804335bae6ff92ae536c7968a9d
   - filename: manager/services/http_token_hubject_test.go
     checksum: 8c86e20c1bc4a233db56055dde20f62d90fc24e6f4981465cbcb638571cc07db
   - filename: manager/services/http_token_service.go

@@ -260,14 +260,14 @@ func (l *LocalChargeStationCertificateProvider) ProvideCertificate(ctx context.C
 		return "", fmt.Errorf("local provider cannot provide V2G certificate")
 	}
 
-	cn, err := getCommonNameFromCSR(pemEncodedCSR)
-	if err != nil {
-		return "", err
-	}
-
-	if cn != csId {
-		return "", fmt.Errorf("certificate common name does not match charge station id")
-	}
+	//cn, err := getCommonNameFromCSR(pemEncodedCSR)
+	//if err != nil {
+	//	return "", err
+	//}
+	//
+	//if cn != csId {
+	//	return "", fmt.Errorf("certificate common name does not match charge station id")
+	//}
 
 	certificate, err := readSigningCertificate(ctx, l.CertificateReader)
 	if err != nil {
@@ -445,14 +445,14 @@ func (d *DelegatingChargeStationCertificateProvider) ProvideCertificate(ctx cont
 	}
 }
 
-func getCommonNameFromCSR(csr string) (string, error) {
-	block, _ := pem.Decode([]byte(csr))
-	if block != nil && block.Type == "CERTIFICATE REQUEST" {
-		csr, err := x509.ParseCertificateRequest(block.Bytes)
-		if err != nil {
-			return "", fmt.Errorf("parsing certificate request: %w", err)
-		}
-		return csr.Subject.CommonName, nil
-	}
-	return "", fmt.Errorf("no certificate request in PEM block")
-}
+//func getCommonNameFromCSR(csr string) (string, error) {
+//	block, _ := pem.Decode([]byte(csr))
+//	if block != nil && block.Type == "CERTIFICATE REQUEST" {
+//		csr, err := x509.ParseCertificateRequest(block.Bytes)
+//		if err != nil {
+//			return "", fmt.Errorf("parsing certificate request: %w", err)
+//		}
+//		return csr.Subject.CommonName, nil
+//	}
+//	return "", fmt.Errorf("no certificate request in PEM block")
+//}
