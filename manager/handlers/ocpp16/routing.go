@@ -1,60 +1,49 @@
 // SPDX-License-Identifier: Apache-2.0
 
-package mqtt
+package ocpp16
 
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"github.com/thoughtworks/maeve-csms/manager/ocpp/has2be"
-	"io/fs"
-	"reflect"
-	"time"
-
-	"github.com/santhosh-tekuri/jsonschema"
+	"github.com/google/uuid"
 	"github.com/thoughtworks/maeve-csms/manager/handlers"
 	handlersHasToBe "github.com/thoughtworks/maeve-csms/manager/handlers/has2be"
-	handlers16 "github.com/thoughtworks/maeve-csms/manager/handlers/ocpp16"
 	handlers201 "github.com/thoughtworks/maeve-csms/manager/handlers/ocpp201"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
+	"github.com/thoughtworks/maeve-csms/manager/ocpp/has2be"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp16"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
-	"github.com/thoughtworks/maeve-csms/manager/schemas"
 	"github.com/thoughtworks/maeve-csms/manager/services"
 	"github.com/thoughtworks/maeve-csms/manager/store"
-	"golang.org/x/exp/slog"
+	"github.com/thoughtworks/maeve-csms/manager/transport"
+	"io/fs"
 	"k8s.io/utils/clock"
+	"reflect"
+	"time"
 )
 
-type Router struct {
-	CallRoutes       map[string]handlers.CallRoute
-	CallResultRoutes map[string]handlers.CallResultRoute
-}
-
-func NewV16Router(emitter Emitter,
+func NewRouter(emitter transport.Emitter,
 	clk clock.PassiveClock,
 	engine store.Engine,
 	certValidationService services.CertificateValidationService,
 	chargeStationCertProvider services.ChargeStationCertificateProvider,
 	contractCertProvider services.ContractCertificateProvider,
 	heartbeatInterval time.Duration,
-	schemaFS fs.FS) *Router {
+	schemaFS fs.FS) transport.Router {
 
-	standardCallMaker := BasicCallMaker{
-		E: emitter,
-		Actions: map[reflect.Type]string{
-			reflect.TypeOf(&ocpp16.TriggerMessageJson{}): "TriggerMessage",
-		},
-	}
+	standardCallMaker := NewCallMaker(emitter)
 
-	return &Router{
+	return &handlers.Router{
+		Emitter:     emitter,
+		SchemaFS:    schemaFS,
+		OcppVersion: transport.OcppVersion16,
 		CallRoutes: map[string]handlers.CallRoute{
 			"BootNotification": {
 				NewRequest:     func() ocpp.Request { return new(ocpp16.BootNotificationJson) },
 				RequestSchema:  "ocpp16/BootNotification.json",
 				ResponseSchema: "ocpp16/BootNotificationResponse.json",
-				Handler: handlers16.BootNotificationHandler{
+				Handler: BootNotificationHandler{
 					Clock:               clk,
 					RuntimeDetailsStore: engine,
 					SettingsStore:       engine,
@@ -65,7 +54,7 @@ func NewV16Router(emitter Emitter,
 				NewRequest:     func() ocpp.Request { return new(ocpp16.HeartbeatJson) },
 				RequestSchema:  "ocpp16/Heartbeat.json",
 				ResponseSchema: "ocpp16/HeartbeatResponse.json",
-				Handler: handlers16.HeartbeatHandler{
+				Handler: HeartbeatHandler{
 					Clock: clk,
 				},
 			},
@@ -73,13 +62,13 @@ func NewV16Router(emitter Emitter,
 				NewRequest:     func() ocpp.Request { return new(ocpp16.StatusNotificationJson) },
 				RequestSchema:  "ocpp16/StatusNotification.json",
 				ResponseSchema: "ocpp16/StatusNotificationResponse.json",
-				Handler:        handlers.CallHandlerFunc(handlers16.StatusNotificationHandler),
+				Handler:        handlers.CallHandlerFunc(StatusNotificationHandler),
 			},
 			"Authorize": {
 				NewRequest:     func() ocpp.Request { return new(ocpp16.AuthorizeJson) },
 				RequestSchema:  "ocpp16/Authorize.json",
 				ResponseSchema: "ocpp16/AuthorizeResponse.json",
-				Handler: handlers16.AuthorizeHandler{
+				Handler: AuthorizeHandler{
 					TokenStore: engine,
 				},
 			},
@@ -87,7 +76,7 @@ func NewV16Router(emitter Emitter,
 				NewRequest:     func() ocpp.Request { return new(ocpp16.StartTransactionJson) },
 				RequestSchema:  "ocpp16/StartTransaction.json",
 				ResponseSchema: "ocpp16/StartTransactionResponse.json",
-				Handler: handlers16.StartTransactionHandler{
+				Handler: StartTransactionHandler{
 					Clock:            clk,
 					TokenStore:       engine,
 					TransactionStore: engine,
@@ -97,7 +86,7 @@ func NewV16Router(emitter Emitter,
 				NewRequest:     func() ocpp.Request { return new(ocpp16.StopTransactionJson) },
 				RequestSchema:  "ocpp16/StopTransaction.json",
 				ResponseSchema: "ocpp16/StopTransactionResponse.json",
-				Handler: handlers16.StopTransactionHandler{
+				Handler: StopTransactionHandler{
 					Clock:            clk,
 					TokenStore:       engine,
 					TransactionStore: engine,
@@ -107,7 +96,7 @@ func NewV16Router(emitter Emitter,
 				NewRequest:     func() ocpp.Request { return new(ocpp16.MeterValuesJson) },
 				RequestSchema:  "ocpp16/MeterValues.json",
 				ResponseSchema: "ocpp16/MeterValuesResponse.json",
-				Handler: handlers16.MeterValuesHandler{
+				Handler: MeterValuesHandler{
 					TransactionStore: engine,
 				},
 			},
@@ -115,13 +104,13 @@ func NewV16Router(emitter Emitter,
 				NewRequest:     func() ocpp.Request { return new(ocpp16.SecurityEventNotificationJson) },
 				RequestSchema:  "ocpp16/SecurityEventNotification.json",
 				ResponseSchema: "ocpp16/SecurityEventNotificationResponse.json",
-				Handler:        handlers16.SecurityEventNotificationHandler{},
+				Handler:        SecurityEventNotificationHandler{},
 			},
 			"DataTransfer": {
 				NewRequest:     func() ocpp.Request { return new(ocpp16.DataTransferJson) },
 				RequestSchema:  "ocpp16/DataTransfer.json",
 				ResponseSchema: "ocpp16/DataTransferResponse.json",
-				Handler: handlers16.DataTransferHandler{
+				Handler: DataTransferHandler{
 					SchemaFS: schemaFS,
 					CallRoutes: map[string]map[string]handlers.CallRoute{
 						"org.openchargealliance.iso15118pnc": {
@@ -214,7 +203,7 @@ func NewV16Router(emitter Emitter,
 				NewResponse:    func() ocpp.Response { return new(ocpp16.DataTransferResponseJson) },
 				RequestSchema:  "ocpp16/DataTransfer.json",
 				ResponseSchema: "ocpp16/DataTransferResponse.json",
-				Handler: handlers16.DataTransferResultHandler{
+				Handler: DataTransferResultHandler{
 					SchemaFS: schemaFS,
 					CallResultRoutes: map[string]map[string]handlers.CallResultRoute{
 						"org.openchargealliance.iso15118pnc": {
@@ -263,7 +252,7 @@ func NewV16Router(emitter Emitter,
 				NewResponse:    func() ocpp.Response { return new(ocpp16.ChangeConfigurationResponseJson) },
 				RequestSchema:  "ocpp16/ChangeConfiguration.json",
 				ResponseSchema: "ocpp16/ChangeConfigurationResponse.json",
-				Handler: handlers16.ChangeConfigurationResultHandler{
+				Handler: ChangeConfigurationResultHandler{
 					SettingsStore: engine,
 					CallMaker:     standardCallMaker,
 				},
@@ -273,218 +262,83 @@ func NewV16Router(emitter Emitter,
 				NewResponse:    func() ocpp.Response { return new(ocpp16.TriggerMessageResponseJson) },
 				RequestSchema:  "ocpp16/TriggerMessage.json",
 				ResponseSchema: "ocpp16/TriggerMessageResponse.json",
-				Handler:        handlers16.TriggerMessageResultHandler{},
+				Handler:        TriggerMessageResultHandler{},
 			},
 		},
 	}
 }
 
-func NewV201Router(clk clock.PassiveClock,
-	engine store.Engine,
-	tariffService services.TariffService,
-	certValidationService services.CertificateValidationService,
-	chargeStationCertProvider services.ChargeStationCertificateProvider,
-	contractCertProvider services.ContractCertificateProvider,
-	heartbeatInterval time.Duration) *Router {
-
-	return &Router{
-		CallRoutes: map[string]handlers.CallRoute{
-			"BootNotification": {
-				NewRequest:     func() ocpp.Request { return new(ocpp201.BootNotificationRequestJson) },
-				RequestSchema:  "ocpp201/BootNotificationRequest.json",
-				ResponseSchema: "ocpp201/BootNotificationResponse.json",
-				Handler: handlers201.BootNotificationHandler{
-					Clock:               clk,
-					HeartbeatInterval:   int(heartbeatInterval.Seconds()),
-					RuntimeDetailsStore: engine,
-				},
-			},
-			"Heartbeat": {
-				NewRequest:     func() ocpp.Request { return new(ocpp201.HeartbeatRequestJson) },
-				RequestSchema:  "ocpp201/HeartbeatRequest.json",
-				ResponseSchema: "ocpp201/HeartbeatResponse.json",
-				Handler: handlers201.HeartbeatHandler{
-					Clock: clk,
-				},
-			},
-			"StatusNotification": {
-				NewRequest:     func() ocpp.Request { return new(ocpp201.StatusNotificationRequestJson) },
-				RequestSchema:  "ocpp201/StatusNotificationRequest.json",
-				ResponseSchema: "ocpp201/StatusNotificationResponse.json",
-				Handler:        handlers.CallHandlerFunc(handlers201.StatusNotificationHandler),
-			},
-			"Authorize": {
-				NewRequest:     func() ocpp.Request { return new(ocpp201.AuthorizeRequestJson) },
-				RequestSchema:  "ocpp201/AuthorizeRequest.json",
-				ResponseSchema: "ocpp201/AuthorizeResponse.json",
-				Handler: handlers201.AuthorizeHandler{
-					TokenStore:                   engine,
-					CertificateValidationService: certValidationService,
-				},
-			},
-			"TransactionEvent": {
-				NewRequest:     func() ocpp.Request { return new(ocpp201.TransactionEventRequestJson) },
-				RequestSchema:  "ocpp201/TransactionEventRequest.json",
-				ResponseSchema: "ocpp201/TransactionEventResponse.json",
-				Handler: handlers201.TransactionEventHandler{
-					Store:         engine,
-					TariffService: tariffService,
-				},
-			},
-			"GetCertificateStatus": {
-				NewRequest:     func() ocpp.Request { return new(ocpp201.GetCertificateStatusRequestJson) },
-				RequestSchema:  "ocpp201/GetCertificateStatusRequest.json",
-				ResponseSchema: "ocpp201/GetCertificateStatusResponse.json",
-				Handler: handlers201.GetCertificateStatusHandler{
-					CertificateValidationService: certValidationService,
-				},
-			},
-			"SignCertificate": {
-				NewRequest:     func() ocpp.Request { return new(ocpp201.SignCertificateRequestJson) },
-				RequestSchema:  "ocpp201/SignCertificateRequest.json",
-				ResponseSchema: "ocpp201/SignCertificateResponse.json",
-				Handler: handlers201.SignCertificateHandler{
-					ChargeStationCertificateProvider: chargeStationCertProvider,
-					Store:                            engine,
-				},
-			},
-			"Get15118EVCertificate": {
-				NewRequest:     func() ocpp.Request { return new(ocpp201.Get15118EVCertificateRequestJson) },
-				RequestSchema:  "ocpp201/Get15118EVCertificateRequest.json",
-				ResponseSchema: "ocpp201/Get15118EVCertificateResponse.json",
-				Handler: handlers201.Get15118EvCertificateHandler{
-					ContractCertificateProvider: contractCertProvider,
-				},
-			},
-			"SecurityEventNotification": {
-				NewRequest:     func() ocpp.Request { return new(ocpp201.SecurityEventNotificationRequestJson) },
-				RequestSchema:  "ocpp201/SecurityEventNotificationRequest.json",
-				ResponseSchema: "ocpp201/SecurityEventNotificationResponse.json",
-				Handler:        handlers201.SecurityEventNotificationHandler{},
-			},
+func NewCallMaker(e transport.Emitter) *handlers.OcppCallMaker {
+	return &handlers.OcppCallMaker{
+		Emitter:     e,
+		OcppVersion: transport.OcppVersion16,
+		Actions: map[reflect.Type]string{
+			reflect.TypeOf(&ocpp16.ChangeConfigurationJson{}):    "ChangeConfiguration",
+			reflect.TypeOf(&ocpp16.TriggerMessageJson{}):         "TriggerMessage",
+			reflect.TypeOf(&ocpp16.RemoteStartTransactionJson{}): "RemoteStartTransaction",
 		},
-		CallResultRoutes: map[string]handlers.CallResultRoute{
-			"CertificateSigned": {
-				NewRequest:     func() ocpp.Request { return new(ocpp201.CertificateSignedRequestJson) },
-				NewResponse:    func() ocpp.Response { return new(ocpp201.CertificateSignedResponseJson) },
-				RequestSchema:  "ocpp201/CertificateSignedRequest.json",
-				ResponseSchema: "ocpp201/CertificateSignedResponse.json",
-				Handler: handlers201.CertificateSignedResultHandler{
-					Store: engine,
-				},
+	}
+}
+
+type DataTransferAction struct {
+	VendorId  string
+	MessageId string
+}
+
+type DataTransferCallMaker struct {
+	e       transport.Emitter
+	actions map[reflect.Type]DataTransferAction
+}
+
+func NewDataTransferCallMaker(e transport.Emitter) *DataTransferCallMaker {
+	return &DataTransferCallMaker{
+		e: e,
+		actions: map[reflect.Type]DataTransferAction{
+			reflect.TypeOf(&ocpp201.CertificateSignedRequestJson{}): {
+				VendorId:  "org.openchargealliance.iso15118pnc",
+				MessageId: "CertificateSigned",
 			},
-			"InstallCertificate": {
-				NewRequest:     func() ocpp.Request { return new(ocpp201.InstallCertificateRequestJson) },
-				NewResponse:    func() ocpp.Response { return new(ocpp201.InstallCertificateResponseJson) },
-				RequestSchema:  "ocpp201/InstallCertificateRequest.json",
-				ResponseSchema: "ocpp201/InstallCertificateResponse.json",
-				Handler: handlers201.InstallCertificateResultHandler{
-					Store: engine,
-				},
+			reflect.TypeOf(&ocpp201.InstallCertificateRequestJson{}): {
+				VendorId:  "org.openchargealliance.iso15118pnc",
+				MessageId: "InstallCertificate",
 			},
-			"TriggerMessage": {
-				NewRequest:     func() ocpp.Request { return new(ocpp201.TriggerMessageRequestJson) },
-				NewResponse:    func() ocpp.Response { return new(ocpp201.TriggerMessageResponseJson) },
-				RequestSchema:  "ocpp201/TriggerMessageRequest.json",
-				ResponseSchema: "ocpp201/TriggerMessageResponse.json",
-				Handler: handlers201.TriggerMessageResultHandler{
-					Store: engine,
-				},
-			},
-			"SetVariables": {
-				NewRequest:     func() ocpp.Request { return new(ocpp201.SetVariablesRequestJson) },
-				NewResponse:    func() ocpp.Response { return new(ocpp201.SetVariablesResponseJson) },
-				RequestSchema:  "ocpp201/SetVariablesRequest.json",
-				ResponseSchema: "ocpp201/SetVariablesResponse.json",
-				Handler: handlers201.SetVariablesResultHandler{
-					Store: engine,
-				},
+			reflect.TypeOf(&ocpp201.TriggerMessageRequestJson{}): {
+				VendorId:  "org.openchargealliance.iso15118pnc",
+				MessageId: "TriggerMessage",
 			},
 		},
 	}
 }
 
-func (r Router) Route(ctx context.Context, chargeStationId string, message Message, emitter Emitter, schemaFS fs.FS) error {
-	switch message.MessageType {
-	case MessageTypeCall:
-		route, ok := r.CallRoutes[message.Action]
-		if !ok {
-			return fmt.Errorf("routing request: %w", NewError(ErrorNotImplemented, fmt.Errorf("%s not implemented", message.Action)))
-		}
-		err := schemas.Validate(message.RequestPayload, schemaFS, route.RequestSchema)
-		if err != nil {
-			var validationErr *jsonschema.ValidationError
-			if errors.As(validationErr, &validationErr) {
-				err = NewError(ErrorFormatViolation, err)
-			}
-			return fmt.Errorf("validating %s request: %w", message.Action, err)
-		}
-		req := route.NewRequest()
-		err = json.Unmarshal(message.RequestPayload, &req)
-		if err != nil {
-			return fmt.Errorf("unmarshalling %s request payload: %w", message.Action, err)
-		}
-		resp, err := route.Handler.HandleCall(ctx, chargeStationId, req)
-		if err != nil {
-			return err
-		}
-		if resp == nil {
-			return fmt.Errorf("no response or error for %s", message.Action)
-		}
-		responseJson, err := json.Marshal(resp)
-		if err != nil {
-			return fmt.Errorf("marshalling %s call response: %w", message.Action, err)
-		}
-		err = schemas.Validate(responseJson, schemaFS, route.ResponseSchema)
-		if err != nil {
-			mqttErr := NewError(ErrorPropertyConstraintViolation, err)
-			slog.Warn("response not valid", slog.String("action", message.Action), mqttErr)
-		}
-		out := &Message{
-			MessageType:     MessageTypeCallResult,
-			Action:          message.Action,
-			MessageId:       message.MessageId,
-			ResponsePayload: responseJson,
-		}
-		err = emitter.Emit(ctx, chargeStationId, out)
-		if err != nil {
-			return fmt.Errorf("sending call response: %w", err)
-		}
-	case MessageTypeCallResult:
-		route, ok := r.CallResultRoutes[message.Action]
-		if !ok {
-			return fmt.Errorf("routing request: %w", NewError(ErrorNotImplemented, fmt.Errorf("%s result not implemented", message.Action)))
-		}
-		err := schemas.Validate(message.RequestPayload, schemaFS, route.RequestSchema)
-		if err != nil {
-			return fmt.Errorf("validating %s request: %w", message.Action, err)
-		}
-		err = schemas.Validate(message.ResponsePayload, schemaFS, route.ResponseSchema)
-		if err != nil {
-			var validationErr *jsonschema.ValidationError
-			if errors.As(validationErr, &validationErr) {
-				err = NewError(ErrorFormatViolation, err)
-			}
-			return fmt.Errorf("validating %s response: %w", message.Action, err)
-		}
-		req := route.NewRequest()
-		err = json.Unmarshal(message.RequestPayload, &req)
-		if err != nil {
-			return fmt.Errorf("unmarshalling %s request payload: %w", message.Action, err)
-		}
-		resp := route.NewResponse()
-		err = json.Unmarshal(message.ResponsePayload, &resp)
-		if err != nil {
-			return fmt.Errorf("unmarshalling %s response payload: %v", message.Action, err)
-		}
-		err = route.Handler.HandleCallResult(ctx, chargeStationId, req, resp, message.State)
-		if err != nil {
-			return err
-		}
-	case MessageTypeCallError:
-		// TODO: what do we want to do with errors?
-		return errors.New("we shouldn't get here at the moment")
+func (d DataTransferCallMaker) Send(ctx context.Context, chargeStationId string, request ocpp.Request) error {
+	dta, ok := d.actions[reflect.TypeOf(request)]
+	if !ok {
+		return fmt.Errorf("unknown request type: %T", request)
 	}
 
-	return nil
+	requestBytes, err := json.Marshal(request)
+	if err != nil {
+		return fmt.Errorf("marshaling request: %w", err)
+	}
+	requestBytesStr := string(requestBytes)
+
+	dataTransferRequest := ocpp16.DataTransferJson{
+		VendorId:  dta.VendorId,
+		MessageId: &dta.MessageId,
+		Data:      &requestBytesStr,
+	}
+
+	dataTransferBytes, err := json.Marshal(dataTransferRequest)
+	if err != nil {
+		return fmt.Errorf("marshaling data transfer request: %w", err)
+	}
+
+	msg := &transport.Message{
+		MessageType:    transport.MessageTypeCall,
+		MessageId:      uuid.New().String(),
+		Action:         "DataTransfer",
+		RequestPayload: dataTransferBytes,
+	}
+
+	return d.e.Emit(ctx, transport.OcppVersion16, chargeStationId, msg)
 }

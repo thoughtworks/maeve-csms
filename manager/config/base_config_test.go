@@ -3,6 +3,7 @@
 package config_test
 
 import (
+	clone "github.com/huandu/go-clone/generic"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/thoughtworks/maeve-csms/manager/config"
@@ -10,20 +11,31 @@ import (
 )
 
 func TestParseConfig(t *testing.T) {
-	cfg := config.BaseConfig{}
+	cfg := clone.Clone(&config.DefaultConfig)
 	err := cfg.LoadFromFile("testdata/config.toml")
 	require.NoError(t, err)
 
-	want := config.BaseConfig{
+	want := &config.BaseConfig{
 		Api: config.ApiSettingsConfig{
 			Addr:         ":9410",
 			ExternalAddr: "https://example.com/",
 			OrgName:      "Example",
 		},
-		Mqtt: config.MqttSettingsConfig{
-			Urls:   []string{"mqtt://127.0.0.1:1883"},
-			Prefix: "cs",
-			Group:  "manager",
+		Transport: config.TransportConfig{
+			Type: "mqtt",
+			Mqtt: &config.MqttSettingsConfig{
+				Urls:              []string{"mqtt://127.0.0.1:1883"},
+				Prefix:            "cs",
+				Group:             "manager",
+				ConnectTimeout:    "10s",
+				ConnectRetryDelay: "1s",
+				KeepAliveInterval: "10s",
+			},
+		},
+		Ocpp: config.OcppSettingsConfig{
+			HeartbeatInterval: "10m",
+			Ocpp16Enabled:     false,
+			Ocpp201Enabled:    true,
 		},
 		Observability: config.ObservabilitySettingsConfig{
 			LogFormat:         "text",
@@ -85,4 +97,13 @@ func TestParseConfig(t *testing.T) {
 	}
 
 	assert.Equal(t, want, cfg)
+
+	err = cfg.Validate()
+	assert.NoError(t, err)
+}
+
+func TestValidateConfig(t *testing.T) {
+	cfg := clone.Clone(&config.DefaultConfig)
+	err := cfg.Validate()
+	assert.NoError(t, err)
 }

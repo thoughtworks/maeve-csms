@@ -1,0 +1,8 @@
+{
+  "certificates": [
+    {
+      "type": "CSMS",
+      "certificate": "The certificate value"
+    }
+  ]
+}

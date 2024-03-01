@@ -1,4 +1,6 @@
-package mqtt
+// SPDX-License-Identifier: Apache-2.0
+
+package sync
 
 import (
 	"context"

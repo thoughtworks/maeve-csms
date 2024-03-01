@@ -8,10 +8,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/thoughtworks/maeve-csms/manager/config"
-	"net/url"
 	"os"
 	"testing"
-	"time"
 )
 
 func TestConfigure(t *testing.T) {
@@ -21,32 +19,22 @@ func TestConfigure(t *testing.T) {
 	settings, err := config.Configure(context.TODO(), cfg)
 	require.NoError(t, err)
 
-	brokerUrl, err := url.Parse("mqtt://localhost:1883")
-	require.NoError(t, err)
-
 	wantApiSettings := config.ApiSettings{
 		Addr:         "localhost:9410",
 		ExternalAddr: "localhost:9410",
 		OrgName:      "Thoughtworks",
 	}
 
-	wantMqttSettings := config.MqttSettings{
-		Urls:              []*url.URL{brokerUrl},
-		Prefix:            "cs",
-		Group:             "manager",
-		ConnectTimeout:    10 * time.Second,
-		ConnectRetryDelay: 1 * time.Second,
-		KeepAliveInterval: 10 * time.Second,
-	}
-
 	assert.Equal(t, wantApiSettings, settings.Api)
-	assert.Equal(t, wantMqttSettings, settings.Mqtt)
+	assert.NotNil(t, settings.Tracer)
+	assert.NotNil(t, settings.TracerProvider)
 	assert.NotNil(t, settings.Storage)
+	assert.NotNil(t, settings.MsgEmitter)
+	assert.NotNil(t, settings.MsgHandler)
 	assert.NotNil(t, settings.ContractCertValidationService)
 	assert.NotNil(t, settings.ContractCertProviderService)
 	assert.NotNil(t, settings.ChargeStationCertProviderService)
 	assert.NotNil(t, settings.TariffService)
-	assert.NotNil(t, settings.TracerProvider)
 }
 
 func TestConfigureFirestoreStorage(t *testing.T) {

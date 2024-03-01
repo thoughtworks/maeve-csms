@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 package server
 
 import (
@@ -6,9 +8,7 @@ import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/thoughtworks/maeve-csms/manager/mqtt"
 	"github.com/thoughtworks/maeve-csms/manager/ocpi"
-	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp16"
 	"github.com/thoughtworks/maeve-csms/manager/store"
 	"github.com/thoughtworks/maeve-csms/manager/store/inmemory"
 	"io"
@@ -16,7 +16,6 @@ import (
 	clockTest "k8s.io/utils/clock/testing"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"testing"
 	"time"
 )
@@ -24,7 +23,7 @@ import (
 func TestSwaggerHandler(t *testing.T) {
 	engine := inmemory.NewStore(clock.RealClock{})
 	ocpiApi := ocpi.NewOCPI(engine, http.DefaultClient, "GB", "TWK")
-	handler := NewOcpiHandler(engine, clock.RealClock{}, ocpiApi, newNoopV16CallMaker())
+	handler := NewOcpiHandler(engine, clock.RealClock{}, ocpiApi, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/openapi.json", nil)
 	w := httptest.NewRecorder()
@@ -60,7 +59,7 @@ func TestAPIRequestWithValidToken(t *testing.T) {
 	require.NoError(t, err)
 	clock := clockTest.NewFakePassiveClock(now)
 	ocpiApi := ocpi.NewOCPI(engine, http.DefaultClient, "GB", "TWK")
-	handler := NewOcpiHandler(engine, clock, ocpiApi, newNoopV16CallMaker())
+	handler := NewOcpiHandler(engine, clock, ocpiApi, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/ocpi/versions", nil)
 	req.Header.Add("Authorization", fmt.Sprintf("Token %s", token))
@@ -88,7 +87,7 @@ func TestAPIRequestWithInvalidToken(t *testing.T) {
 	token := "abcdef123456"
 	engine := inmemory.NewStore(clock.RealClock{})
 	ocpiApi := ocpi.NewOCPI(engine, http.DefaultClient, "GB", "TWK")
-	handler := NewOcpiHandler(engine, clock.RealClock{}, ocpiApi, newNoopV16CallMaker())
+	handler := NewOcpiHandler(engine, clock.RealClock{}, ocpiApi, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/ocpi/versions", nil)
 	req.Header.Add("Authorization", fmt.Sprintf("Token %s", token))
@@ -104,16 +103,5 @@ func TestAPIRequestWithInvalidToken(t *testing.T) {
 
 	if res.StatusCode != http.StatusUnauthorized {
 		t.Errorf("status code: want %d, got %d", http.StatusOK, res.StatusCode)
-	}
-}
-
-func newNoopV16CallMaker() mqtt.BasicCallMaker {
-	return mqtt.BasicCallMaker{
-		E: mqtt.EmitterFunc(func(ctx context.Context, chargeStationId string, message *mqtt.Message) error {
-			return nil
-		}),
-		Actions: map[reflect.Type]string{
-			reflect.TypeOf(&ocpp16.RemoteStartTransactionJson{}): "RemoteStartTransaction",
-		},
 	}
 }

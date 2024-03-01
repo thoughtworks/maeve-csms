@@ -1,41 +1,61 @@
 # Manager
 
-The manager is stateless and implements the core logic for processing OCPP messages. It uses an MQTT v5
-shared subscription to read messages published to the incoming MQTT topic for any charge station and routes
-them to an appropriate handler. This means that different messages from a charge station may be distributed
-to different instances of the manager. The MQTT subscription is managed by the 
-[Handler](../manager/mqtt/handler.go) type. 
+The manager is stateless and implements the core logic for processing OCPP messages. 
 
-The messages on the MQTT topics correspond to the [Message](../manager/mqtt/messages.go) type. This is an
-amalgamation of the OCPP call, call result and call error. Responses to CSMS initiated calls will include
-the original call details for context.
+Messages are received from the gateway using a transport (currently only MQTT 5) and are 
+then routed to a handler that will process that message. If the incoming message was an 
+OCPP call then an OCPP call result will be emitted.
 
-Messages are routed to an appropriate OCPP handler by the [Router](../manager/mqtt/router.go). The
-`Router` validates the message using the OCPP JSON schemas and (if all is well) uses the OCPP version (from the topic),
-OCPP message type and OCPP action (from the message) to determine which handler to invoke. The router is responsible
-for creating the handler instances and providing them with their dependencies.
+The CSMS may also emit messages in order to manage the charge stations.
 
-![Diagram showing MQTT handler subscribing to incoming messages from the MQTT broker and processing them via either an OCPP 1.6 or OCPP 2.0.1 router which distributes them to a handler. A handler may initiate a call with a Call Maker which publishes a message to the MQTT broker](assets/manager.png)
+The manager is configured using a TOML file. This configuration is defined in the
+[config](../manager/config) package which also documents the available options.
 
-All integration points are decoupled from the OCPP handlers and provided to the handler as dependencies. At present 
-the following integration points are used:
-* [services.CertificateValidationService](../manager/services/certificate_validation.go): provides support for verifying a
-  contract certificate chain based on either receiving the chain as a PEM encoded string or via certificate element
-  hashes. Current implementation uses an OCSP server to verify that the certificates have not been revoked.
-* [services.ChargeStationCertificateProvider](../manager/services/charge_station_certificate_provider.go): provides support 
-for signing the TLS certificates used by charge stations (for either the V2G or CPO interfaces). Current implementation 
-uses Hubject EST and will only sign the V2G certificate.
-* [services.ContractCertificateProvider](../manager/services/contract_certificate_provider.go): provides supports for 
-retrieving a contract certificate given an ISO-15118-2 get EV certificate request. Current implementation uses an 
-Open Plug&Charge Protocol (OPCP) contract certificate pool.
-* [services.TariffService](../manager/services/tariff.go): provides support for calculating the cost of a transaction. Current
-implementation applies a fixed charge per kWh energy consumed.
-* [store.Engine](../manager/store/engine.go): provides support for persisting various entities. Current implementations
-use either [Firestore](https://firebase.google.com/docs/firestore) or an in-memory store for testing.
+There is an administration API that allows the CSMS to be configured. This is defined in 
+the [api](../manager/api) package.
 
-There are separate interfaces that a handler implements for handling a call
-(a [CallHandler](../manager/handlers/types.go)) and a call result (a [CallResultHandler](../manager/handlers/types.go)).
-A handler that wants to initiate a call to a charge station can use a [CallMaker](../manager/handlers/types.go)
-to send an OCPP message to a charge station.
+Support for OCPI is provided by the [ocpi](../manager/ocpi) package.
 
-The manager has a [RESTful API](../manager/api/api-spec.yaml) that allows the CSMS to be configured.
+The structure of the manager source code is:
+```
+manager/
+├─ adminui/       Administration UI
+├─ api/           Administration API
+├─ cmd/           Executable commands
+├─ config/        Configuration management and dependency injection 
+├─ handlers/      Common implementations for handling OCPP messages
+│  ├─ has2be/     Handlers for the Has2Be OCPP 1.6 extension messages 
+│  ├─ ocpp16/     Handlers for OCPP 1.6 messages
+│  ├─ ocpp201/    Handlers for OCPP 2.0.1 messages
+├─ ocpi/          OCPI API
+├─ ocpp/          Common types for OCPP messages
+│  ├─ has2be/     Types representing the Has2Be OCPP 1.6 extension messages
+│  ├─ ocpp16/     Types representing OCPP 1.6 messages
+│  ├─ ocpp201/    Types representing OCPP 2.0.1 messages
+├─ schemas/       Support for schema validation
+│  ├─ has2be/     JSON schema files for the Has2Be OCPP 1.6 extension messages
+│  ├─ ocpp16/     JSON schema files for the OCPP 1.6 messages
+│  ├─ ocpp201/    JSON schema files for the OCPP 2.0.1 messages
+├─ server/        Support for providing HTTP-based endpoints
+├─ services/      Pluggable implementations used by handlers
+├─ store/         Interface for interacting with the persistent store
+│  ├─ firestore/  Persistent store implementation using Google Firestore
+│  ├─ inmemory/   In-memory implementation of the persistent store (for testing) 
+├─ sync/          Synchronize configuration to charge stations
+├─ transport/     Interface for sending/receiving messages
+│  ├─ mqtt/       Transport interface implemented using MQTT
+```
+
+The incoming message flow (for MQTT) is:
+```
+├─ [receiver](../manager/transport/mqtt/receiver.go)  Receives the call message from the gateway
+│  ├─ [router](../manager/handlers/router.go)         Routes the message to the appropriate handler
+│  │  ├─ handler                                      Provides the message specific behaviour
+│  ├─ [emitter](../manager/transport/mqtt/emitter.go) Emits the response to the gateway
+```
+
+The outgoing message flow (for MQTT) is:
+```
+├─ [call maker](../manager/handlers/call_maker.go)    Encodes the message
+│  ├─ [emitter](../manager/transport/mqtt/emitter.go) Emits the message to the gateway
+```

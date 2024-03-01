@@ -6,12 +6,10 @@ import (
 	"context"
 	"github.com/spf13/cobra"
 	"github.com/thoughtworks/maeve-csms/manager/config"
-	"github.com/thoughtworks/maeve-csms/manager/mqtt"
 	"github.com/thoughtworks/maeve-csms/manager/server"
-	"go.opentelemetry.io/otel"
+	"github.com/thoughtworks/maeve-csms/manager/sync"
 	"golang.org/x/exp/slog"
 	"k8s.io/utils/clock"
-	"time"
 )
 
 var (
@@ -44,39 +42,17 @@ the gateway and send appropriate responses.`,
 			}
 		}()
 
-		tracer := otel.Tracer("manager")
-
 		apiServer := server.New("api", cfg.Api.Addr, nil,
 			server.NewApiHandler(settings.Api, settings.Storage, settings.OcpiApi, settings.ChargeStationCertProviderService))
 
-		mqttHandler := mqtt.NewHandler(
-			mqtt.WithMqttBrokerUrls(settings.Mqtt.Urls),
-			mqtt.WithMqttPrefix(settings.Mqtt.Prefix),
-			mqtt.WithMqttGroup(settings.Mqtt.Group),
-			mqtt.WithMqttConnectSettings(settings.Mqtt.ConnectTimeout, settings.Mqtt.ConnectRetryDelay, settings.Mqtt.KeepAliveInterval),
-			mqtt.WithStorageEngine(settings.Storage),
-			mqtt.WithCertValidationService(settings.ContractCertValidationService),
-			mqtt.WithContractCertificateProvider(settings.ContractCertProviderService),
-			mqtt.WithChargeStationCertificateProvider(settings.ChargeStationCertProviderService),
-			mqtt.WithTariffService(settings.TariffService),
-			mqtt.WithHeartbeatInterval(time.Minute*5),
-			mqtt.WithOtelTracer(tracer))
+		sync.Sync(settings.Storage, clock.RealClock{}, settings.Tracer, settings.MsgEmitter)
 
 		errCh := make(chan error, 1)
 		apiServer.Start(errCh)
-		mqttHandler.Connect(errCh)
+		settings.MsgHandler.Connect(errCh)
 
 		if settings.OcpiApi != nil {
-			mqttSender := mqtt.NewSender(settings.Mqtt.Urls,
-				settings.Mqtt.Prefix,
-				"manager",
-				settings.Mqtt.ConnectTimeout,
-				settings.Mqtt.ConnectRetryDelay,
-				uint16(settings.Mqtt.KeepAliveInterval.Round(time.Second).Seconds()),
-				tracer,
-			)
-			mqttSender.Connect(errCh)
-			ocpiServer := server.New("ocpi", cfg.Ocpi.Addr, nil, server.NewOcpiHandler(settings.Storage, clock.RealClock{}, settings.OcpiApi, mqttSender.V16CallMaker))
+			ocpiServer := server.New("ocpi", cfg.Ocpi.Addr, nil, server.NewOcpiHandler(settings.Storage, clock.RealClock{}, settings.OcpiApi, settings.MsgEmitter))
 			ocpiServer.Start(errCh)
 		}
 

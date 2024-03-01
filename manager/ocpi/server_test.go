@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 package ocpi_test
 
 import (
@@ -7,17 +9,17 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/thoughtworks/maeve-csms/manager/mqtt"
+	"github.com/thoughtworks/maeve-csms/manager/handlers"
+	"github.com/thoughtworks/maeve-csms/manager/handlers/ocpp16"
 	"github.com/thoughtworks/maeve-csms/manager/ocpi"
-	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp16"
 	"github.com/thoughtworks/maeve-csms/manager/store"
 	"github.com/thoughtworks/maeve-csms/manager/store/inmemory"
+	"github.com/thoughtworks/maeve-csms/manager/transport"
 	"io"
 	"k8s.io/utils/clock"
 	fakeclock "k8s.io/utils/clock/testing"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -329,13 +331,9 @@ func TestPostStartSession(t *testing.T) {
 	assert.Equal(t, ocpi.CommandResponseResultACCEPTED, ocpiResponseCommandResponse.Data.Result)
 }
 
-func newNoopV16CallMaker() mqtt.BasicCallMaker {
-	return mqtt.BasicCallMaker{
-		E: mqtt.EmitterFunc(func(ctx context.Context, chargeStationId string, message *mqtt.Message) error {
-			return nil
-		}),
-		Actions: map[reflect.Type]string{
-			reflect.TypeOf(&ocpp16.RemoteStartTransactionJson{}): "RemoteStartTransaction",
-		},
-	}
+func newNoopV16CallMaker() *handlers.OcppCallMaker {
+	emitter := transport.EmitterFunc(func(ctx context.Context, ocppVersion transport.OcppVersion, chargeStationId string, message *transport.Message) error {
+		return nil
+	})
+	return ocpp16.NewCallMaker(emitter)
 }

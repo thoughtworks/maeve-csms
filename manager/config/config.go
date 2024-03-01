@@ -7,11 +7,16 @@ import (
 	"crypto/tls"
 	"fmt"
 	"github.com/subnova/slog-exporter/slogtrace"
+	"github.com/thoughtworks/maeve-csms/manager/handlers/ocpp16"
+	"github.com/thoughtworks/maeve-csms/manager/handlers/ocpp201"
 	"github.com/thoughtworks/maeve-csms/manager/ocpi"
+	"github.com/thoughtworks/maeve-csms/manager/schemas"
 	"github.com/thoughtworks/maeve-csms/manager/services"
 	"github.com/thoughtworks/maeve-csms/manager/store"
 	"github.com/thoughtworks/maeve-csms/manager/store/firestore"
 	"github.com/thoughtworks/maeve-csms/manager/store/inmemory"
+	"github.com/thoughtworks/maeve-csms/manager/transport"
+	mqtt2 "github.com/thoughtworks/maeve-csms/manager/transport/mqtt"
 	"go.opentelemetry.io/contrib/detectors/gcp"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
@@ -20,6 +25,7 @@ import (
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.19.0"
+	oteltrace "go.opentelemetry.io/otel/trace"
 	"golang.org/x/exp/slog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -36,20 +42,13 @@ type ApiSettings struct {
 	OrgName      string
 }
 
-type MqttSettings struct {
-	Urls              []*url.URL
-	Prefix            string
-	Group             string
-	ConnectTimeout    time.Duration
-	ConnectRetryDelay time.Duration
-	KeepAliveInterval time.Duration
-}
-
 type Config struct {
 	Api                              ApiSettings
-	Mqtt                             MqttSettings
+	Tracer                           oteltrace.Tracer
 	TracerProvider                   *trace.TracerProvider
 	Storage                          store.Engine
+	MsgEmitter                       transport.Emitter
+	MsgHandler                       transport.Receiver
 	ContractCertValidationService    services.CertificateValidationService
 	ContractCertProviderService      services.ContractCertificateProvider
 	ChargeStationCertProviderService services.ChargeStationCertificateProvider
@@ -58,28 +57,14 @@ type Config struct {
 }
 
 func Configure(ctx context.Context, cfg *BaseConfig) (c *Config, err error) {
-	var mqttUrls []*url.URL
-	for _, urlStr := range cfg.Mqtt.Urls {
-		u, err := url.Parse(urlStr)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse mqtt url: %w", err)
-		}
-		mqttUrls = append(mqttUrls, u)
+	err = cfg.Validate()
+	if err != nil {
+		return nil, err
 	}
 
-	mqttConnectTimeout, err := time.ParseDuration(cfg.Mqtt.ConnectTimeout)
+	heartbeatInterval, err := time.ParseDuration(cfg.Ocpp.HeartbeatInterval)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse mqtt connect timeout: %w", err)
-	}
-
-	mqttConnectRetryDelay, err := time.ParseDuration(cfg.Mqtt.ConnectRetryDelay)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse mqtt connect retry delay: %w", err)
-	}
-
-	mqttKeepAliveInterval, err := time.ParseDuration(cfg.Mqtt.KeepAliveInterval)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse mqtt keep alive interval: %w", err)
+		return nil, fmt.Errorf("failed to parse heartbeat interval: %s", err)
 	}
 
 	c = &Config{
@@ -87,14 +72,6 @@ func Configure(ctx context.Context, cfg *BaseConfig) (c *Config, err error) {
 			Addr:         cfg.Api.Addr,
 			ExternalAddr: cfg.Api.ExternalAddr,
 			OrgName:      cfg.Api.OrgName,
-		},
-		Mqtt: MqttSettings{
-			Urls:              mqttUrls,
-			Prefix:            cfg.Mqtt.Prefix,
-			Group:             cfg.Mqtt.Group,
-			ConnectTimeout:    mqttConnectTimeout,
-			ConnectRetryDelay: mqttConnectRetryDelay,
-			KeepAliveInterval: mqttKeepAliveInterval,
 		},
 	}
 
@@ -116,6 +93,8 @@ func Configure(ctx context.Context, cfg *BaseConfig) (c *Config, err error) {
 	if err != nil {
 		return nil, err
 	}
+
+	c.Tracer = c.TracerProvider.Tracer("manager")
 
 	c.Storage, err = getStorage(ctx, &cfg.Storage)
 	if err != nil {
@@ -142,6 +121,39 @@ func Configure(ctx context.Context, cfg *BaseConfig) (c *Config, err error) {
 		return nil, err
 	}
 
+	c.MsgEmitter, err = getMsgEmitter(&cfg.Transport, c.Tracer)
+	if err != nil {
+		return nil, err
+	}
+
+	var routers []transport.Router
+	if cfg.Ocpp.Ocpp16Enabled {
+		routers = append(routers, ocpp16.NewRouter(c.MsgEmitter,
+			clock.RealClock{},
+			c.Storage,
+			c.ContractCertValidationService,
+			c.ChargeStationCertProviderService,
+			c.ContractCertProviderService,
+			heartbeatInterval,
+			schemas.OcppSchemas))
+	}
+	if cfg.Ocpp.Ocpp201Enabled {
+		routers = append(routers, ocpp201.NewRouter(c.MsgEmitter,
+			clock.RealClock{},
+			c.Storage,
+			c.TariffService,
+			c.ContractCertValidationService,
+			c.ChargeStationCertProviderService,
+			c.ContractCertProviderService,
+			heartbeatInterval,
+			schemas.OcppSchemas))
+	}
+
+	c.MsgHandler, err = getMsgHandler(&cfg.Transport, c.MsgEmitter, routers, c.Tracer)
+	if err != nil {
+		return nil, err
+	}
+
 	if cfg.Ocpi != nil {
 		c.OcpiApi, err = getOcpiApi(cfg.Ocpi, c.Storage, httpClient)
 		if err != nil {
@@ -153,26 +165,13 @@ func Configure(ctx context.Context, cfg *BaseConfig) (c *Config, err error) {
 }
 
 func getOcpiApi(o *OcpiConfig, engine store.Engine, httpClient *http.Client) (ocpi.Api, error) {
-	if o.Addr == "" {
-		return nil, fmt.Errorf("ocpi addr is required")
-	}
-	if o.ExternalURL == "" {
-		return nil, fmt.Errorf("ocpi external url is required")
-	}
-	if o.PartyId == "" {
-		return nil, fmt.Errorf("ocpi party id is required")
-	}
-	if o.CountryCode == "" {
-		return nil, fmt.Errorf("ocpi country code is required")
-	}
-
 	api := ocpi.NewOCPI(engine, httpClient, o.CountryCode, o.PartyId)
 	api.SetExternalUrl(o.ExternalURL)
 	return api, nil
 }
 
 func getHttpClient(keylogFile string) (*http.Client, error) {
-	var transport http.RoundTripper
+	var httpTransport http.RoundTripper
 
 	if keylogFile != "" {
 		slog.Warn("***** TLS key logging enabled *****")
@@ -189,12 +188,12 @@ func getHttpClient(keylogFile string) (*http.Client, error) {
 			MinVersion:   tls.VersionTLS12,
 		}
 
-		transport = otelhttp.NewTransport(baseTransport)
+		httpTransport = otelhttp.NewTransport(baseTransport)
 	} else {
-		transport = otelhttp.NewTransport(http.DefaultTransport)
+		httpTransport = otelhttp.NewTransport(http.DefaultTransport)
 	}
 
-	return &http.Client{Transport: transport}, nil
+	return &http.Client{Transport: httpTransport}, nil
 }
 
 func getStorage(ctx context.Context, cfg *StorageConfig) (engine store.Engine, err error) {
@@ -417,6 +416,93 @@ func getTariffService(cfg *TariffServiceConfig) (tariffService services.TariffSe
 	}
 
 	return
+}
+
+func getMsgEmitter(cfg *TransportConfig, tracer oteltrace.Tracer) (transport.Emitter, error) {
+	switch cfg.Type {
+	case "mqtt":
+		var mqttUrls []*url.URL
+		for _, urlStr := range cfg.Mqtt.Urls {
+			u, err := url.Parse(urlStr)
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse mqtt url: %w", err)
+			}
+			mqttUrls = append(mqttUrls, u)
+		}
+
+		mqttConnectTimeout, err := time.ParseDuration(cfg.Mqtt.ConnectTimeout)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse mqtt connect timeout: %w", err)
+		}
+
+		mqttConnectRetryDelay, err := time.ParseDuration(cfg.Mqtt.ConnectRetryDelay)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse mqtt connect retry delay: %w", err)
+		}
+
+		mqttKeepAliveInterval, err := time.ParseDuration(cfg.Mqtt.KeepAliveInterval)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse mqtt keep alive interval: %w", err)
+		}
+
+		mqttEmitter := mqtt2.NewEmitter(
+			mqtt2.WithMqttBrokerUrls[mqtt2.Emitter](mqttUrls),
+			mqtt2.WithMqttPrefix[mqtt2.Emitter](cfg.Mqtt.Prefix),
+			mqtt2.WithMqttConnectSettings[mqtt2.Emitter](mqttConnectTimeout, mqttConnectRetryDelay, mqttKeepAliveInterval),
+			mqtt2.WithOtelTracer[mqtt2.Emitter](tracer))
+
+		return mqttEmitter, nil
+	default:
+		return nil, fmt.Errorf("unknown transport type: %s", cfg.Type)
+	}
+}
+
+func getMsgHandler(cfg *TransportConfig, emitter transport.Emitter, routers []transport.Router, tracer oteltrace.Tracer) (transport.Receiver, error) {
+	switch cfg.Type {
+	case "mqtt":
+		var mqttUrls []*url.URL
+		for _, urlStr := range cfg.Mqtt.Urls {
+			u, err := url.Parse(urlStr)
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse mqtt url: %w", err)
+			}
+			mqttUrls = append(mqttUrls, u)
+		}
+
+		mqttConnectTimeout, err := time.ParseDuration(cfg.Mqtt.ConnectTimeout)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse mqtt connect timeout: %w", err)
+		}
+
+		mqttConnectRetryDelay, err := time.ParseDuration(cfg.Mqtt.ConnectRetryDelay)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse mqtt connect retry delay: %w", err)
+		}
+
+		mqttKeepAliveInterval, err := time.ParseDuration(cfg.Mqtt.KeepAliveInterval)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse mqtt keep alive interval: %w", err)
+		}
+
+		opts := []mqtt2.Opt[mqtt2.Receiver]{
+			mqtt2.WithMqttBrokerUrls[mqtt2.Receiver](mqttUrls),
+			mqtt2.WithMqttPrefix[mqtt2.Receiver](cfg.Mqtt.Prefix),
+			mqtt2.WithMqttConnectSettings[mqtt2.Receiver](mqttConnectTimeout, mqttConnectRetryDelay, mqttKeepAliveInterval),
+			mqtt2.WithMqttGroup(cfg.Mqtt.Group),
+			mqtt2.WithEmitter(emitter),
+			mqtt2.WithOtelTracer[mqtt2.Receiver](tracer),
+		}
+
+		for _, router := range routers {
+			opts = append(opts, mqtt2.WithRouter(router))
+		}
+
+		mqttHandler := mqtt2.NewReceiver(opts...)
+
+		return mqttHandler, nil
+	default:
+		return nil, fmt.Errorf("unknown transport type: %s", cfg.Type)
+	}
 }
 
 func getTracerProvider(ctx context.Context, collectorAddr string) (*trace.TracerProvider, error) {

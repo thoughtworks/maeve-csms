@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-package mqtt
+package sync
 
 import (
 	"context"
@@ -50,7 +50,7 @@ func SyncSettings(ctx context.Context, engine store.Engine, clock clock.PassiveC
 							slog.Info("updating charge station settings", slog.String("chargeStationId", csId),
 								slog.String("key", name),
 								slog.String("value", setting.Value),
-								slog.String("version", details.OcppVersion))
+								slog.String("OcppVersion", details.OcppVersion))
 							err = engine.UpdateChargeStationSettings(ctx, csId, &store.ChargeStationSettings{
 								Settings: map[string]*store.ChargeStationSetting{
 									name: {Status: setting.Status, Value: setting.Value, SendAfter: clock.Now().Add(retryAfter)},
@@ -77,7 +77,7 @@ func SyncSettings(ctx context.Context, engine store.Engine, clock clock.PassiveC
 						slog.Info("updating charge station settings", slog.String("chargeStationId", csId),
 							slog.String("key", name),
 							slog.String("value", setting.Value),
-							slog.String("version", details.OcppVersion))
+							slog.String("OcppVersion", details.OcppVersion))
 						if setting.Status == store.ChargeStationSettingStatusPending && clock.Now().After(setting.SendAfter) {
 							err = engine.UpdateChargeStationSettings(ctx, csId, &store.ChargeStationSettings{
 								Settings: map[string]*store.ChargeStationSetting{

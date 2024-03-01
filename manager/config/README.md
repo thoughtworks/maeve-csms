@@ -6,6 +6,7 @@ Configuration is defined in TOML.
 
 * [General settings](#general-settings)
 * [Service settings](#service-settings)
+* [Transport](#transport)
 * [Storage](#storage)
 * [Contract certificate validator](#contract-certificate-validator)
 * [Contract certificate provider](#contract-certificate-provider)
@@ -17,18 +18,42 @@ Configuration is defined in TOML.
 
 ## General settings
 
-| Section       | Key                 | Type             | Description                                                        |
-|---------------|---------------------|------------------|--------------------------------------------------------------------|
-| api           | addr                | string           | Address that API server will listen on, e.g. localhost:9410        |
-| mqtt          | urls                | array of strings | List of MQTT broker URLs, e.g. [mqtt://localhost:1883]             |
-| mqtt          | prefix              | string           | MQTT topic prefix, e.g. "cs"                                       |
-| mqtt          | group               | string           | MQTT subscriber group name, e.g. "manager"                         |
-| mqtt          | connect_timeout     | string           | MQTT connection timeout, e.g. "10s"                                |
-| mqtt          | connect_retry_delay | string           | MQTT connection retry delay, e.g. "1s"                             |
-| mqtt          | keep_alive_interval | string           | MQTT keep alive interval, e.g. "10s"                               |
-| observability | log_format          | string           | Either "json" or "text"                                            |
-| observability | otel_collector_addr | string           | Address of the OpenTelemetry collector, e.g. "localhost:4317"      |
-| observability | tls_keylog_file     | string           | File where TLS session keys will be written for use with Wireshark |
+| Section       | Key                 | Type   | Description                                                          |
+|---------------|---------------------|--------|----------------------------------------------------------------------|
+| api           | addr                | string | Address that API server will listen on, e.g. localhost:9410          |
+| api           | external_addr       | string | The Externally visible URL that the server is available on           |
+| api           | org_name            | string | The organization name to use when issuing client certificates        |
+| ocpp          | heartbeat_interval  | string | Frequency to request charge station heartbeat messages at, e.g. "5m" |
+| ocpp          | ocpp16_enabled      | bool   | Is OCPP 1.6 support enabled, e.g. "true"?                            |
+| ocpp          | ocpp201_enabled     | bool   | Is OCPP 2.0.1 support enabled, e.g. "true"?                          |
+| observability | log_format          | string | Either "json" or "text"                                              |
+| observability | otel_collector_addr | string | Address of the OpenTelemetry collector, e.g. "localhost:4317"        |
+| observability | tls_keylog_file     | string | File where TLS session keys will be written for use with Wireshark   |
+
+## Transport settings
+
+This section consists of a `type` parameter and a set of parameters specific to that type prefixed by the type name.
+
+e.g.
+
+```toml
+[transport]
+type = "mqtt"
+mqtt.urls = ["mqtt://mqtt-server.example.com:1883"]
+```
+
+### MQTT
+
+Configures the MQTT transport.
+
+| Section | Key                 | Type             | Description                                            |
+|---------|---------------------|------------------|--------------------------------------------------------|
+| mqtt    | urls                | array of strings | List of MQTT broker URLs, e.g. [mqtt://localhost:1883] |
+| mqtt    | prefix              | string           | MQTT topic prefix, e.g. "cs"                           |
+| mqtt    | group               | string           | MQTT subscriber group name, e.g. "manager"             |
+| mqtt    | connect_timeout     | string           | MQTT connection timeout, e.g. "10s"                    |
+| mqtt    | connect_retry_delay | string           | MQTT connection retry delay, e.g. "1s"                 |
+| mqtt    | keep_alive_interval | string           | MQTT keep alive interval, e.g. "10s"                   |
 
 ## Service settings
 

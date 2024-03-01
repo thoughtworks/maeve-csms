@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: Apache-2.0
 
-package mqtt_test
+package sync_test
 
 import (
 	"context"
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/thoughtworks/maeve-csms/manager/mqtt"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp16"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
 	"github.com/thoughtworks/maeve-csms/manager/store"
 	"github.com/thoughtworks/maeve-csms/manager/store/inmemory"
+	"github.com/thoughtworks/maeve-csms/manager/sync"
 	"k8s.io/utils/clock"
 	"testing"
 	"time"
@@ -127,7 +127,7 @@ func TestSyncV16Settings(t *testing.T) {
 	require.NoError(t, err)
 
 	v16CallMaker := &mockCallMaker{engine: engine, updateFn: updateV16StatusToAccepted}
-	mqtt.SyncSettings(ctx, engine, clock.RealClock{}, v16CallMaker, nil, 100*time.Millisecond, 500*time.Millisecond)
+	sync.SyncSettings(ctx, engine, clock.RealClock{}, v16CallMaker, nil, 100*time.Millisecond, 500*time.Millisecond)
 
 	settings, err := engine.LookupChargeStationSettings(ctx, "cs001")
 	require.NoError(t, err)
@@ -163,7 +163,7 @@ func TestSyncV16SettingsRetryAfterDelay(t *testing.T) {
 
 	updater := updateWithNoResponse{}
 	v16CallMaker := &mockCallMaker{engine: engine, updateFn: updater.update}
-	mqtt.SyncSettings(ctx, engine, clock.RealClock{}, v16CallMaker, nil, 100*time.Millisecond, 400*time.Millisecond)
+	sync.SyncSettings(ctx, engine, clock.RealClock{}, v16CallMaker, nil, 100*time.Millisecond, 400*time.Millisecond)
 
 	require.Equal(t, 3, len(updater.updateAttempts))
 	assert.True(t, updater.updateAttempts[1].After(updater.updateAttempts[0].Add(400*time.Millisecond)))
@@ -198,7 +198,7 @@ func TestSyncV201Variables(t *testing.T) {
 	require.NoError(t, err)
 
 	v201CallMaker := &mockCallMaker{engine: engine, updateFn: updateV201StatusToAccepted}
-	mqtt.SyncSettings(ctx, engine, clock.RealClock{}, nil, v201CallMaker, 100*time.Millisecond, 500*time.Millisecond)
+	sync.SyncSettings(ctx, engine, clock.RealClock{}, nil, v201CallMaker, 100*time.Millisecond, 500*time.Millisecond)
 
 	settings, err := engine.LookupChargeStationSettings(ctx, "cs001")
 	require.NoError(t, err)
@@ -234,7 +234,7 @@ func TestSyncV201SettingsRetryAfterDelay(t *testing.T) {
 
 	updater := updateWithNoResponse{}
 	v201CallMaker := &mockCallMaker{engine: engine, updateFn: updater.update}
-	mqtt.SyncSettings(ctx, engine, clock.RealClock{}, nil, v201CallMaker, 100*time.Millisecond, 400*time.Millisecond)
+	sync.SyncSettings(ctx, engine, clock.RealClock{}, nil, v201CallMaker, 100*time.Millisecond, 400*time.Millisecond)
 
 	require.Equal(t, 3, len(updater.updateAttempts))
 	assert.True(t, updater.updateAttempts[1].After(updater.updateAttempts[0].Add(400*time.Millisecond)))
@@ -289,7 +289,7 @@ func TestSyncSettingsWithManyChargeStations(t *testing.T) {
 
 	v16CallMaker := &mockCallMaker{engine: engine, updateFn: updateV16StatusToAccepted}
 	v201CallMaker := &mockCallMaker{engine: engine, updateFn: updateV201StatusToAccepted}
-	mqtt.SyncSettings(ctx, engine, clock.RealClock{}, v16CallMaker, v201CallMaker, 100*time.Millisecond, 500*time.Millisecond)
+	sync.SyncSettings(ctx, engine, clock.RealClock{}, v16CallMaker, v201CallMaker, 100*time.Millisecond, 500*time.Millisecond)
 
 	settings, err := engine.LookupChargeStationSettings(ctx, "cs133")
 	require.NoError(t, err)

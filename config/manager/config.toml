@@ -1,8 +1,9 @@
 [api]
 addr = ":9410"
 
-[mqtt]
-urls = ["mqtt://mqtt:1883"]
+[transport]
+type = "mqtt"
+mqtt.urls = ["mqtt://mqtt:1883"]
 
 [ocpi]
 addr = ":9411"

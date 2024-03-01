@@ -60,13 +60,13 @@ fileignoreconfig:
   - filename: manager/config/base_config_test.go
     checksum: 1da75b3709b5bf69b251690199fc2e19fbb4d5c1996b703f2c01fb23b140ee1b
   - filename: manager/config/charge_station_cert_provider_config.go
-    checksum: ba937840fb90c0ef13c79e611f9b9ff69e7b028d31892fd410fd5ce1f319d72d
+    checksum: b78f985fc1aad03419940957c3c48317c700c5528cd3f812a52000184c5aa7cf
   - filename: manager/config/config.go
     checksum: 3841ea99861b8064e6a127e092a400df3f5d1c986995047aec8eb1d9200ccdb4
   - filename: manager/config/config_test.go
     checksum: 10a323c13c371fed4229424597ccab80aaebbe4b696d88c17763dda64062baf0
   - filename: manager/config/http_token_config.go
-    checksum: a49d33538ca625df3d5706e0143750f87dcded44ae085788e1a64519ef95c70c
+    checksum: 212d3dec7875921df622ed72a9d994904f18a532f89d26b9daff164aa0424fd9
   - filename: manager/config/settings_config.go
     checksum: cd96899088c1ab4ae43ff2635bb9a9b97b64d1e624acf4a0ff8bcca1c2f08c46
   - filename: manager/config/testdata/ca.key
@@ -97,24 +97,8 @@ fileignoreconfig:
     checksum: c181e8cd66c0b11de814810bf8d2dd411489ad5e0dc0e47ec5ca0555148b6ecd
   - filename: manager/handlers/tracing.go
     checksum: 5a44615eb6e4eab449c5594c09b3d7b2c5499ffa2452d2b4bce48ddddb9955e5
-  - filename: manager/mqtt/certificates.go
-    checksum: be0efcb6bb764994f66367764282f7c14332b9d0e73e8df8aac46f92bd93a493
-  - filename: manager/mqtt/handler.go
-    checksum: 9660c626538042009cebcba874730e4222c115fdf24c9dba12c5d4601c69b613
-  - filename: manager/mqtt/router.go
-    checksum: 880513a5d3f0070619c4890b5aab9fcf10650afc79550a83c1ad9a986c7e7367
-  - filename: manager/mqtt/settings.go
-    checksum: 6f058ad0205d28c649ac22b615cdd64029b46723d8fc5d5ced579e99b426ec8f
-  - filename: manager/mqtt/settings_test.go
-    checksum: 99db5ba6a8456c7bae42bd1ab98df485a7d742a33171ed03dc92b8a502d4f699
-  - filename: manager/mqtt/settings_test.go
-    checksum: dd7a956f3e659906c047ae6a0e094c335a273fbe4a3248c8b2687224817f24d8
-  - filename: manager/mqtt/triggers.go
-    checksum: 0f272466fb565103843a81d961800e0909826c743163f67aa4e215fe13722c76
   - filename: manager/ocpi/correlation.go
     checksum: b875df588159233dd77aacdfe0683ce0f1da9a0e17f7b8eb41d1ecc3d1a58a38
-  - filename: manager/ocpi/ocpi.gen.go
-    checksum: 6ca663b1e4f6ecaef87f6fadaacdebcc905ac236adf704ac9278d25e605d940d
   - filename: manager/ocpi/ocpi.gen.go
     checksum: 8d0e4696ae72913d2fde472400683e55ed4e6582598422225a5a8b57a198caec
   - filename: manager/ocpi/ocpi_test.go
@@ -122,9 +106,7 @@ fileignoreconfig:
   - filename: manager/ocpi/register.go
     checksum: 50b33545ae6af5356024ac1e454d20f4550a61c23ffd380c7e8b10dbe403812d
   - filename: manager/ocpi/server.go
-    checksum: 67cefb85bb20fd6ebbc1587c2726472ead79d4277404f65b4ef7c218d3f9eb13
-  - filename: manager/ocpi/server.go
-    checksum: da605a41bec5c85c6e26f0816c8d8dc15799ef301a23278046d0fa35c17c9d50
+    checksum: 6ebfe5c94e6894a1ad4aab3a8891a40c86a4af00b84498c530c56cbce2302a59
   - filename: manager/ocpi/server_test.go
     checksum: 782d0af5e4194142fd49ba5006ce6ac332a6018b1c97daecabae715965d79032
   - filename: manager/ocpp/emaid_test.go
@@ -170,9 +152,7 @@ fileignoreconfig:
   - filename: manager/schemas/ocpp201/TransactionEventResponse.json
     checksum: 30e812e60ae4c19b31bc91b1214057cb2dca6e346967250d912cd108a44322d2
   - filename: manager/server/ocpi.go
-    checksum: 3678a916dbab5a3bc0384c088cafbf9720081df0d8bd7478d17ae3098c6b9af8
-  - filename: manager/server/ocpi.go
-    checksum: 228cab74af5cc9cf81602a79dda7e497f917dc4e6d87217f50dadd08c2b2604d
+    checksum: c4dd31e4e315b2b9da4d39dad33d9ac8bcfc67a2c23a4005a1102b3fafb3629a
   - filename: manager/services/certificate_validation.go
     checksum: c56dba57d1502acbecb680f97f6efbbd42fda3fde3ca5f54e63da883684db610
   - filename: manager/services/certificate_validation_hubject_test.go

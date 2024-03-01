@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-package mqtt_test
+package sync_test
 
 import (
 	"context"
@@ -8,11 +8,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	handlers201 "github.com/thoughtworks/maeve-csms/manager/handlers/ocpp201"
-	"github.com/thoughtworks/maeve-csms/manager/mqtt"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
 	"github.com/thoughtworks/maeve-csms/manager/store"
 	"github.com/thoughtworks/maeve-csms/manager/store/inmemory"
+	"github.com/thoughtworks/maeve-csms/manager/sync"
 	"k8s.io/utils/clock"
 	"testing"
 	"time"
@@ -172,7 +172,7 @@ func TestSyncCertificates(t *testing.T) {
 		updateFn: updater.update,
 	}
 
-	mqtt.SyncCertificates(ctx, engine, clock.RealClock{}, v16CallMaker, v201CallMaker, 100*time.Millisecond, 100*time.Millisecond)
+	sync.SyncCertificates(ctx, engine, clock.RealClock{}, v16CallMaker, v201CallMaker, 100*time.Millisecond, 100*time.Millisecond)
 
 	require.Len(t, v16CallMaker.callEvents, 2)
 	assert.Equal(t, v16CallMaker.callEvents[0].chargeStationId, "cs001")

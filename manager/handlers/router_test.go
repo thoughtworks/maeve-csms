@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-package mqtt_test
+package handlers_test
 
 import (
 	"context"
@@ -8,35 +8,47 @@ import (
 	"github.com/thoughtworks/maeve-csms/manager/handlers"
 	handlers201 "github.com/thoughtworks/maeve-csms/manager/handlers/ocpp201"
 	"github.com/thoughtworks/maeve-csms/manager/schemas"
+	"github.com/thoughtworks/maeve-csms/manager/transport"
 	"k8s.io/utils/clock"
 	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/thoughtworks/maeve-csms/manager/mqtt"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
 )
 
-var heartbeatMsg = mqtt.Message{
+var heartbeatMsg = transport.Message{
 	Action:         "Heartbeat",
-	MessageType:    mqtt.MessageTypeCall,
+	MessageType:    transport.MessageTypeCall,
 	RequestPayload: []byte("{}"),
 }
 
-var resultMsg = mqtt.Message{
+var resultMsg = transport.Message{
 	Action:          "Result",
-	MessageType:     mqtt.MessageTypeCallResult,
+	MessageType:     transport.MessageTypeCallResult,
 	RequestPayload:  []byte("{}"),
 	ResponsePayload: []byte("{}"),
 }
 
-var fakeEmitter = func(ctx context.Context, id string, msg *mqtt.Message) error {
+var fakeEmitter = func(ctx context.Context, ocppVersion transport.OcppVersion, id string, msg *transport.Message) error {
 	return nil
 }
 
 func TestRouterHandlesCall(t *testing.T) {
-	router := mqtt.Router{
+	var chargeStationId string
+	var message *transport.Message
+
+	emitter := func(ctx context.Context, ocppVersion transport.OcppVersion, id string, msg *transport.Message) error {
+		chargeStationId = id
+		message = msg
+		return nil
+	}
+
+	router := handlers.Router{
+		Emitter:     transport.EmitterFunc(emitter),
+		SchemaFS:    schemas.OcppSchemas,
+		OcppVersion: transport.OcppVersion201,
 		CallRoutes: map[string]handlers.CallRoute{
 			"Heartbeat": {
 				NewRequest:     func() ocpp.Request { return new(ocpp201.HeartbeatRequestJson) },
@@ -49,39 +61,36 @@ func TestRouterHandlesCall(t *testing.T) {
 		},
 	}
 
-	var chargeStationId string
-	var message *mqtt.Message
-	emitter := func(ctx context.Context, id string, msg *mqtt.Message) error {
-		chargeStationId = id
-		message = msg
-		return nil
-	}
-
-	err := router.Route(context.Background(), "id", heartbeatMsg, mqtt.EmitterFunc(emitter), schemas.OcppSchemas)
+	err := router.Route(context.Background(), "id", heartbeatMsg)
 
 	assert.NoError(t, err)
 	assert.Equal(t, "id", chargeStationId)
-	assert.Equal(t, mqtt.MessageTypeCallResult, message.MessageType)
+	assert.Equal(t, transport.MessageTypeCallResult, message.MessageType)
 	assert.Equal(t, "Heartbeat", message.Action)
 	assert.Equal(t, "", message.MessageId)
 	assert.NotNil(t, message.ResponsePayload)
 }
 
 func TestRouterErrorWhenNoCallRoute(t *testing.T) {
-	router := mqtt.Router{
-		CallRoutes: map[string]handlers.CallRoute{},
+	router := handlers.Router{
+		Emitter:     transport.EmitterFunc(fakeEmitter),
+		SchemaFS:    schemas.OcppSchemas,
+		OcppVersion: transport.OcppVersion201,
+		CallRoutes:  map[string]handlers.CallRoute{},
 	}
 
-	err := router.Route(context.Background(), "id", heartbeatMsg, mqtt.EmitterFunc(fakeEmitter), schemas.OcppSchemas)
+	err := router.Route(context.Background(), "id", heartbeatMsg)
 
-	var mqttError *mqtt.Error
+	var mqttError *transport.Error
 	assert.Error(t, err)
 	assert.ErrorAs(t, err, &mqttError)
-	assert.Equal(t, mqtt.ErrorNotImplemented, mqttError.ErrorCode)
+	assert.Equal(t, transport.ErrorNotImplemented, mqttError.ErrorCode)
 }
 
 func TestRouterErrorWhenCallRequestPayloadIsInvalid(t *testing.T) {
-	router := mqtt.Router{
+	router := handlers.Router{
+		Emitter:  transport.EmitterFunc(fakeEmitter),
+		SchemaFS: schemas.OcppSchemas,
 		CallRoutes: map[string]handlers.CallRoute{
 			"Heartbeat": {
 				NewRequest:     func() ocpp.Request { return new(noUnmarshalRequest) },
@@ -94,19 +103,21 @@ func TestRouterErrorWhenCallRequestPayloadIsInvalid(t *testing.T) {
 		},
 	}
 
-	var heartbeatMsgWithEmptyPayload = mqtt.Message{
+	var heartbeatMsgWithEmptyPayload = transport.Message{
 		Action:         "Heartbeat",
-		MessageType:    mqtt.MessageTypeCall,
+		MessageType:    transport.MessageTypeCall,
 		RequestPayload: []byte("{}"),
 	}
 
-	err := router.Route(context.Background(), "id", heartbeatMsgWithEmptyPayload, mqtt.EmitterFunc(fakeEmitter), schemas.OcppSchemas)
+	err := router.Route(context.Background(), "id", heartbeatMsgWithEmptyPayload)
 
 	assert.ErrorContains(t, err, "validating Heartbeat request")
 }
 
 func TestRouterErrorWhenCantUnmarshallCallRequestPayload(t *testing.T) {
-	router := mqtt.Router{
+	router := handlers.Router{
+		Emitter:  transport.EmitterFunc(fakeEmitter),
+		SchemaFS: os.DirFS("testdata"),
 		CallRoutes: map[string]handlers.CallRoute{
 			"MyCall": {
 				NewRequest:     func() ocpp.Request { return new(noUnmarshalRequest) },
@@ -119,13 +130,13 @@ func TestRouterErrorWhenCantUnmarshallCallRequestPayload(t *testing.T) {
 		},
 	}
 
-	var heartbeatMsgWithEmptyPayload = mqtt.Message{
+	var heartbeatMsgWithEmptyPayload = transport.Message{
 		Action:         "MyCall",
-		MessageType:    mqtt.MessageTypeCall,
+		MessageType:    transport.MessageTypeCall,
 		RequestPayload: []byte("{}"),
 	}
 
-	err := router.Route(context.Background(), "id", heartbeatMsgWithEmptyPayload, mqtt.EmitterFunc(fakeEmitter), os.DirFS("testdata"))
+	err := router.Route(context.Background(), "id", heartbeatMsgWithEmptyPayload)
 
 	assert.ErrorContains(t, err, "unmarshalling MyCall request payload")
 }
@@ -135,7 +146,9 @@ func TestRouterErrorWhenCallHandlerErrors(t *testing.T) {
 		return nil, errors.New("handler error")
 	}
 
-	router := mqtt.Router{
+	router := handlers.Router{
+		Emitter:  transport.EmitterFunc(fakeEmitter),
+		SchemaFS: schemas.OcppSchemas,
 		CallRoutes: map[string]handlers.CallRoute{
 			"Heartbeat": {
 				NewRequest:     func() ocpp.Request { return new(ocpp201.HeartbeatRequestJson) },
@@ -146,7 +159,7 @@ func TestRouterErrorWhenCallHandlerErrors(t *testing.T) {
 		},
 	}
 
-	err := router.Route(context.Background(), "id", heartbeatMsg, mqtt.EmitterFunc(fakeEmitter), schemas.OcppSchemas)
+	err := router.Route(context.Background(), "id", heartbeatMsg)
 
 	assert.ErrorContains(t, err, "handler error")
 }
@@ -156,7 +169,9 @@ func TestRouterErrorWhenErrorMarshallingCallHandlerResponse(t *testing.T) {
 		return new(noMarshalResponse), nil
 	}
 
-	router := mqtt.Router{
+	router := handlers.Router{
+		Emitter:  transport.EmitterFunc(fakeEmitter),
+		SchemaFS: schemas.OcppSchemas,
 		CallRoutes: map[string]handlers.CallRoute{
 			"Heartbeat": {
 				NewRequest:     func() ocpp.Request { return new(ocpp201.HeartbeatRequestJson) },
@@ -167,7 +182,7 @@ func TestRouterErrorWhenErrorMarshallingCallHandlerResponse(t *testing.T) {
 		},
 	}
 
-	err := router.Route(context.Background(), "id", heartbeatMsg, mqtt.EmitterFunc(fakeEmitter), schemas.OcppSchemas)
+	err := router.Route(context.Background(), "id", heartbeatMsg)
 
 	assert.ErrorContains(t, err, "marshalling Heartbeat call response")
 }
@@ -181,7 +196,9 @@ func TestRouterHandlesCallResult(t *testing.T) {
 		return nil
 	}
 
-	router := mqtt.Router{
+	router := handlers.Router{
+		Emitter:  transport.EmitterFunc(fakeEmitter),
+		SchemaFS: os.DirFS("testdata"),
 		CallResultRoutes: map[string]handlers.CallResultRoute{
 			"Result": {
 				NewRequest:     func() ocpp.Request { return new(fakeRequest) },
@@ -193,22 +210,24 @@ func TestRouterHandlesCallResult(t *testing.T) {
 		},
 	}
 
-	err := router.Route(context.Background(), "id", resultMsg, mqtt.EmitterFunc(fakeEmitter), os.DirFS("testdata"))
+	err := router.Route(context.Background(), "id", resultMsg)
 
 	assert.NoError(t, err)
 }
 
 func TestRouterErrorWhenNoCallResultRoute(t *testing.T) {
-	router := mqtt.Router{
+	router := handlers.Router{
+		Emitter:          transport.EmitterFunc(fakeEmitter),
+		SchemaFS:         os.DirFS("testdata"),
 		CallResultRoutes: map[string]handlers.CallResultRoute{},
 	}
 
-	err := router.Route(context.Background(), "id", resultMsg, mqtt.EmitterFunc(fakeEmitter), os.DirFS("testdata"))
+	err := router.Route(context.Background(), "id", resultMsg)
 
-	var mqttError *mqtt.Error
+	var mqttError *transport.Error
 	assert.Error(t, err)
 	assert.ErrorAs(t, err, &mqttError)
-	assert.Equal(t, mqtt.ErrorNotImplemented, mqttError.ErrorCode)
+	assert.Equal(t, transport.ErrorNotImplemented, mqttError.ErrorCode)
 }
 
 func TestRouterErrorWhenInvalidCallResultRequestPayload(t *testing.T) {
@@ -220,7 +239,9 @@ func TestRouterErrorWhenInvalidCallResultRequestPayload(t *testing.T) {
 		return nil
 	}
 
-	router := mqtt.Router{
+	router := handlers.Router{
+		Emitter:  transport.EmitterFunc(fakeEmitter),
+		SchemaFS: os.DirFS("testdata"),
 		CallResultRoutes: map[string]handlers.CallResultRoute{
 			"MyCallResult": {
 				NewRequest:     func() ocpp.Request { return nil },
@@ -232,14 +253,14 @@ func TestRouterErrorWhenInvalidCallResultRequestPayload(t *testing.T) {
 		},
 	}
 
-	var resultWithEmptyRequestPayload = mqtt.Message{
+	var resultWithEmptyRequestPayload = transport.Message{
 		Action:          "MyCallResult",
-		MessageType:     mqtt.MessageTypeCallResult,
+		MessageType:     transport.MessageTypeCallResult,
 		RequestPayload:  []byte("{}"),
 		ResponsePayload: []byte("{}"),
 	}
 
-	err := router.Route(context.Background(), "id", resultWithEmptyRequestPayload, mqtt.EmitterFunc(fakeEmitter), os.DirFS("testdata"))
+	err := router.Route(context.Background(), "id", resultWithEmptyRequestPayload)
 
 	assert.ErrorContains(t, err, "validating MyCallResult request")
 }
@@ -253,7 +274,9 @@ func TestRouterErrorWhenCantUnmarshallCallResultRequestPayload(t *testing.T) {
 		return nil
 	}
 
-	router := mqtt.Router{
+	router := handlers.Router{
+		Emitter:  transport.EmitterFunc(fakeEmitter),
+		SchemaFS: os.DirFS("testdata"),
 		CallResultRoutes: map[string]handlers.CallResultRoute{
 			"MyCallResult": {
 				NewRequest:     func() ocpp.Request { return nil },
@@ -265,14 +288,14 @@ func TestRouterErrorWhenCantUnmarshallCallResultRequestPayload(t *testing.T) {
 		},
 	}
 
-	var resultWithEmptyRequestPayload = mqtt.Message{
+	var resultWithEmptyRequestPayload = transport.Message{
 		Action:          "MyCallResult",
-		MessageType:     mqtt.MessageTypeCallResult,
+		MessageType:     transport.MessageTypeCallResult,
 		RequestPayload:  []byte("{}"),
 		ResponsePayload: []byte("{}"),
 	}
 
-	err := router.Route(context.Background(), "id", resultWithEmptyRequestPayload, mqtt.EmitterFunc(fakeEmitter), os.DirFS("testdata"))
+	err := router.Route(context.Background(), "id", resultWithEmptyRequestPayload)
 
 	assert.ErrorContains(t, err, "unmarshalling MyCallResult request payload")
 }
@@ -286,7 +309,9 @@ func TestRouterErrorWhenInvalidCallResultResponsePayload(t *testing.T) {
 		return nil
 	}
 
-	router := mqtt.Router{
+	router := handlers.Router{
+		Emitter:  transport.EmitterFunc(fakeEmitter),
+		SchemaFS: os.DirFS("testdata"),
 		CallResultRoutes: map[string]handlers.CallResultRoute{
 			"MyCallResult": {
 				NewRequest:     func() ocpp.Request { return nil },
@@ -298,14 +323,14 @@ func TestRouterErrorWhenInvalidCallResultResponsePayload(t *testing.T) {
 		},
 	}
 
-	var resultWithEmptyRequestPayload = mqtt.Message{
+	var resultWithEmptyRequestPayload = transport.Message{
 		Action:          "MyCallResult",
-		MessageType:     mqtt.MessageTypeCallResult,
+		MessageType:     transport.MessageTypeCallResult,
 		RequestPayload:  []byte("{}"),
 		ResponsePayload: []byte("{}"),
 	}
 
-	err := router.Route(context.Background(), "id", resultWithEmptyRequestPayload, mqtt.EmitterFunc(fakeEmitter), os.DirFS("testdata"))
+	err := router.Route(context.Background(), "id", resultWithEmptyRequestPayload)
 
 	assert.ErrorContains(t, err, "validating MyCallResult response")
 }
@@ -319,7 +344,9 @@ func TestRouterErrorWhenCantUnmarshallCallResultResponsePayload(t *testing.T) {
 		return nil
 	}
 
-	router := mqtt.Router{
+	router := handlers.Router{
+		Emitter:  transport.EmitterFunc(fakeEmitter),
+		SchemaFS: os.DirFS("testdata"),
 		CallResultRoutes: map[string]handlers.CallResultRoute{
 			"MyCallResult": {
 				NewRequest:     func() ocpp.Request { return new(fakeRequest) },
@@ -331,14 +358,14 @@ func TestRouterErrorWhenCantUnmarshallCallResultResponsePayload(t *testing.T) {
 		},
 	}
 
-	var resultWithEmptyResponsePayload = mqtt.Message{
+	var resultWithEmptyResponsePayload = transport.Message{
 		Action:          "MyCallResult",
-		MessageType:     mqtt.MessageTypeCallResult,
+		MessageType:     transport.MessageTypeCallResult,
 		RequestPayload:  []byte("{}"),
 		ResponsePayload: []byte("{}"),
 	}
 
-	err := router.Route(context.Background(), "id", resultWithEmptyResponsePayload, mqtt.EmitterFunc(fakeEmitter), os.DirFS("testdata"))
+	err := router.Route(context.Background(), "id", resultWithEmptyResponsePayload)
 
 	assert.ErrorContains(t, err, "unmarshalling MyCallResult response payload")
 }
@@ -352,7 +379,9 @@ func TestRouterErrorWhenCallResultHandlerErrors(t *testing.T) {
 		return errors.New("handler error")
 	}
 
-	router := mqtt.Router{
+	router := handlers.Router{
+		Emitter:  transport.EmitterFunc(fakeEmitter),
+		SchemaFS: os.DirFS("testdata"),
 		CallResultRoutes: map[string]handlers.CallResultRoute{
 			"Result": {
 				NewRequest:     func() ocpp.Request { return new(fakeRequest) },
@@ -364,7 +393,7 @@ func TestRouterErrorWhenCallResultHandlerErrors(t *testing.T) {
 		},
 	}
 
-	err := router.Route(context.Background(), "id", resultMsg, mqtt.EmitterFunc(fakeEmitter), os.DirFS("testdata"))
+	err := router.Route(context.Background(), "id", resultMsg)
 
 	assert.ErrorContains(t, err, "handler error")
 }

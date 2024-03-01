@@ -3,10 +3,17 @@ addr = ":9410"
 org_name = "Example"
 external_addr = "https://example.com/"
 
-[mqtt]
+[transport]
+type = "mqtt"
+
+[transport.mqtt]
 urls = ["mqtt://127.0.0.1:1883"]
 prefix = "cs"
 group = "manager"
+
+[ocpp]
+heartbeat_interval = "10m"
+ocpp16_enabled = false
 
 [observability]
 log_format = "text"

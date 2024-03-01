@@ -13,6 +13,8 @@ import (
 	"testing"
 )
 
+// GetTracer is used in tests to get a trace.Tracer implementation that captures
+// the spans generated during a test.
 func GetTracer() (trace.Tracer, *tracetest.InMemoryExporter) {
 	traceExporter := tracetest.NewInMemoryExporter()
 	tracerProvider := tracesdk.NewTracerProvider(
@@ -24,6 +26,7 @@ func GetTracer() (trace.Tracer, *tracetest.InMemoryExporter) {
 	return tracerProvider.Tracer("test"), traceExporter
 }
 
+// AssertSpan is used to test whether a span contains the expected attributes.
 func AssertSpan(t *testing.T, span *tracetest.SpanStub, name string, attributes map[string]any) {
 	assert.Equal(t, name, span.Name)
 	assert.Len(t, span.Attributes, len(attributes))

@@ -8,7 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/go-chi/render"
-	"github.com/thoughtworks/maeve-csms/manager/mqtt"
+	"github.com/thoughtworks/maeve-csms/manager/handlers"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp16"
 	"golang.org/x/exp/slog"
 	"k8s.io/utils/clock"
@@ -21,10 +21,10 @@ import (
 type Server struct {
 	ocpi         Api
 	clock        clock.PassiveClock
-	v16CallMaker mqtt.BasicCallMaker
+	v16CallMaker *handlers.OcppCallMaker
 }
 
-func NewServer(ocpi Api, clock clock.PassiveClock, v16CallMaker mqtt.BasicCallMaker) (*Server, error) {
+func NewServer(ocpi Api, clock clock.PassiveClock, v16CallMaker *handlers.OcppCallMaker) (*Server, error) {
 	return &Server{
 		ocpi:         ocpi,
 		clock:        clock,

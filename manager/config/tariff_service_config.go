@@ -3,5 +3,5 @@
 package config
 
 type TariffServiceConfig struct {
-	Type string `mapstructure:"type" toml:"type"`
+	Type string `mapstructure:"type" toml:"type" validate:"required,oneof=kwh"`
 }

@@ -24,6 +24,7 @@ func getFreePort() (port int, err error) {
 	return
 }
 
+// NewBroker creates a local MQTT broker that can be used for testing.
 func NewBroker(t *testing.T) (*mqtt.Server, *url.URL) {
 	server := mqtt.New(nil)
 

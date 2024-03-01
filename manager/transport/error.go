@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
-package mqtt
+package transport
 
 import "fmt"
 
+// ErrorCode represents an OCPP error code.
 type ErrorCode string
 
 const (
@@ -21,26 +22,27 @@ const (
 	ErrorTypeConstraintViolation       ErrorCode = "TypeConstraintViolation"
 )
 
+// An Error allows a function to return an error that includes an OCPP ErrorCode.
 type Error struct {
 	ErrorCode    ErrorCode
-	wrappedError error
+	WrappedError error
 }
 
 func NewError(code ErrorCode, err error) *Error {
 	return &Error{
 		ErrorCode:    code,
-		wrappedError: err,
+		WrappedError: err,
 	}
 }
 
 func (e Error) Error() string {
-	if e.wrappedError != nil {
-		return fmt.Sprintf("%s: %v", e.ErrorCode, e.wrappedError)
+	if e.WrappedError != nil {
+		return fmt.Sprintf("%s: %v", e.ErrorCode, e.WrappedError)
 	} else {
 		return string(e.ErrorCode)
 	}
 }
 
 func (e Error) Unwrap() error {
-	return e.wrappedError
+	return e.WrappedError
 }
