@@ -13,8 +13,8 @@ import (
 )
 
 type TransactionEventHandler struct {
-	TransactionStore store.TransactionStore
-	TariffService    services.TariffService
+	Store         store.Engine
+	TariffService services.TariffService
 }
 
 func (t TransactionEventHandler) HandleCall(ctx context.Context, chargeStationId string, request ocpp.Request) (ocpp.Response, error) {
@@ -24,16 +24,32 @@ func (t TransactionEventHandler) HandleCall(ctx context.Context, chargeStationId
 		slog.String("eventType", string(req.EventType)),
 		slog.String("triggerReason", string(req.TriggerReason)),
 		slog.Int("seqNo", req.SeqNo))
+	response := &types.TransactionEventResponseJson{}
+
 	var idToken, tokenType string
 	if req.IdToken != nil {
 		idToken = req.IdToken.IdToken
 		tokenType = string(req.IdToken.Type)
+
+		tok, err := t.Store.LookupToken(ctx, idToken)
+		if err != nil {
+			return nil, err
+		}
+		if tok != nil {
+			response.IdTokenInfo = &types.IdTokenInfoType{
+				Status: types.AuthorizationStatusEnumTypeAccepted,
+			}
+		} else {
+			response.IdTokenInfo = &types.IdTokenInfoType{
+				Status: types.AuthorizationStatusEnumTypeUnknown,
+			}
+		}
 	}
 
 	var err error
 	switch req.EventType {
 	case types.TransactionEventEnumTypeStarted:
-		err = t.TransactionStore.CreateTransaction(
+		err = t.Store.CreateTransaction(
 			ctx,
 			chargeStationId,
 			req.TransactionInfo.TransactionId,
@@ -43,13 +59,13 @@ func (t TransactionEventHandler) HandleCall(ctx context.Context, chargeStationId
 			req.SeqNo,
 			req.Offline)
 	case types.TransactionEventEnumTypeUpdated:
-		err = t.TransactionStore.UpdateTransaction(
+		err = t.Store.UpdateTransaction(
 			ctx,
 			chargeStationId,
 			req.TransactionInfo.TransactionId,
 			convertMeterValues(req.MeterValue))
 	case types.TransactionEventEnumTypeEnded:
-		err = t.TransactionStore.EndTransaction(
+		err = t.Store.EndTransaction(
 			ctx,
 			chargeStationId,
 			req.TransactionInfo.TransactionId,
@@ -63,10 +79,8 @@ func (t TransactionEventHandler) HandleCall(ctx context.Context, chargeStationId
 		return nil, err
 	}
 
-	response := &types.TransactionEventResponseJson{}
-
 	if req.EventType == types.TransactionEventEnumTypeEnded {
-		transaction, err := t.TransactionStore.FindTransaction(ctx, chargeStationId, req.TransactionInfo.TransactionId)
+		transaction, err := t.Store.FindTransaction(ctx, chargeStationId, req.TransactionInfo.TransactionId)
 		if err != nil {
 			return nil, err
 		}

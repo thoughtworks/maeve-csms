@@ -327,8 +327,8 @@ func NewV201Router(clk clock.PassiveClock,
 				RequestSchema:  "ocpp201/TransactionEventRequest.json",
 				ResponseSchema: "ocpp201/TransactionEventResponse.json",
 				Handler: handlers201.TransactionEventHandler{
-					TransactionStore: engine,
-					TariffService:    tariffService,
+					Store:         engine,
+					TariffService: tariffService,
 				},
 			},
 			"GetCertificateStatus": {
