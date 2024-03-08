@@ -12,7 +12,7 @@ The manager is configured using a TOML file. This configuration is defined in th
 [config](../manager/config) package which also documents the available options.
 
 There is an administration API that allows the CSMS to be configured. This is defined in 
-the [api](../manager/api) package.
+the [api](../manager/api) package with [API documentation](../manager/api/API.md).
 
 Support for OCPI is provided by the [ocpi](../manager/ocpi) package.
 
