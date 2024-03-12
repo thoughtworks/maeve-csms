@@ -22,9 +22,16 @@ import (
 	"time"
 )
 
-type fakeEmitter struct{}
+type fakeEmitter struct {
+	OcppVersion     transport.OcppVersion
+	ChargeStationId string
+	Message         *transport.Message
+}
 
-func (f fakeEmitter) Emit(ctx context.Context, ocppVersion transport.OcppVersion, chargeStationId string, message *transport.Message) error {
+func (f *fakeEmitter) Emit(ctx context.Context, ocppVersion transport.OcppVersion, chargeStationId string, message *transport.Message) error {
+	f.OcppVersion = ocppVersion
+	f.ChargeStationId = chargeStationId
+	f.Message = message
 	return nil
 }
 
@@ -298,6 +305,53 @@ func TestRoutingCallResults(t *testing.T) {
 
 			err = router.Route(context.TODO(), "cs001", msg)
 			assert.NoError(t, err)
+		})
+	}
+}
+
+func TestCallMaker(t *testing.T) {
+	emitter := &fakeEmitter{}
+	callMaker := ocpp201.NewCallMaker(emitter)
+
+	inputMessages := map[string]ocpp.Request{
+		"CertificateSigned": &types.CertificateSignedRequestJson{
+			CertificateChain: "",
+			CertificateType:  makePtr(types.CertificateSigningUseEnumTypeChargingStationCertificate),
+		},
+		"InstallCertificate": &types.InstallCertificateRequestJson{
+			Certificate:     "",
+			CertificateType: types.InstallCertificateUseEnumTypeMORootCertificate,
+		},
+		"SetVariables": &types.SetVariablesRequestJson{
+			SetVariableData: []types.SetVariableDataType{
+				{
+					Component: types.ComponentType{
+						Name: "ClockCtrlr",
+					},
+					Variable: types.VariableType{
+						Name: "TimeZone",
+					},
+					AttributeValue: "Europe/London",
+				},
+			},
+		},
+		"TriggerMessage": &types.TriggerMessageRequestJson{
+			RequestedMessage: types.MessageTriggerEnumTypeLogStatusNotification,
+		},
+		"UnlockConnector": &types.UnlockConnectorRequestJson{
+			EvseId:      1,
+			ConnectorId: 1,
+		},
+	}
+
+	for action, req := range inputMessages {
+		t.Run(action, func(t *testing.T) {
+			err := callMaker.Send(context.TODO(), "cs001", req)
+			require.NoError(t, err)
+
+			assert.Equal(t, transport.OcppVersion201, emitter.OcppVersion)
+			assert.Equal(t, "cs001", emitter.ChargeStationId)
+			assert.Equal(t, action, emitter.Message.Action)
 		})
 	}
 }
