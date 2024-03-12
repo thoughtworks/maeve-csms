@@ -95,6 +95,8 @@ fileignoreconfig:
     checksum: 26b2a5113699eb2d1558d782785a5a44ac17477e1d6d47be9f0ae9a0d0877242
   - filename: manager/handlers/ocpp201/get_certificate_status_test.go
     checksum: c181e8cd66c0b11de814810bf8d2dd411489ad5e0dc0e47ec5ca0555148b6ecd
+  - filename: manager/handlers/ocpp201/routing_test.go
+    checksum: 5f315b4c0c350bd5932fbfbe6301b5f9093b2df0d7c13e2c694c20ac2ac27764
   - filename: manager/handlers/tracing.go
     checksum: 5a44615eb6e4eab449c5594c09b3d7b2c5499ffa2452d2b4bce48ddddb9955e5
   - filename: manager/ocpi/correlation.go

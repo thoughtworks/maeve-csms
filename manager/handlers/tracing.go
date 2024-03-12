@@ -41,6 +41,8 @@ func AssertSpan(t *testing.T, span *tracetest.SpanStub, name string, attributes 
 		case string:
 			assert.Equal(t, want, attr.Value.AsString())
 		case int:
+			assert.Equal(t, want, int(attr.Value.AsInt64()))
+		case int64:
 			assert.Equal(t, want, attr.Value.AsInt64())
 		case bool:
 			assert.Equal(t, want, attr.Value.AsBool())
