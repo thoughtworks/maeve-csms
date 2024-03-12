@@ -132,6 +132,13 @@ func NewRouter(emitter transport.Emitter,
 					Store: engine,
 				},
 			},
+			"GetTransactionStatus": {
+				NewRequest:     func() ocpp.Request { return new(ocpp201.GetTransactionStatusRequestJson) },
+				NewResponse:    func() ocpp.Response { return new(ocpp201.GetTransactionStatusResponseJson) },
+				RequestSchema:  "ocpp201/GetTransactionStatusRequest.json",
+				ResponseSchema: "ocpp201/GetTransactionStatusResponse.json",
+				Handler:        GetTransactionStatusResultHandler{},
+			},
 			"InstallCertificate": {
 				NewRequest:     func() ocpp.Request { return new(ocpp201.InstallCertificateRequestJson) },
 				NewResponse:    func() ocpp.Response { return new(ocpp201.InstallCertificateResponseJson) },
@@ -175,11 +182,12 @@ func NewCallMaker(e transport.Emitter) *handlers.OcppCallMaker {
 		Emitter:     e,
 		OcppVersion: transport.OcppVersion201,
 		Actions: map[reflect.Type]string{
-			reflect.TypeOf(&ocpp201.CertificateSignedRequestJson{}):  "CertificateSigned",
-			reflect.TypeOf(&ocpp201.InstallCertificateRequestJson{}): "InstallCertificate",
-			reflect.TypeOf(&ocpp201.SetVariablesRequestJson{}):       "SetVariables",
-			reflect.TypeOf(&ocpp201.TriggerMessageRequestJson{}):     "TriggerMessage",
-			reflect.TypeOf(&ocpp201.UnlockConnectorRequestJson{}):    "UnlockConnector",
+			reflect.TypeOf(&ocpp201.CertificateSignedRequestJson{}):    "CertificateSigned",
+			reflect.TypeOf(&ocpp201.GetTransactionStatusRequestJson{}): "GetTransactionStatus",
+			reflect.TypeOf(&ocpp201.InstallCertificateRequestJson{}):   "InstallCertificate",
+			reflect.TypeOf(&ocpp201.SetVariablesRequestJson{}):         "SetVariables",
+			reflect.TypeOf(&ocpp201.TriggerMessageRequestJson{}):       "TriggerMessage",
+			reflect.TypeOf(&ocpp201.UnlockConnectorRequestJson{}):      "UnlockConnector",
 		},
 	}
 }

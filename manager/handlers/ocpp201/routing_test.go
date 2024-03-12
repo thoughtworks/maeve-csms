@@ -237,6 +237,15 @@ func TestRoutingCallResults(t *testing.T) {
 				Status: types.CertificateSignedStatusEnumTypeRejected,
 			},
 		},
+		"GetTransactionStatus": {
+			request: &types.GetTransactionStatusRequestJson{
+				TransactionId: makePtr(""),
+			},
+			response: &types.GetTransactionStatusResponseJson{
+				MessagesInQueue:  true,
+				OngoingIndicator: makePtr(false),
+			},
+		},
 		"InstallCertificate": {
 			request: &types.InstallCertificateRequestJson{
 				Certificate:     string(pemBytes),
@@ -317,6 +326,9 @@ func TestCallMaker(t *testing.T) {
 		"CertificateSigned": &types.CertificateSignedRequestJson{
 			CertificateChain: "",
 			CertificateType:  makePtr(types.CertificateSigningUseEnumTypeChargingStationCertificate),
+		},
+		"GetTransactionStatus": &types.GetTransactionStatusRequestJson{
+			TransactionId: makePtr(""),
 		},
 		"InstallCertificate": &types.InstallCertificateRequestJson{
 			Certificate:     "",
