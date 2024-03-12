@@ -61,6 +61,7 @@ func (e *Emitter) Emit(ctx context.Context, ocppVersion transport.OcppVersion, c
 			semconv.MessagingOperationKey.String("publish"),
 			semconv.MessagingMessageConversationID(message.MessageId),
 			attribute.String("csId", chargeStationId),
+			attribute.String(getActionName(message), message.Action),
 		))
 	defer span.End()
 
@@ -88,6 +89,17 @@ func (e *Emitter) Emit(ctx context.Context, ocppVersion transport.OcppVersion, c
 		return fmt.Errorf("publishing to %s: %v", topic, err)
 	}
 	return nil
+}
+
+func getActionName(msg *transport.Message) string {
+	switch msg.MessageType {
+	case transport.MessageTypeCall:
+		return "call.action"
+	case transport.MessageTypeCallResult:
+		return "call_result.action"
+	default:
+		return "call_error.action"
+	}
 }
 
 func ensureEmitterDefaults(e *Emitter) {
