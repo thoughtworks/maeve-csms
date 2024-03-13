@@ -255,6 +255,18 @@ func TestRoutingCallResults(t *testing.T) {
 				Status: types.InstallCertificateStatusEnumTypeAccepted,
 			},
 		},
+		"RequestStartTransaction": {
+			request: &types.RequestStartTransactionRequestJson{
+				IdToken: types.IdTokenType{
+					Type:    types.IdTokenEnumTypeISO14443,
+					IdToken: "DEADBEEF",
+				},
+				RemoteStartId: 12345,
+			},
+			response: &types.RequestStartTransactionResponseJson{
+				Status: types.RequestStartStopStatusEnumTypeAccepted,
+			},
+		},
 		"RequestStopTransaction": {
 			request: &types.RequestStopTransactionRequestJson{
 				TransactionId: "abc12345",
@@ -341,6 +353,13 @@ func TestCallMaker(t *testing.T) {
 		"InstallCertificate": &types.InstallCertificateRequestJson{
 			Certificate:     "",
 			CertificateType: types.InstallCertificateUseEnumTypeMORootCertificate,
+		},
+		"RequestStartTransaction": &types.RequestStartTransactionRequestJson{
+			IdToken: types.IdTokenType{
+				Type:    types.IdTokenEnumTypeISO14443,
+				IdToken: "DEADBEEF",
+			},
+			RemoteStartId: 12345,
 		},
 		"RequestStopTransaction": &types.RequestStopTransactionRequestJson{
 			TransactionId: "123abcde",
