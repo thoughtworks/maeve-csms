@@ -255,6 +255,14 @@ func TestRoutingCallResults(t *testing.T) {
 				Status: types.InstallCertificateStatusEnumTypeAccepted,
 			},
 		},
+		"RequestStopTransaction": {
+			request: &types.RequestStopTransactionRequestJson{
+				TransactionId: "abc12345",
+			},
+			response: &types.RequestStopTransactionResponseJson{
+				Status: types.RequestStartStopStatusEnumTypeAccepted,
+			},
+		},
 		"SetVariables": {
 			request: &types.SetVariablesRequestJson{
 				SetVariableData: []types.SetVariableDataType{
@@ -333,6 +341,9 @@ func TestCallMaker(t *testing.T) {
 		"InstallCertificate": &types.InstallCertificateRequestJson{
 			Certificate:     "",
 			CertificateType: types.InstallCertificateUseEnumTypeMORootCertificate,
+		},
+		"RequestStopTransaction": &types.RequestStopTransactionRequestJson{
+			TransactionId: "123abcde",
 		},
 		"SetVariables": &types.SetVariablesRequestJson{
 			SetVariableData: []types.SetVariableDataType{

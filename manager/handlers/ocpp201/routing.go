@@ -148,6 +148,13 @@ func NewRouter(emitter transport.Emitter,
 					Store: engine,
 				},
 			},
+			"RequestStopTransaction": {
+				NewRequest:     func() ocpp.Request { return new(ocpp201.RequestStopTransactionRequestJson) },
+				NewResponse:    func() ocpp.Response { return new(ocpp201.RequestStopTransactionResponseJson) },
+				RequestSchema:  "ocpp201/RequestStopTransactionRequest.json",
+				ResponseSchema: "ocpp201/RequestStopTransactionResponse.json",
+				Handler:        RequestStopTransactionResultHandler{},
+			},
 			"SetVariables": {
 				NewRequest:     func() ocpp.Request { return new(ocpp201.SetVariablesRequestJson) },
 				NewResponse:    func() ocpp.Response { return new(ocpp201.SetVariablesResponseJson) },
@@ -182,12 +189,13 @@ func NewCallMaker(e transport.Emitter) *handlers.OcppCallMaker {
 		Emitter:     e,
 		OcppVersion: transport.OcppVersion201,
 		Actions: map[reflect.Type]string{
-			reflect.TypeOf(&ocpp201.CertificateSignedRequestJson{}):    "CertificateSigned",
-			reflect.TypeOf(&ocpp201.GetTransactionStatusRequestJson{}): "GetTransactionStatus",
-			reflect.TypeOf(&ocpp201.InstallCertificateRequestJson{}):   "InstallCertificate",
-			reflect.TypeOf(&ocpp201.SetVariablesRequestJson{}):         "SetVariables",
-			reflect.TypeOf(&ocpp201.TriggerMessageRequestJson{}):       "TriggerMessage",
-			reflect.TypeOf(&ocpp201.UnlockConnectorRequestJson{}):      "UnlockConnector",
+			reflect.TypeOf(&ocpp201.CertificateSignedRequestJson{}):      "CertificateSigned",
+			reflect.TypeOf(&ocpp201.GetTransactionStatusRequestJson{}):   "GetTransactionStatus",
+			reflect.TypeOf(&ocpp201.InstallCertificateRequestJson{}):     "InstallCertificate",
+			reflect.TypeOf(&ocpp201.RequestStopTransactionRequestJson{}): "RequestStopTransaction",
+			reflect.TypeOf(&ocpp201.SetVariablesRequestJson{}):           "SetVariables",
+			reflect.TypeOf(&ocpp201.TriggerMessageRequestJson{}):         "TriggerMessage",
+			reflect.TypeOf(&ocpp201.UnlockConnectorRequestJson{}):        "UnlockConnector",
 		},
 	}
 }
