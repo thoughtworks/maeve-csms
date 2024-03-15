@@ -5,16 +5,16 @@ package ocpp201_test
 import (
 	"context"
 	"github.com/stretchr/testify/require"
-	"github.com/thoughtworks/maeve-csms/manager/handlers"
 	"github.com/thoughtworks/maeve-csms/manager/handlers/ocpp201"
 	types "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
+	"github.com/thoughtworks/maeve-csms/manager/testutil"
 	"testing"
 )
 
 func TestTransactionStatusResultHandlerWithTransactionId(t *testing.T) {
 	handler := ocpp201.GetTransactionStatusResultHandler{}
 
-	tracer, exporter := handlers.GetTracer()
+	tracer, exporter := testutil.GetTracer()
 
 	ctx := context.Background()
 
@@ -33,7 +33,7 @@ func TestTransactionStatusResultHandlerWithTransactionId(t *testing.T) {
 		require.NoError(t, err)
 	}()
 
-	handlers.AssertSpan(t, &exporter.GetSpans()[0], "test", map[string]any{
+	testutil.AssertSpan(t, &exporter.GetSpans()[0], "test", map[string]any{
 		"get_transaction_status.transaction_id":    "1234567890",
 		"get_transaction_status.messages_in_queue": true,
 	})
@@ -42,7 +42,7 @@ func TestTransactionStatusResultHandlerWithTransactionId(t *testing.T) {
 func TestTransactionStatusResultHandlerWithOngoingIndicator(t *testing.T) {
 	handler := ocpp201.GetTransactionStatusResultHandler{}
 
-	tracer, exporter := handlers.GetTracer()
+	tracer, exporter := testutil.GetTracer()
 
 	ctx := context.Background()
 
@@ -60,7 +60,7 @@ func TestTransactionStatusResultHandlerWithOngoingIndicator(t *testing.T) {
 		require.NoError(t, err)
 	}()
 
-	handlers.AssertSpan(t, &exporter.GetSpans()[0], "test", map[string]any{
+	testutil.AssertSpan(t, &exporter.GetSpans()[0], "test", map[string]any{
 		"get_transaction_status.messages_in_queue": false,
 		"get_transaction_status.ongoing":           true,
 	})

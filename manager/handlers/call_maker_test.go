@@ -14,11 +14,17 @@ import (
 )
 
 type FakeEmitter struct {
-	got *transport.Message
+	called          bool
+	ocppVersion     transport.OcppVersion
+	chargeStationId string
+	msg             *transport.Message
 }
 
-func (e *FakeEmitter) Emit(ctx context.Context, ocppVersion transport.OcppVersion, chargeStationId string, message *transport.Message) error {
-	e.got = message
+func (e *FakeEmitter) Emit(_ context.Context, ocppVersion transport.OcppVersion, chargeStationId string, message *transport.Message) error {
+	e.called = true
+	e.ocppVersion = ocppVersion
+	e.chargeStationId = chargeStationId
+	e.msg = message
 	return nil
 }
 
@@ -41,10 +47,10 @@ func TestCallMaker(t *testing.T) {
 	assert.NoError(t, err)
 
 	uuidPattern := regexp.MustCompile(`^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$`)
-	assert.Equal(t, transport.MessageTypeCall, emitter.got.MessageType)
-	assert.Regexp(t, uuidPattern, emitter.got.MessageId)
-	assert.Equal(t, "CertificateSigned", emitter.got.Action)
-	assert.JSONEq(t, `{"certificateType":"V2GCertificate","certificateChain":"pemData"}`, string(emitter.got.RequestPayload))
+	assert.Equal(t, transport.MessageTypeCall, emitter.msg.MessageType)
+	assert.Regexp(t, uuidPattern, emitter.msg.MessageId)
+	assert.Equal(t, "CertificateSigned", emitter.msg.Action)
+	assert.JSONEq(t, `{"certificateType":"V2GCertificate","certificateChain":"pemData"}`, string(emitter.msg.RequestPayload))
 }
 
 func TestCallMakerWithUnknownMessageType(t *testing.T) {
@@ -59,5 +65,5 @@ func TestCallMakerWithUnknownMessageType(t *testing.T) {
 
 	err := callMaker.Send(context.Background(), "cs001", &ocpp201.AuthorizeRequestJson{})
 	assert.ErrorContains(t, err, "unknown request type")
-	assert.Nil(t, emitter.got)
+	assert.Nil(t, emitter.msg)
 }

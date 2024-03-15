@@ -8,6 +8,7 @@ import (
 	"github.com/thoughtworks/maeve-csms/manager/config"
 	"github.com/thoughtworks/maeve-csms/manager/server"
 	"github.com/thoughtworks/maeve-csms/manager/sync"
+	"github.com/thoughtworks/maeve-csms/manager/transport"
 	"golang.org/x/exp/slog"
 	"k8s.io/utils/clock"
 )
@@ -49,7 +50,21 @@ the gateway and send appropriate responses.`,
 
 		errCh := make(chan error, 1)
 		apiServer.Start(errCh)
-		settings.MsgHandler.Connect(errCh)
+		var ocpp16Connection transport.Connection
+		if settings.Ocpp16Handler != nil {
+			ocpp16Connection, err = settings.MsgListener.Connect(context.Background(), transport.OcppVersion16, nil, settings.Ocpp16Handler)
+			if err != nil {
+				errCh <- err
+			}
+		}
+
+		var ocpp201Connection transport.Connection
+		if settings.Ocpp201Handler != nil {
+			ocpp201Connection, err = settings.MsgListener.Connect(context.Background(), transport.OcppVersion201, nil, settings.Ocpp201Handler)
+			if err != nil {
+				errCh <- err
+			}
+		}
 
 		if settings.OcpiApi != nil {
 			ocpiServer := server.New("ocpi", cfg.Ocpi.Addr, nil, server.NewOcpiHandler(settings.Storage, clock.RealClock{}, settings.OcpiApi, settings.MsgEmitter))
@@ -57,6 +72,20 @@ the gateway and send appropriate responses.`,
 		}
 
 		err = <-errCh
+
+		if ocpp16Connection != nil {
+			err := ocpp16Connection.Disconnect(context.Background())
+			if err != nil {
+				slog.Warn("disconnecting from broker", "err", err)
+			}
+		}
+		if ocpp201Connection != nil {
+			err := ocpp201Connection.Disconnect(context.Background())
+			if err != nil {
+				slog.Warn("disconnecting from broker", "err", err)
+			}
+		}
+
 		return err
 	},
 }

@@ -16,19 +16,23 @@ import (
 	"github.com/thoughtworks/maeve-csms/manager/services"
 	"github.com/thoughtworks/maeve-csms/manager/store"
 	"github.com/thoughtworks/maeve-csms/manager/store/inmemory"
+	"github.com/thoughtworks/maeve-csms/manager/testutil"
 	"github.com/thoughtworks/maeve-csms/manager/transport"
+	"go.opentelemetry.io/otel/codes"
 	clockTest "k8s.io/utils/clock/testing"
 	"testing"
 	"time"
 )
 
 type fakeEmitter struct {
+	Called          bool
 	OcppVersion     transport.OcppVersion
 	ChargeStationId string
 	Message         *transport.Message
 }
 
 func (f *fakeEmitter) Emit(ctx context.Context, ocppVersion transport.OcppVersion, chargeStationId string, message *transport.Message) error {
+	f.Called = true
 	f.OcppVersion = ocppVersion
 	f.ChargeStationId = chargeStationId
 	f.Message = message
@@ -194,8 +198,17 @@ func TestRoutingCalls(t *testing.T) {
 				MessageId:      messageId.String(),
 				RequestPayload: reqBytes,
 			}
-			err = router.Route(context.TODO(), "cs001", msg)
-			assert.NoError(t, err)
+
+			tracer, exporter := testutil.GetTracer()
+
+			func() {
+				ctx, span := tracer.Start(context.TODO(), "test")
+				defer span.End()
+				router.Handle(ctx, "cs001", &msg)
+			}()
+
+			require.Greater(t, len(exporter.GetSpans()), 0)
+			assert.Equal(t, codes.Ok, exporter.GetSpans()[0].Status.Code)
 		})
 	}
 }
@@ -340,8 +353,16 @@ func TestRoutingCallResults(t *testing.T) {
 				ResponsePayload: respBytes,
 			}
 
-			err = router.Route(context.TODO(), "cs001", msg)
-			assert.NoError(t, err)
+			tracer, exporter := testutil.GetTracer()
+
+			func() {
+				ctx, span := tracer.Start(context.TODO(), "test")
+				defer span.End()
+				router.Handle(ctx, "cs001", &msg)
+			}()
+
+			require.Greater(t, len(exporter.GetSpans()), 0)
+			assert.Equal(t, codes.Ok, exporter.GetSpans()[0].Status.Code)
 		})
 	}
 }

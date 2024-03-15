@@ -5,16 +5,16 @@ package ocpp201_test
 import (
 	"context"
 	"github.com/stretchr/testify/require"
-	"github.com/thoughtworks/maeve-csms/manager/handlers"
 	"github.com/thoughtworks/maeve-csms/manager/handlers/ocpp201"
 	types "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
+	"github.com/thoughtworks/maeve-csms/manager/testutil"
 	"testing"
 )
 
 func TestChangeAvailabilityResultHandler(t *testing.T) {
 	handler := ocpp201.ChangeAvailabilityResultHandler{}
 
-	tracer, exporter := handlers.GetTracer()
+	tracer, exporter := testutil.GetTracer()
 
 	ctx := context.Background()
 
@@ -33,7 +33,7 @@ func TestChangeAvailabilityResultHandler(t *testing.T) {
 		require.NoError(t, err)
 	}()
 
-	handlers.AssertSpan(t, &exporter.GetSpans()[0], "test", map[string]any{
+	testutil.AssertSpan(t, &exporter.GetSpans()[0], "test", map[string]any{
 		"change_availability.operational_status": "Operative",
 		"change_availability.status":             "Accepted",
 	})
@@ -42,7 +42,7 @@ func TestChangeAvailabilityResultHandler(t *testing.T) {
 func TestChangeAvailabilityResultHandlerWithEvseId(t *testing.T) {
 	handler := ocpp201.ChangeAvailabilityResultHandler{}
 
-	tracer, exporter := handlers.GetTracer()
+	tracer, exporter := testutil.GetTracer()
 
 	ctx := context.Background()
 
@@ -64,7 +64,7 @@ func TestChangeAvailabilityResultHandlerWithEvseId(t *testing.T) {
 		require.NoError(t, err)
 	}()
 
-	handlers.AssertSpan(t, &exporter.GetSpans()[0], "test", map[string]any{
+	testutil.AssertSpan(t, &exporter.GetSpans()[0], "test", map[string]any{
 		"change_availability.operational_status": "Operative",
 		"change_availability.status":             "Accepted",
 		"change_availability.evse_id":            1,
@@ -74,7 +74,7 @@ func TestChangeAvailabilityResultHandlerWithEvseId(t *testing.T) {
 func TestChangeAvailabilityResultHandlerWithConnectorId(t *testing.T) {
 	handler := ocpp201.ChangeAvailabilityResultHandler{}
 
-	tracer, exporter := handlers.GetTracer()
+	tracer, exporter := testutil.GetTracer()
 
 	ctx := context.Background()
 
@@ -97,7 +97,7 @@ func TestChangeAvailabilityResultHandlerWithConnectorId(t *testing.T) {
 		require.NoError(t, err)
 	}()
 
-	handlers.AssertSpan(t, &exporter.GetSpans()[0], "test", map[string]any{
+	testutil.AssertSpan(t, &exporter.GetSpans()[0], "test", map[string]any{
 		"change_availability.operational_status": "Operative",
 		"change_availability.status":             "Accepted",
 		"change_availability.evse_id":            1,

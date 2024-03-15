@@ -48,7 +48,9 @@ type Config struct {
 	TracerProvider                   *trace.TracerProvider
 	Storage                          store.Engine
 	MsgEmitter                       transport.Emitter
-	MsgHandler                       transport.Receiver
+	MsgListener                      transport.Listener
+	Ocpp16Handler                    transport.MessageHandler
+	Ocpp201Handler                   transport.MessageHandler
 	ContractCertValidationService    services.CertificateValidationService
 	ContractCertProviderService      services.ContractCertificateProvider
 	ChargeStationCertProviderService services.ChargeStationCertificateProvider
@@ -126,19 +128,23 @@ func Configure(ctx context.Context, cfg *BaseConfig) (c *Config, err error) {
 		return nil, err
 	}
 
-	var routers []transport.Router
+	c.MsgListener, err = getMsgListener(&cfg.Transport, c.Tracer)
+	if err != nil {
+		return nil, err
+	}
+
 	if cfg.Ocpp.Ocpp16Enabled {
-		routers = append(routers, ocpp16.NewRouter(c.MsgEmitter,
+		c.Ocpp16Handler = ocpp16.NewRouter(c.MsgEmitter,
 			clock.RealClock{},
 			c.Storage,
 			c.ContractCertValidationService,
 			c.ChargeStationCertProviderService,
 			c.ContractCertProviderService,
 			heartbeatInterval,
-			schemas.OcppSchemas))
+			schemas.OcppSchemas)
 	}
 	if cfg.Ocpp.Ocpp201Enabled {
-		routers = append(routers, ocpp201.NewRouter(c.MsgEmitter,
+		c.Ocpp201Handler = ocpp201.NewRouter(c.MsgEmitter,
 			clock.RealClock{},
 			c.Storage,
 			c.TariffService,
@@ -146,12 +152,7 @@ func Configure(ctx context.Context, cfg *BaseConfig) (c *Config, err error) {
 			c.ChargeStationCertProviderService,
 			c.ContractCertProviderService,
 			heartbeatInterval,
-			schemas.OcppSchemas))
-	}
-
-	c.MsgHandler, err = getMsgHandler(&cfg.Transport, c.MsgEmitter, routers, c.Tracer)
-	if err != nil {
-		return nil, err
+			schemas.OcppSchemas)
 	}
 
 	if cfg.Ocpi != nil {
@@ -457,7 +458,7 @@ func getMsgEmitter(cfg *TransportConfig, tracer oteltrace.Tracer) (transport.Emi
 	}
 }
 
-func getMsgHandler(cfg *TransportConfig, emitter transport.Emitter, routers []transport.Router, tracer oteltrace.Tracer) (transport.Receiver, error) {
+func getMsgListener(cfg *TransportConfig, tracer oteltrace.Tracer) (transport.Listener, error) {
 	switch cfg.Type {
 	case "mqtt":
 		var mqttUrls []*url.URL
@@ -484,22 +485,15 @@ func getMsgHandler(cfg *TransportConfig, emitter transport.Emitter, routers []tr
 			return nil, fmt.Errorf("failed to parse mqtt keep alive interval: %w", err)
 		}
 
-		opts := []mqtt2.Opt[mqtt2.Receiver]{
-			mqtt2.WithMqttBrokerUrls[mqtt2.Receiver](mqttUrls),
-			mqtt2.WithMqttPrefix[mqtt2.Receiver](cfg.Mqtt.Prefix),
-			mqtt2.WithMqttConnectSettings[mqtt2.Receiver](mqttConnectTimeout, mqttConnectRetryDelay, mqttKeepAliveInterval),
-			mqtt2.WithMqttGroup(cfg.Mqtt.Group),
-			mqtt2.WithEmitter(emitter),
-			mqtt2.WithOtelTracer[mqtt2.Receiver](tracer),
+		opts := []mqtt2.Opt[mqtt2.Listener]{
+			mqtt2.WithMqttBrokerUrls[mqtt2.Listener](mqttUrls),
+			mqtt2.WithMqttPrefix[mqtt2.Listener](cfg.Mqtt.Prefix),
+			mqtt2.WithMqttConnectSettings[mqtt2.Listener](mqttConnectTimeout, mqttConnectRetryDelay, mqttKeepAliveInterval),
+			mqtt2.WithMqttGroup[mqtt2.Listener](cfg.Mqtt.Group),
+			mqtt2.WithOtelTracer[mqtt2.Listener](tracer),
 		}
 
-		for _, router := range routers {
-			opts = append(opts, mqtt2.WithRouter(router))
-		}
-
-		mqttHandler := mqtt2.NewReceiver(opts...)
-
-		return mqttHandler, nil
+		return mqtt2.NewListener(opts...), nil
 	default:
 		return nil, fmt.Errorf("unknown transport type: %s", cfg.Type)
 	}

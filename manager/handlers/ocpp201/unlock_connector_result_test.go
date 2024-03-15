@@ -5,16 +5,16 @@ package ocpp201_test
 import (
 	"context"
 	"github.com/stretchr/testify/require"
-	"github.com/thoughtworks/maeve-csms/manager/handlers"
 	"github.com/thoughtworks/maeve-csms/manager/handlers/ocpp201"
 	types "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
+	"github.com/thoughtworks/maeve-csms/manager/testutil"
 	"testing"
 )
 
 func TestUnlockConnectorResult(t *testing.T) {
 	handler := ocpp201.UnlockConnectorResultHandler{}
 
-	tracer, exporter := handlers.GetTracer()
+	tracer, exporter := testutil.GetTracer()
 
 	ctx := context.TODO()
 
@@ -35,7 +35,7 @@ func TestUnlockConnectorResult(t *testing.T) {
 		require.NoError(t, err)
 	}()
 
-	handlers.AssertSpan(t, &exporter.GetSpans()[0], "test", map[string]any{
+	testutil.AssertSpan(t, &exporter.GetSpans()[0], "test", map[string]any{
 		"unlock_connector.evse_id":      1,
 		"unlock_connector.connector_id": 2,
 		"unlock_connector.status":       "Unlocked",

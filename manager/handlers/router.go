@@ -10,6 +10,8 @@ import (
 	"github.com/santhosh-tekuri/jsonschema"
 	"github.com/thoughtworks/maeve-csms/manager/schemas"
 	"github.com/thoughtworks/maeve-csms/manager/transport"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/exp/slog"
 	"io/fs"
 )
@@ -23,7 +25,35 @@ type Router struct {
 	CallResultRoutes map[string]CallResultRoute // the set of routes for call results (indexed by action)
 }
 
-func (r Router) Route(ctx context.Context, chargeStationId string, message transport.Message) error {
+func (r Router) Handle(ctx context.Context, chargeStationId string, msg *transport.Message) {
+	span := trace.SpanFromContext(ctx)
+
+	err := r.route(ctx, chargeStationId, msg)
+	if err != nil {
+		slog.Error("unable to route message", slog.String("chargeStationId", chargeStationId), slog.String("action", msg.Action), "err", err)
+		span.SetStatus(codes.Error, "routing request failed")
+		span.RecordError(err)
+
+		// only emit an error on a call (the charge station will not be expecting any response message)
+		if msg.MessageType == transport.MessageTypeCall {
+			var mqttError *transport.Error
+			var errMsg *transport.Message
+			if errors.As(err, &mqttError) {
+				errMsg = transport.NewErrorMessage(msg.Action, msg.MessageId, mqttError.ErrorCode, mqttError.WrappedError)
+			} else {
+				errMsg = transport.NewErrorMessage(msg.Action, msg.MessageId, transport.ErrorInternalError, err)
+			}
+			err = r.Emitter.Emit(ctx, r.OcppVersion, chargeStationId, errMsg)
+			if err != nil {
+				slog.Error("unable to emit error message", "err", err)
+			}
+		}
+	} else {
+		span.SetStatus(codes.Ok, "ok")
+	}
+}
+
+func (r Router) route(ctx context.Context, chargeStationId string, message *transport.Message) error {
 	switch message.MessageType {
 	case transport.MessageTypeCall:
 		route, ok := r.CallRoutes[message.Action]
@@ -106,8 +136,4 @@ func (r Router) Route(ctx context.Context, chargeStationId string, message trans
 	}
 
 	return nil
-}
-
-func (r Router) GetOcppVersion() transport.OcppVersion {
-	return r.OcppVersion
 }

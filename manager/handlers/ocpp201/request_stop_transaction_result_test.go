@@ -5,16 +5,16 @@ package ocpp201_test
 import (
 	"context"
 	"github.com/stretchr/testify/require"
-	"github.com/thoughtworks/maeve-csms/manager/handlers"
 	"github.com/thoughtworks/maeve-csms/manager/handlers/ocpp201"
 	types "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
+	"github.com/thoughtworks/maeve-csms/manager/testutil"
 	"testing"
 )
 
 func TestRequestStopTransactionResultHandler(t *testing.T) {
 	handler := ocpp201.RequestStopTransactionResultHandler{}
 
-	tracer, exporter := handlers.GetTracer()
+	tracer, exporter := testutil.GetTracer()
 
 	ctx := context.Background()
 
@@ -33,7 +33,7 @@ func TestRequestStopTransactionResultHandler(t *testing.T) {
 		require.NoError(t, err)
 	}()
 
-	handlers.AssertSpan(t, &exporter.GetSpans()[0], "test", map[string]any{
+	testutil.AssertSpan(t, &exporter.GetSpans()[0], "test", map[string]any{
 		"request_stop.transaction_id": "abc12345",
 		"request_stop.status":         "Accepted",
 	})

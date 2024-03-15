@@ -5,6 +5,7 @@ package mqtt_test
 import (
 	"context"
 	"encoding/json"
+	"github.com/eclipse/paho.golang/autopaho"
 	"github.com/eclipse/paho.golang/paho"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -14,6 +15,7 @@ import (
 	"go.opentelemetry.io/otel/propagation"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
+	"net/url"
 	"testing"
 	"time"
 )
@@ -195,4 +197,31 @@ func TestEmitterAddsCorrelationData(t *testing.T) {
 	case <-ctx.Done():
 		assert.Fail(t, "timeout waiting for test")
 	}
+}
+
+func listenForMessageSentByManager(t *testing.T, ctx context.Context, clientUrl *url.URL, router paho.Router) *autopaho.ConnectionManager {
+	mqttClient, err := autopaho.NewConnection(context.Background(), autopaho.ClientConfig{
+		BrokerUrls:        []*url.URL{clientUrl},
+		KeepAlive:         10,
+		ConnectRetryDelay: 10,
+		OnConnectionUp: func(manager *autopaho.ConnectionManager, connack *paho.Connack) {
+			_, err := manager.Subscribe(context.Background(), &paho.Subscribe{
+				Subscriptions: map[string]paho.SubscribeOptions{
+					"cs/out/ocpp1.6/cs001":   {},
+					"cs/out/ocpp2.0.1/cs001": {},
+				},
+			})
+			require.NoError(t, err)
+		},
+		ClientConfig: paho.ClientConfig{
+			ClientID: "test",
+			Router:   router,
+		},
+	})
+	require.NoError(t, err)
+
+	err = mqttClient.AwaitConnection(ctx)
+	require.NoError(t, err)
+
+	return mqttClient
 }

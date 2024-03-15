@@ -6,12 +6,12 @@ import (
 	"context"
 	"encoding/pem"
 	"github.com/stretchr/testify/require"
-	"github.com/thoughtworks/maeve-csms/manager/handlers"
 	handlers201 "github.com/thoughtworks/maeve-csms/manager/handlers/ocpp201"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
 	"github.com/thoughtworks/maeve-csms/manager/services"
 	"github.com/thoughtworks/maeve-csms/manager/store"
 	"github.com/thoughtworks/maeve-csms/manager/store/inmemory"
+	"github.com/thoughtworks/maeve-csms/manager/testutil"
 	"k8s.io/utils/clock"
 	"testing"
 )
@@ -40,7 +40,7 @@ func TestSignCertificateHandler(t *testing.T) {
 		Store:                            engine,
 	}
 
-	tracer, exporter := handlers.GetTracer()
+	tracer, exporter := testutil.GetTracer()
 
 	func() {
 		ctx, span := tracer.Start(context.Background(), t.Name())
@@ -54,7 +54,7 @@ func TestSignCertificateHandler(t *testing.T) {
 		require.Equal(t, ocpp201.GenericStatusEnumTypeAccepted, resp.Status)
 	}()
 
-	handlers.AssertSpan(t, &exporter.GetSpans()[0], t.Name(), map[string]any{
+	testutil.AssertSpan(t, &exporter.GetSpans()[0], t.Name(), map[string]any{
 		"sign_cert.cert_type": "V2GCertificate",
 		"request.status":      "Accepted",
 	})

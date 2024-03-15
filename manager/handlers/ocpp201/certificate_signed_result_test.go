@@ -7,11 +7,11 @@ import (
 	"encoding/pem"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/thoughtworks/maeve-csms/manager/handlers"
 	handlers201 "github.com/thoughtworks/maeve-csms/manager/handlers/ocpp201"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
 	"github.com/thoughtworks/maeve-csms/manager/store"
 	"github.com/thoughtworks/maeve-csms/manager/store/inmemory"
+	"github.com/thoughtworks/maeve-csms/manager/testutil"
 	"k8s.io/utils/clock"
 	"testing"
 )
@@ -123,7 +123,7 @@ func TestCertificateSignedResultHandler(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			tracer, exporter := handlers.GetTracer()
+			tracer, exporter := testutil.GetTracer()
 
 			ctx := context.Background()
 
@@ -135,7 +135,7 @@ func TestCertificateSignedResultHandler(t *testing.T) {
 				require.NoError(t, err)
 			}()
 
-			handlers.AssertSpan(t, &exporter.GetSpans()[0], tc.name, tc.attrs)
+			testutil.AssertSpan(t, &exporter.GetSpans()[0], tc.name, tc.attrs)
 
 			certs, err := engine.LookupChargeStationInstallCertificates(ctx, "test")
 			require.NoError(t, err)

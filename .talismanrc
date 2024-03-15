@@ -97,8 +97,8 @@ fileignoreconfig:
     checksum: c181e8cd66c0b11de814810bf8d2dd411489ad5e0dc0e47ec5ca0555148b6ecd
   - filename: manager/handlers/ocpp201/routing_test.go
     checksum: 5f315b4c0c350bd5932fbfbe6301b5f9093b2df0d7c13e2c694c20ac2ac27764
-  - filename: manager/handlers/tracing.go
-    checksum: 5a44615eb6e4eab449c5594c09b3d7b2c5499ffa2452d2b4bce48ddddb9955e5
+  - filename: manager/handlers/router_test.go
+    checksum: 817b5440e8ef6f40cd654d541ab854e2fb5f3104f21b5a89f4fef93df8ad6240
   - filename: manager/ocpi/correlation.go
     checksum: b875df588159233dd77aacdfe0683ce0f1da9a0e17f7b8eb41d1ecc3d1a58a38
   - filename: manager/ocpi/ocpi.gen.go
@@ -193,6 +193,10 @@ fileignoreconfig:
     checksum: 535591f9b2a347dd1fc00f07aa3742660c96a636dae8f724c9e2842e09b95356
   - filename: manager/store/inmemory/store.go
     checksum: f3a283875a4a23a9c8eb703be42785da6602c5780c3d81978aeb29a3836dea33
+  - filename: manager/transport/mqtt/listener.go
+    checksum: b24f30ef79812e2d3875e3df4c936521ea9b9af70478066ea3838f0b7ec810e4
+  - filename: manager/transport/mqtt/listener_test.go
+    checksum: 14dd73d91c91f9c64b2483b17a2720d42f027bc94ce9b12b83f35d4516699c5e
 scopeconfig:
   - scope: go
 version: ''

@@ -5,16 +5,16 @@ package ocpp201_test
 import (
 	"context"
 	"github.com/stretchr/testify/require"
-	"github.com/thoughtworks/maeve-csms/manager/handlers"
 	"github.com/thoughtworks/maeve-csms/manager/handlers/ocpp201"
 	types "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
+	"github.com/thoughtworks/maeve-csms/manager/testutil"
 	"testing"
 )
 
 func TestRequestStartTransactionResultHandler(t *testing.T) {
 	handler := ocpp201.RequestStartTransactionResultHandler{}
 
-	tracer, exporter := handlers.GetTracer()
+	tracer, exporter := testutil.GetTracer()
 
 	ctx := context.Background()
 
@@ -37,7 +37,7 @@ func TestRequestStartTransactionResultHandler(t *testing.T) {
 		require.NoError(t, err)
 	}()
 
-	handlers.AssertSpan(t, &exporter.GetSpans()[0], "test", map[string]any{
+	testutil.AssertSpan(t, &exporter.GetSpans()[0], "test", map[string]any{
 		"request_start.remote_start_id": 123,
 		"request_start.status":          "Accepted",
 	})
@@ -46,7 +46,7 @@ func TestRequestStartTransactionResultHandler(t *testing.T) {
 func TestRequestStartTransactionResultHandlerWithTransactionId(t *testing.T) {
 	handler := ocpp201.RequestStartTransactionResultHandler{}
 
-	tracer, exporter := handlers.GetTracer()
+	tracer, exporter := testutil.GetTracer()
 
 	ctx := context.Background()
 
@@ -70,7 +70,7 @@ func TestRequestStartTransactionResultHandlerWithTransactionId(t *testing.T) {
 		require.NoError(t, err)
 	}()
 
-	handlers.AssertSpan(t, &exporter.GetSpans()[0], "test", map[string]any{
+	testutil.AssertSpan(t, &exporter.GetSpans()[0], "test", map[string]any{
 		"request_start.remote_start_id": 123,
 		"request_start.status":          "Accepted",
 		"request_start.transaction_id":  "abc12345",

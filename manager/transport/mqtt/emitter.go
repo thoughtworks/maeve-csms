@@ -31,7 +31,7 @@ import (
 // The Emitter defaults to connecting to a broker on 127.0.0.1:1883.
 type Emitter struct {
 	sync.Mutex
-	connection
+	connectionDetails
 	tracer trace.Tracer
 	conn   *autopaho.ConnectionManager
 }

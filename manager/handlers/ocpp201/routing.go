@@ -23,7 +23,7 @@ func NewRouter(emitter transport.Emitter,
 	chargeStationCertProvider services.ChargeStationCertificateProvider,
 	contractCertProvider services.ContractCertificateProvider,
 	heartbeatInterval time.Duration,
-	schemaFS fs.FS) transport.Router {
+	schemaFS fs.FS) transport.MessageHandler {
 
 	return &handlers.Router{
 		Emitter:     emitter,

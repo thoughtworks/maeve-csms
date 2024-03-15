@@ -5,12 +5,17 @@ package handlers_test
 import (
 	"context"
 	"errors"
+	"github.com/stretchr/testify/require"
 	"github.com/thoughtworks/maeve-csms/manager/handlers"
 	handlers201 "github.com/thoughtworks/maeve-csms/manager/handlers/ocpp201"
 	"github.com/thoughtworks/maeve-csms/manager/schemas"
+	"github.com/thoughtworks/maeve-csms/manager/testutil"
 	"github.com/thoughtworks/maeve-csms/manager/transport"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 	"k8s.io/utils/clock"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -31,22 +36,11 @@ var resultMsg = transport.Message{
 	ResponsePayload: []byte("{}"),
 }
 
-var fakeEmitter = func(ctx context.Context, ocppVersion transport.OcppVersion, id string, msg *transport.Message) error {
-	return nil
-}
-
 func TestRouterHandlesCall(t *testing.T) {
-	var chargeStationId string
-	var message *transport.Message
-
-	emitter := func(ctx context.Context, ocppVersion transport.OcppVersion, id string, msg *transport.Message) error {
-		chargeStationId = id
-		message = msg
-		return nil
-	}
+	emitter := new(FakeEmitter)
 
 	router := handlers.Router{
-		Emitter:     transport.EmitterFunc(emitter),
+		Emitter:     emitter,
 		SchemaFS:    schemas.OcppSchemas,
 		OcppVersion: transport.OcppVersion201,
 		CallRoutes: map[string]handlers.CallRoute{
@@ -61,35 +55,40 @@ func TestRouterHandlesCall(t *testing.T) {
 		},
 	}
 
-	err := router.Route(context.Background(), "id", heartbeatMsg)
+	router.Handle(context.Background(), "id", &heartbeatMsg)
 
-	assert.NoError(t, err)
-	assert.Equal(t, "id", chargeStationId)
-	assert.Equal(t, transport.MessageTypeCallResult, message.MessageType)
-	assert.Equal(t, "Heartbeat", message.Action)
-	assert.Equal(t, "", message.MessageId)
-	assert.NotNil(t, message.ResponsePayload)
+	assert.Equal(t, "id", emitter.chargeStationId)
+	assert.Equal(t, transport.MessageTypeCallResult, emitter.msg.MessageType)
+	assert.Equal(t, "Heartbeat", emitter.msg.Action)
+	assert.Equal(t, "", emitter.msg.MessageId)
+	assert.NotNil(t, emitter.msg.ResponsePayload)
 }
 
 func TestRouterErrorWhenNoCallRoute(t *testing.T) {
+	emitter := new(FakeEmitter)
+
 	router := handlers.Router{
-		Emitter:     transport.EmitterFunc(fakeEmitter),
+		Emitter:     emitter,
 		SchemaFS:    schemas.OcppSchemas,
 		OcppVersion: transport.OcppVersion201,
 		CallRoutes:  map[string]handlers.CallRoute{},
 	}
 
-	err := router.Route(context.Background(), "id", heartbeatMsg)
+	router.Handle(context.Background(), "id", &heartbeatMsg)
 
-	var mqttError *transport.Error
-	assert.Error(t, err)
-	assert.ErrorAs(t, err, &mqttError)
-	assert.Equal(t, transport.ErrorNotImplemented, mqttError.ErrorCode)
+	assert.Equal(t, "id", emitter.chargeStationId)
+	assert.Equal(t, transport.MessageTypeCallError, emitter.msg.MessageType)
+	assert.Equal(t, "Heartbeat", emitter.msg.Action)
+	assert.Equal(t, "", emitter.msg.MessageId)
+	assert.Equal(t, transport.ErrorNotImplemented, emitter.msg.ErrorCode)
+	assert.Nil(t, emitter.msg.ResponsePayload)
 }
 
 func TestRouterErrorWhenCallRequestPayloadIsInvalid(t *testing.T) {
+	emitter := new(FakeEmitter)
+
 	router := handlers.Router{
-		Emitter:  transport.EmitterFunc(fakeEmitter),
+		Emitter:  emitter,
 		SchemaFS: schemas.OcppSchemas,
 		CallRoutes: map[string]handlers.CallRoute{
 			"Heartbeat": {
@@ -109,14 +108,21 @@ func TestRouterErrorWhenCallRequestPayloadIsInvalid(t *testing.T) {
 		RequestPayload: []byte("{}"),
 	}
 
-	err := router.Route(context.Background(), "id", heartbeatMsgWithEmptyPayload)
+	router.Handle(context.Background(), "id", &heartbeatMsgWithEmptyPayload)
 
-	assert.ErrorContains(t, err, "validating Heartbeat request")
+	assert.Equal(t, "id", emitter.chargeStationId)
+	assert.Equal(t, transport.MessageTypeCallError, emitter.msg.MessageType)
+	assert.Equal(t, "Heartbeat", emitter.msg.Action)
+	assert.Equal(t, "", emitter.msg.MessageId)
+	assert.Equal(t, transport.ErrorFormatViolation, emitter.msg.ErrorCode)
+	assert.Nil(t, emitter.msg.ResponsePayload)
 }
 
 func TestRouterErrorWhenCantUnmarshallCallRequestPayload(t *testing.T) {
+	emitter := new(FakeEmitter)
+
 	router := handlers.Router{
-		Emitter:  transport.EmitterFunc(fakeEmitter),
+		Emitter:  emitter,
 		SchemaFS: os.DirFS("testdata"),
 		CallRoutes: map[string]handlers.CallRoute{
 			"MyCall": {
@@ -136,18 +142,25 @@ func TestRouterErrorWhenCantUnmarshallCallRequestPayload(t *testing.T) {
 		RequestPayload: []byte("{}"),
 	}
 
-	err := router.Route(context.Background(), "id", heartbeatMsgWithEmptyPayload)
+	router.Handle(context.Background(), "id", &heartbeatMsgWithEmptyPayload)
 
-	assert.ErrorContains(t, err, "unmarshalling MyCall request payload")
+	assert.Equal(t, "id", emitter.chargeStationId)
+	assert.Equal(t, transport.MessageTypeCallError, emitter.msg.MessageType)
+	assert.Equal(t, "MyCall", emitter.msg.Action)
+	assert.Equal(t, "", emitter.msg.MessageId)
+	assert.Equal(t, transport.ErrorInternalError, emitter.msg.ErrorCode)
+	assert.Nil(t, emitter.msg.ResponsePayload)
 }
 
 func TestRouterErrorWhenCallHandlerErrors(t *testing.T) {
+	emitter := new(FakeEmitter)
+
 	handler := func(ctx context.Context, chargeStationId string, request ocpp.Request) (ocpp.Response, error) {
 		return nil, errors.New("handler error")
 	}
 
 	router := handlers.Router{
-		Emitter:  transport.EmitterFunc(fakeEmitter),
+		Emitter:  emitter,
 		SchemaFS: schemas.OcppSchemas,
 		CallRoutes: map[string]handlers.CallRoute{
 			"Heartbeat": {
@@ -159,18 +172,25 @@ func TestRouterErrorWhenCallHandlerErrors(t *testing.T) {
 		},
 	}
 
-	err := router.Route(context.Background(), "id", heartbeatMsg)
+	router.Handle(context.Background(), "id", &heartbeatMsg)
 
-	assert.ErrorContains(t, err, "handler error")
+	assert.Equal(t, "id", emitter.chargeStationId)
+	assert.Equal(t, transport.MessageTypeCallError, emitter.msg.MessageType)
+	assert.Equal(t, "Heartbeat", emitter.msg.Action)
+	assert.Equal(t, "", emitter.msg.MessageId)
+	assert.Equal(t, transport.ErrorInternalError, emitter.msg.ErrorCode)
+	assert.Nil(t, emitter.msg.ResponsePayload)
 }
 
 func TestRouterErrorWhenErrorMarshallingCallHandlerResponse(t *testing.T) {
+	emitter := new(FakeEmitter)
+
 	handler := func(ctx context.Context, chargeStationId string, request ocpp.Request) (ocpp.Response, error) {
 		return new(noMarshalResponse), nil
 	}
 
 	router := handlers.Router{
-		Emitter:  transport.EmitterFunc(fakeEmitter),
+		Emitter:  emitter,
 		SchemaFS: schemas.OcppSchemas,
 		CallRoutes: map[string]handlers.CallRoute{
 			"Heartbeat": {
@@ -182,12 +202,21 @@ func TestRouterErrorWhenErrorMarshallingCallHandlerResponse(t *testing.T) {
 		},
 	}
 
-	err := router.Route(context.Background(), "id", heartbeatMsg)
+	router.Handle(context.Background(), "id", &heartbeatMsg)
 
-	assert.ErrorContains(t, err, "marshalling Heartbeat call response")
+	assert.Equal(t, "id", emitter.chargeStationId)
+	assert.Equal(t, transport.MessageTypeCallError, emitter.msg.MessageType)
+	assert.Equal(t, "Heartbeat", emitter.msg.Action)
+	assert.Equal(t, "", emitter.msg.MessageId)
+	assert.Equal(t, transport.ErrorInternalError, emitter.msg.ErrorCode)
+	assert.Nil(t, emitter.msg.ResponsePayload)
 }
 
 func TestRouterHandlesCallResult(t *testing.T) {
+	tracer, exporter := testutil.GetTracer()
+
+	emitter := new(FakeEmitter)
+
 	handler := func(ctx context.Context,
 		chargeStationId string,
 		request ocpp.Request,
@@ -197,7 +226,7 @@ func TestRouterHandlesCallResult(t *testing.T) {
 	}
 
 	router := handlers.Router{
-		Emitter:  transport.EmitterFunc(fakeEmitter),
+		Emitter:  emitter,
 		SchemaFS: os.DirFS("testdata"),
 		CallResultRoutes: map[string]handlers.CallResultRoute{
 			"Result": {
@@ -210,27 +239,55 @@ func TestRouterHandlesCallResult(t *testing.T) {
 		},
 	}
 
-	err := router.Route(context.Background(), "id", resultMsg)
+	func() {
+		ctx, span := tracer.Start(context.Background(), "test")
+		defer span.End()
+		router.Handle(ctx, "id", &resultMsg)
+	}()
 
-	assert.NoError(t, err)
+	// for a call response the emitter should never be called
+	assert.False(t, emitter.called)
+
+	// check that no error was produced using telemetry
+	assert.Greater(t, len(exporter.GetSpans()), 0)
+	assert.Equal(t, codes.Ok, exporter.GetSpans()[0].Status.Code)
 }
 
 func TestRouterErrorWhenNoCallResultRoute(t *testing.T) {
+	tracer, exporter := testutil.GetTracer()
+
+	emitter := new(FakeEmitter)
+
 	router := handlers.Router{
-		Emitter:          transport.EmitterFunc(fakeEmitter),
+		Emitter:          emitter,
 		SchemaFS:         os.DirFS("testdata"),
 		CallResultRoutes: map[string]handlers.CallResultRoute{},
 	}
 
-	err := router.Route(context.Background(), "id", resultMsg)
+	func() {
+		ctx, span := tracer.Start(context.Background(), "test")
+		defer span.End()
+		router.Handle(ctx, "id", &resultMsg)
+	}()
 
-	var mqttError *transport.Error
-	assert.Error(t, err)
-	assert.ErrorAs(t, err, &mqttError)
-	assert.Equal(t, transport.ErrorNotImplemented, mqttError.ErrorCode)
+	// for a call response the emitter should never be called
+	assert.False(t, emitter.called)
+
+	// check that an error was produced using telemetry
+	require.Greater(t, len(exporter.GetSpans()), 0)
+	assert.Equal(t, codes.Error, exporter.GetSpans()[0].Status.Code)
+	require.Greater(t, len(exporter.GetSpans()[0].Events), 0)
+	testutil.AssertAttributes(t, exporter.GetSpans()[0].Events[0].Attributes, map[string]any{
+		"exception.type":    "*fmt.wrapError",
+		"exception.message": "routing request: NotImplemented: Result result not implemented",
+	})
 }
 
 func TestRouterErrorWhenInvalidCallResultRequestPayload(t *testing.T) {
+	tracer, exporter := testutil.GetTracer()
+
+	emitter := new(FakeEmitter)
+
 	handler := func(ctx context.Context,
 		chargeStationId string,
 		request ocpp.Request,
@@ -240,7 +297,7 @@ func TestRouterErrorWhenInvalidCallResultRequestPayload(t *testing.T) {
 	}
 
 	router := handlers.Router{
-		Emitter:  transport.EmitterFunc(fakeEmitter),
+		Emitter:  emitter,
 		SchemaFS: os.DirFS("testdata"),
 		CallResultRoutes: map[string]handlers.CallResultRoute{
 			"MyCallResult": {
@@ -260,12 +317,33 @@ func TestRouterErrorWhenInvalidCallResultRequestPayload(t *testing.T) {
 		ResponsePayload: []byte("{}"),
 	}
 
-	err := router.Route(context.Background(), "id", resultWithEmptyRequestPayload)
+	func() {
+		ctx, span := tracer.Start(context.Background(), "test")
+		defer span.End()
 
-	assert.ErrorContains(t, err, "validating MyCallResult request")
+		router.Handle(ctx, "id", &resultWithEmptyRequestPayload)
+	}()
+
+	// for a call response the emitter should never be called
+	assert.False(t, emitter.called)
+
+	// check that an error was produced using telemetry
+	require.Greater(t, len(exporter.GetSpans()), 0)
+	assert.Equal(t, codes.Error, exporter.GetSpans()[0].Status.Code)
+	require.Greater(t, len(exporter.GetSpans()[0].Events), 0)
+	testutil.AssertAttributes(t, exporter.GetSpans()[0].Events[0].Attributes, map[string]any{
+		"exception.type": "*fmt.wrapError",
+		"exception.message": func(val attribute.Value) bool {
+			return strings.Contains(val.AsString(), "validating MyCallResult request")
+		},
+	})
 }
 
 func TestRouterErrorWhenCantUnmarshallCallResultRequestPayload(t *testing.T) {
+	tracer, exporter := testutil.GetTracer()
+
+	emitter := new(FakeEmitter)
+
 	handler := func(ctx context.Context,
 		chargeStationId string,
 		request ocpp.Request,
@@ -275,7 +353,7 @@ func TestRouterErrorWhenCantUnmarshallCallResultRequestPayload(t *testing.T) {
 	}
 
 	router := handlers.Router{
-		Emitter:  transport.EmitterFunc(fakeEmitter),
+		Emitter:  emitter,
 		SchemaFS: os.DirFS("testdata"),
 		CallResultRoutes: map[string]handlers.CallResultRoute{
 			"MyCallResult": {
@@ -295,12 +373,32 @@ func TestRouterErrorWhenCantUnmarshallCallResultRequestPayload(t *testing.T) {
 		ResponsePayload: []byte("{}"),
 	}
 
-	err := router.Route(context.Background(), "id", resultWithEmptyRequestPayload)
+	func() {
+		ctx, span := tracer.Start(context.Background(), "test")
+		defer span.End()
+		router.Handle(ctx, "id", &resultWithEmptyRequestPayload)
+	}()
 
-	assert.ErrorContains(t, err, "unmarshalling MyCallResult request payload")
+	// for a call response the emitter should never be called
+	assert.False(t, emitter.called)
+
+	// check that an error was produced using telemetry
+	require.Greater(t, len(exporter.GetSpans()), 0)
+	assert.Equal(t, codes.Error, exporter.GetSpans()[0].Status.Code)
+	require.Greater(t, len(exporter.GetSpans()[0].Events), 0)
+	testutil.AssertAttributes(t, exporter.GetSpans()[0].Events[0].Attributes, map[string]any{
+		"exception.type": "*fmt.wrapError",
+		"exception.message": func(val attribute.Value) bool {
+			return strings.Contains(val.AsString(), "unmarshalling MyCallResult request payload")
+		},
+	})
 }
 
 func TestRouterErrorWhenInvalidCallResultResponsePayload(t *testing.T) {
+	tracer, exporter := testutil.GetTracer()
+
+	emitter := new(FakeEmitter)
+
 	handler := func(ctx context.Context,
 		chargeStationId string,
 		request ocpp.Request,
@@ -310,7 +408,7 @@ func TestRouterErrorWhenInvalidCallResultResponsePayload(t *testing.T) {
 	}
 
 	router := handlers.Router{
-		Emitter:  transport.EmitterFunc(fakeEmitter),
+		Emitter:  emitter,
 		SchemaFS: os.DirFS("testdata"),
 		CallResultRoutes: map[string]handlers.CallResultRoute{
 			"MyCallResult": {
@@ -330,12 +428,32 @@ func TestRouterErrorWhenInvalidCallResultResponsePayload(t *testing.T) {
 		ResponsePayload: []byte("{}"),
 	}
 
-	err := router.Route(context.Background(), "id", resultWithEmptyRequestPayload)
+	func() {
+		ctx, span := tracer.Start(context.Background(), "test")
+		defer span.End()
+		router.Handle(ctx, "id", &resultWithEmptyRequestPayload)
+	}()
 
-	assert.ErrorContains(t, err, "validating MyCallResult response")
+	// for a call response the emitter should never be called
+	assert.False(t, emitter.called)
+
+	// check that an error was produced using telemetry
+	require.Greater(t, len(exporter.GetSpans()), 0)
+	assert.Equal(t, codes.Error, exporter.GetSpans()[0].Status.Code)
+	require.Greater(t, len(exporter.GetSpans()[0].Events), 0)
+	testutil.AssertAttributes(t, exporter.GetSpans()[0].Events[0].Attributes, map[string]any{
+		"exception.type": "*fmt.wrapError",
+		"exception.message": func(val attribute.Value) bool {
+			return strings.Contains(val.AsString(), "validating MyCallResult response")
+		},
+	})
 }
 
 func TestRouterErrorWhenCantUnmarshallCallResultResponsePayload(t *testing.T) {
+	tracer, exporter := testutil.GetTracer()
+
+	emitter := new(FakeEmitter)
+
 	handler := func(ctx context.Context,
 		chargeStationId string,
 		request ocpp.Request,
@@ -345,7 +463,7 @@ func TestRouterErrorWhenCantUnmarshallCallResultResponsePayload(t *testing.T) {
 	}
 
 	router := handlers.Router{
-		Emitter:  transport.EmitterFunc(fakeEmitter),
+		Emitter:  emitter,
 		SchemaFS: os.DirFS("testdata"),
 		CallResultRoutes: map[string]handlers.CallResultRoute{
 			"MyCallResult": {
@@ -365,12 +483,32 @@ func TestRouterErrorWhenCantUnmarshallCallResultResponsePayload(t *testing.T) {
 		ResponsePayload: []byte("{}"),
 	}
 
-	err := router.Route(context.Background(), "id", resultWithEmptyResponsePayload)
+	func() {
+		ctx, span := tracer.Start(context.Background(), "test")
+		defer span.End()
+		router.Handle(ctx, "id", &resultWithEmptyResponsePayload)
+	}()
 
-	assert.ErrorContains(t, err, "unmarshalling MyCallResult response payload")
+	// for a call response the emitter should never be called
+	assert.False(t, emitter.called)
+
+	// check that an error was produced using telemetry
+	require.Greater(t, len(exporter.GetSpans()), 0)
+	assert.Equal(t, codes.Error, exporter.GetSpans()[0].Status.Code)
+	require.Greater(t, len(exporter.GetSpans()[0].Events), 0)
+	testutil.AssertAttributes(t, exporter.GetSpans()[0].Events[0].Attributes, map[string]any{
+		"exception.type": "*errors.errorString",
+		"exception.message": func(val attribute.Value) bool {
+			return strings.Contains(val.AsString(), "unmarshalling MyCallResult response payload")
+		},
+	})
 }
 
 func TestRouterErrorWhenCallResultHandlerErrors(t *testing.T) {
+	tracer, exporter := testutil.GetTracer()
+
+	emitter := new(FakeEmitter)
+
 	handler := func(ctx context.Context,
 		chargeStationId string,
 		request ocpp.Request,
@@ -380,7 +518,7 @@ func TestRouterErrorWhenCallResultHandlerErrors(t *testing.T) {
 	}
 
 	router := handlers.Router{
-		Emitter:  transport.EmitterFunc(fakeEmitter),
+		Emitter:  emitter,
 		SchemaFS: os.DirFS("testdata"),
 		CallResultRoutes: map[string]handlers.CallResultRoute{
 			"Result": {
@@ -393,9 +531,25 @@ func TestRouterErrorWhenCallResultHandlerErrors(t *testing.T) {
 		},
 	}
 
-	err := router.Route(context.Background(), "id", resultMsg)
+	func() {
+		ctx, span := tracer.Start(context.Background(), "test")
+		defer span.End()
+		router.Handle(ctx, "id", &resultMsg)
+	}()
 
-	assert.ErrorContains(t, err, "handler error")
+	// for a call response the emitter should never be called
+	assert.False(t, emitter.called)
+
+	// check that an error was produced using telemetry
+	require.Greater(t, len(exporter.GetSpans()), 0)
+	assert.Equal(t, codes.Error, exporter.GetSpans()[0].Status.Code)
+	require.Greater(t, len(exporter.GetSpans()[0].Events), 0)
+	testutil.AssertAttributes(t, exporter.GetSpans()[0].Events[0].Attributes, map[string]any{
+		"exception.type": "*errors.errorString",
+		"exception.message": func(val attribute.Value) bool {
+			return strings.Contains(val.AsString(), "handler error")
+		},
+	})
 }
 
 type fakeRequest struct{}
@@ -410,7 +564,7 @@ type noUnmarshalRequest struct{}
 
 func (*noUnmarshalRequest) IsRequest() {}
 
-func (*noUnmarshalRequest) UnmarshalJSON(data []byte) error {
+func (*noUnmarshalRequest) UnmarshalJSON(_ []byte) error {
 	return errors.New("expected to fail")
 }
 
@@ -418,7 +572,7 @@ type noUnmarshalResponse struct{}
 
 func (*noUnmarshalResponse) IsResponse() {}
 
-func (*noUnmarshalResponse) UnmarshalJSON(data []byte) error {
+func (*noUnmarshalResponse) UnmarshalJSON(_ []byte) error {
 	return errors.New("expected to fail")
 }
 
