@@ -267,6 +267,34 @@ func TestRoutingCallResults(t *testing.T) {
 				OngoingIndicator: makePtr(false),
 			},
 		},
+		"GetVariables": {
+			request: &types.GetVariablesRequestJson{
+				GetVariableData: []types.GetVariableDataType{
+					{
+						Component: types.ComponentType{
+							Name: "SomeCtrlr",
+						},
+						Variable: types.VariableType{
+							Name: "MyVar",
+						},
+					},
+				},
+			},
+			response: &types.GetVariablesResponseJson{
+				GetVariableResult: []types.GetVariableResultType{
+					{
+						Component: types.ComponentType{
+							Name: "SomeCtrlr",
+						},
+						Variable: types.VariableType{
+							Name: "MyVar",
+						},
+						AttributeValue:  makePtr("Val"),
+						AttributeStatus: types.GetVariableStatusEnumTypeAccepted,
+					},
+				},
+			},
+		},
 		"InstallCertificate": {
 			request: &types.InstallCertificateRequestJson{
 				Certificate:     string(pemBytes),
@@ -381,6 +409,18 @@ func TestCallMaker(t *testing.T) {
 		},
 		"GetTransactionStatus": &types.GetTransactionStatusRequestJson{
 			TransactionId: makePtr(""),
+		},
+		"GetVariables": &types.GetVariablesRequestJson{
+			GetVariableData: []types.GetVariableDataType{
+				{
+					Component: types.ComponentType{
+						Name: "SomeCtrlr",
+					},
+					Variable: types.VariableType{
+						Name: "AnyValue",
+					},
+				},
+			},
 		},
 		"InstallCertificate": &types.InstallCertificateRequestJson{
 			Certificate:     "",

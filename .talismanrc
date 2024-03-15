@@ -123,6 +123,8 @@ fileignoreconfig:
     checksum: 0d8a2377b6f329c6c765c9be5f5720c1b6a06de8569be8251747e70e94538b69
   - filename: manager/ocpp/ocpp201/certificate_signed_request.go
     checksum: ce7ab452c6bafff18dd02b023d994ae7916fd6ec12537c28ff30796f48340da0
+  - filename: manager/ocpp/ocpp201/get_variables_response.go
+    checksum: 59847ff1e1e7e69859e48cbb64b1bfaacd304e66854a9b18bfccbb6bc2280537
   - filename: manager/ocpp/ocpp201/id_token_enum_type.go
     checksum: 12cb2bc8ca2fe84231986857696a463e3dff4d5f9cdde9b265899b09bb1f95b0
   - filename: manager/ocpp/ocpp201/set_variables_request.go
