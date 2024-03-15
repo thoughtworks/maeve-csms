@@ -13,15 +13,17 @@ import (
 )
 
 type chargeStation struct {
-	SecurityProfile      int    `firestore:"prof"`
-	Base64SHA256Password string `firestore:"pwd"`
+	SecurityProfile        int    `firestore:"prof"`
+	Base64SHA256Password   string `firestore:"pwd"`
+	InvalidUsernameAllowed bool   `firestore:"inv"`
 }
 
 func (s *Store) SetChargeStationAuth(ctx context.Context, chargeStationId string, auth *store.ChargeStationAuth) error {
 	csRef := s.client.Doc(fmt.Sprintf("ChargeStation/%s", chargeStationId))
 	_, err := csRef.Set(ctx, &chargeStation{
-		SecurityProfile:      int(auth.SecurityProfile),
-		Base64SHA256Password: auth.Base64SHA256Password,
+		SecurityProfile:        int(auth.SecurityProfile),
+		Base64SHA256Password:   auth.Base64SHA256Password,
+		InvalidUsernameAllowed: auth.InvalidUsernameAllowed,
 	})
 	if err != nil {
 		return err
@@ -43,8 +45,9 @@ func (s *Store) LookupChargeStationAuth(ctx context.Context, chargeStationId str
 		return nil, fmt.Errorf("map charge station %s: %w", chargeStationId, err)
 	}
 	return &store.ChargeStationAuth{
-		SecurityProfile:      store.SecurityProfile(csData.SecurityProfile),
-		Base64SHA256Password: csData.Base64SHA256Password,
+		SecurityProfile:        store.SecurityProfile(csData.SecurityProfile),
+		Base64SHA256Password:   csData.Base64SHA256Password,
+		InvalidUsernameAllowed: csData.InvalidUsernameAllowed,
 	}, nil
 }
 

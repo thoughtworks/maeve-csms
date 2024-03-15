@@ -26,6 +26,14 @@
         <label for="password">Password:</label>
         <input type="text" class="form-control" id="password" name="password" value="{{ .password }}" readonly>
     </div>
+    <div class="form-group">
+        <label for="invalidUsername">Invalid Username:</label>
+        {{- if eq .invalidUsername "on" }}
+        <input type="text" class="form-control" id="invalidUsername" name="invalidUsername" value="Allowed" readonly>
+        {{- else }}
+        <input type="text" class="form-control" id="invalidUsername" name="invalidUsername" value="Disallowed" readonly>
+        {{- end }}
+    </div>
     {{ end }}
     {{- if .clientCert }}
     <div class="form-group">

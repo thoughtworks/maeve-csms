@@ -51,7 +51,8 @@ so it can been configured when it sends a boot notification.
 ```json
 {
   "securityProfile": 0,
-  "base64SHA256Password": "string"
+  "base64SHA256Password": "string",
+  "invalidUsernameAllowed": true
 }
 ```
 
@@ -210,7 +211,8 @@ the charge station
 ```json
 {
   "securityProfile": 0,
-  "base64SHA256Password": "string"
+  "base64SHA256Password": "string",
+  "invalidUsernameAllowed": true
 }
 ```
 
@@ -721,7 +723,8 @@ This operation does not require authentication
 ```json
 {
   "securityProfile": 0,
-  "base64SHA256Password": "string"
+  "base64SHA256Password": "string",
+  "invalidUsernameAllowed": true
 }
 
 ```
@@ -734,6 +737,7 @@ Connection details for a charge station
 |---|---|---|---|---|
 |securityProfile|integer|true|none|The security profile to use for the charge station: * `0` - unsecured transport with basic auth * `1` - TLS with basic auth * `2` - TLS with client certificate|
 |base64SHA256Password|string|false|none|The base64 encoded, SHA-256 hash of the charge station password|
+|invalidUsernameAllowed|boolean|false|none|If set to true then an invalid username will not prevent the charge station connecting|
 
 <h2 id="tocS_ChargeStationSettings">ChargeStationSettings</h2>
 <!-- backwards compatibility -->

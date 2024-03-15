@@ -62,6 +62,7 @@ func NewServer(externalAddr, orgName string, engine store.Engine, certificatePro
 
 		csId := r.PostFormValue("csid")
 		auth := r.PostFormValue("auth")
+		invalidUsername := r.PostFormValue("invalidUsername")
 
 		if csId == "" || auth == "" {
 			slog.Error("missing form parameters")
@@ -79,17 +80,18 @@ func NewServer(externalAddr, orgName string, engine store.Engine, certificatePro
 				_ = templates.ExecuteTemplate(w, "error.gohtml", nil)
 				return
 			}
-			err = registerChargeStation(r.Context(), engine, csId, 0, password)
+			err = registerChargeStation(r.Context(), engine, csId, 0, password, invalidUsername == "on")
 			if err != nil {
 				slog.Error("registering charge station", "err", err)
 				_ = templates.ExecuteTemplate(w, "error.gohtml", nil)
 				return
 			}
 			data = map[string]string{
-				"csid":     csId,
-				"auth":     auth,
-				"url":      fmt.Sprintf("ws://%s/ws/%s", externalAddr, csId),
-				"password": password,
+				"csid":            csId,
+				"auth":            auth,
+				"url":             fmt.Sprintf("ws://%s/ws/%s", externalAddr, csId),
+				"password":        password,
+				"invalidUsername": invalidUsername,
 			}
 		case "basic":
 			password, err := createPassword()
@@ -98,17 +100,18 @@ func NewServer(externalAddr, orgName string, engine store.Engine, certificatePro
 				_ = templates.ExecuteTemplate(w, "error.gohtml", nil)
 				return
 			}
-			err = registerChargeStation(r.Context(), engine, csId, 1, password)
+			err = registerChargeStation(r.Context(), engine, csId, 1, password, invalidUsername == "on")
 			if err != nil {
 				slog.Error("registering charge station", "err", err)
 				_ = templates.ExecuteTemplate(w, "error.gohtml", nil)
 				return
 			}
 			data = map[string]string{
-				"csid":     csId,
-				"auth":     auth,
-				"url":      fmt.Sprintf("wss://%s/ws/%s", externalAddr, csId),
-				"password": password,
+				"csid":            csId,
+				"auth":            auth,
+				"url":             fmt.Sprintf("wss://%s/ws/%s", externalAddr, csId),
+				"password":        password,
+				"invalidUsername": invalidUsername,
 			}
 		case "mtls":
 			clientKey, clientCert, err := createSignedKeyPair(r.Context(), csId, orgName, certificateProvider)
@@ -117,7 +120,7 @@ func NewServer(externalAddr, orgName string, engine store.Engine, certificatePro
 				_ = templates.ExecuteTemplate(w, "error.gohtml", nil)
 				return
 			}
-			err = registerChargeStation(r.Context(), engine, csId, 2, "")
+			err = registerChargeStation(r.Context(), engine, csId, 2, "", false)
 			if err != nil {
 				slog.Error("registering charge station", "err", err)
 				_ = templates.ExecuteTemplate(w, "error.gohtml", nil)
@@ -254,7 +257,7 @@ func createSignedKeyPair(ctx context.Context, csId string, orgName string, certi
 	return string(pemKey), chain, nil
 }
 
-func registerChargeStation(ctx context.Context, engine store.Engine, csId string, scheme int, password string) error {
+func registerChargeStation(ctx context.Context, engine store.Engine, csId string, scheme int, password string, invalidUsername bool) error {
 	var profile store.SecurityProfile
 
 	switch scheme {
@@ -275,8 +278,9 @@ func registerChargeStation(ctx context.Context, engine store.Engine, csId string
 	}
 
 	err := engine.SetChargeStationAuth(ctx, csId, &store.ChargeStationAuth{
-		SecurityProfile:      profile,
-		Base64SHA256Password: b64sha256,
+		SecurityProfile:        profile,
+		Base64SHA256Password:   b64sha256,
+		InvalidUsernameAllowed: invalidUsername,
 	})
 	if err != nil {
 		return err

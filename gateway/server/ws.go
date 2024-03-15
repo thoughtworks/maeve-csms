@@ -377,7 +377,7 @@ func checkAuthorization(ctx context.Context, r *http.Request, cs *registry.Charg
 		span.SetAttributes(attribute.String("auth.failure_reason", "no basic auth"))
 		return false
 	}
-	if username != cs.ClientId {
+	if username != cs.ClientId && !cs.InvalidUsernameAllowed {
 		span.SetAttributes(
 			attribute.String("auth.failure_reason", "invalid username"),
 			attribute.String("auth.username", username))

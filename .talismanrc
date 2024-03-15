@@ -14,7 +14,7 @@ fileignoreconfig:
   - filename: gateway/cmd/serve.go
     checksum: f08fe8f8c8710239376098c6e1b778d3fa9a1fb5f0653ff2a9a34e9c70d4194e
   - filename: gateway/registry/remote.go
-    checksum: bcdef78dfc66e140acd32d12df1806b95c3541f51cc0208a43abff49552fdcd8
+    checksum: 2ccb715b917495fca8090f1d85a146f97b436b9490e10f70a9f0883dba5e2fc6
   - filename: gateway/registry/remote_test.go
     checksum: f5aa4dbb5e14d772613612eeb02df83ae4458875487e3c408eff2950b460c298
   - filename: gateway/server/tracing.go
@@ -22,13 +22,13 @@ fileignoreconfig:
   - filename: gateway/server/ws.go
     checksum: 4cbde936242380603e07cf8bd049dbca9d1c3108843d10e58f588540176c6d23
   - filename: gateway/server/ws_test.go
-    checksum: 844d3cbd6d95dab9555f901c21fe37b6882831a18ea2b6b9120a9230ff2e6006
+    checksum: e16bac32f52486a9f05e97758a96077296741fb6126689f408bf1e8d9eae84e6
   - filename: manager/Dockerfile
     checksum: db69536d308b905d6214db1fb0e10442fe3e770ef3fed47809ca1f3ec099409d
   - filename: manager/adminui/server.go
-    checksum: 826cbac1161c5c8b29eeeb7b7caaf6127da578808d2af1b6a941134737ae032b
+    checksum: aa3d352ed0bddb533861d410ddf4de8877c7839a7d00c611ba31706dcf9d9399
   - filename: manager/adminui/server_test.go
-    checksum: 3a2329f89ca93816c474c0407eacd79f02bbcb7f3f6a3340fa7b3a44a71826ff
+    checksum: 497c91994bbce5defae822b26b78be805ac8b2f2c051c1ea163bb5addd0794e4
   - filename: manager/adminui/templates/connect.gohtml
     checksum: d127a65b7f328d5aee708e4967f921ad5c96bb9e797d4307a0cdb9666a05e2a3
   - filename: manager/adminui/templates/error.gohtml
@@ -42,9 +42,9 @@ fileignoreconfig:
   - filename: manager/adminui/templates/token.gohtml
     checksum: 6af3e3014820fe20e8f6b6e7fd954da0e67f8657f1b559b6452112d01ea90f09
   - filename: manager/api/API.md
-    checksum: c9a715fef138947fcaa341a4ee531a1c87216f180de576565ff5edb42cec936e
+    checksum: d1078a7ba98967a6a9918dd8095edf77e06a52e78d02276ff387a134b328e46e
   - filename: manager/api/api.gen.go
-    checksum: 7938cf66adf3f3cca66581111dea5b2f9b9ceb28d252493bc78f8746a920b36d
+    checksum: cea123ebc20489d2a3faeaa2d4139c77ed2289b4397931835a6a7fb1b81ebfd9
   - filename: manager/api/server.go
     checksum: 98cbd1df522ea428f7e669c01721f3070133062378a4f2e4b167d55eaa8d079b
   - filename: manager/api/server_test.go
@@ -184,7 +184,7 @@ fileignoreconfig:
   - filename: manager/store/firestore/cert_test.go
     checksum: 5882e08beca19cfcaab9abda418c87aa13251b49424817e9c3a54a4be4bb268c
   - filename: manager/store/firestore/cs.go
-    checksum: 04aa0b00b290595b5d8d7a4693bf526a3d6ee1df8a1a2e7ca9a25f0a54eb7dd3
+    checksum: 497c91994bbce5defae822b26b78be805ac8b2f2c051c1ea163bb5addd0794e4
   - filename: manager/store/firestore/cs_test.go
     checksum: b31b2ed998237c77a6cd3501ce4231c2cbe15a2aca68db8715f4f43f9fc7e01c
   - filename: manager/store/firestore/store.go

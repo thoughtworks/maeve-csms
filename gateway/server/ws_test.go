@@ -281,6 +281,84 @@ func TestHttpConnectionWithBasicAuthWrongPassword(t *testing.T) {
 	}
 }
 
+func TestHttpConnectionWithBasicAuthWrongUsername(t *testing.T) {
+	//defer goleak.VerifyNone(t)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	cs := &registry.ChargeStation{
+		ClientId:             "basicAuthCS1WrongUsername",
+		SecurityProfile:      registry.UnsecuredTransportWithBasicAuth,
+		Base64SHA256Password: "XohImNooBHFR0OVvjcYpJ3NgPQ1qq73WKhHvch0VQtg=", // password,
+	}
+
+	mockRegistry := registry.NewMockRegistry()
+	mockRegistry.ChargeStations[cs.ClientId] = cs
+
+	srv := httptest.NewServer(server.NewWebsocketHandler(server.WithDeviceRegistry(mockRegistry)))
+	defer srv.Close()
+
+	authHeader := "Basic " + base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", "wrong", "password")))
+	dialOptions := &websocket.DialOptions{
+		Subprotocols: []string{"ocpp1.6", "ocpp2.0.1"},
+		HTTPHeader: http.Header{
+			"authorization": []string{authHeader},
+		},
+	}
+
+	conn, resp, err := websocket.Dial(ctx, fmt.Sprintf("%s/ws/%s", srv.URL, cs.ClientId), dialOptions)
+	if err == nil {
+		_ = conn.Close(websocket.StatusGoingAway, "Shutdown")
+		t.Fatalf("expected error dialing CSMS")
+	}
+	if resp.StatusCode != http.StatusUnauthorized {
+		t.Fatalf("status code: want %d, got %d", http.StatusUnauthorized, resp.StatusCode)
+	}
+}
+
+func TestHttpConnectionWithBasicAuthInvalidUsernameAllowed(t *testing.T) {
+	//defer goleak.VerifyNone(t)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	cs := &registry.ChargeStation{
+		ClientId:               "basicAuthCS1WrongUsername",
+		SecurityProfile:        registry.UnsecuredTransportWithBasicAuth,
+		Base64SHA256Password:   "XohImNooBHFR0OVvjcYpJ3NgPQ1qq73WKhHvch0VQtg=", // password,
+		InvalidUsernameAllowed: true,
+	}
+
+	mockRegistry := registry.NewMockRegistry()
+	mockRegistry.ChargeStations[cs.ClientId] = cs
+
+	srv := httptest.NewServer(server.NewWebsocketHandler(server.WithDeviceRegistry(mockRegistry)))
+	defer srv.Close()
+
+	authHeader := "Basic " + base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", "wrong", "password")))
+	dialOptions := &websocket.DialOptions{
+		Subprotocols: []string{"ocpp1.6", "ocpp2.0.1"},
+		HTTPHeader: http.Header{
+			"authorization": []string{authHeader},
+		},
+	}
+
+	conn, resp, err := websocket.Dial(ctx, fmt.Sprintf("%s/ws/%s", srv.URL, cs.ClientId), dialOptions)
+	if err != nil {
+		t.Fatalf("dialing CSMS: %v", err)
+	}
+	defer func() {
+		err := conn.Close(websocket.StatusGoingAway, "Shutdown")
+		if err != nil {
+			t.Logf("WARN: websocket close: %v", err)
+		}
+	}()
+	if resp.StatusCode != http.StatusSwitchingProtocols {
+		t.Fatalf("status code: want %d, got %d", http.StatusSwitchingProtocols, resp.StatusCode)
+	}
+}
+
 func TestTlsConnectionWithBasicAuth(t *testing.T) {
 	//defer goleak.VerifyNone(t)
 

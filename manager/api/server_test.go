@@ -66,8 +66,10 @@ func TestLookupChargeStationAuth(t *testing.T) {
 	b, err := io.ReadAll(rr.Result().Body)
 	require.NoError(t, err)
 
+	invalidUsernameAllowed := false
 	want := &api.ChargeStationAuth{
-		SecurityProfile: 1,
+		SecurityProfile:        1,
+		InvalidUsernameAllowed: &invalidUsernameAllowed,
 	}
 
 	got := new(api.ChargeStationAuth)

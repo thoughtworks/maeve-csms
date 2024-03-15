@@ -13,9 +13,10 @@ const (
 )
 
 type ChargeStation struct {
-	ClientId             string
-	SecurityProfile      SecurityProfile
-	Base64SHA256Password string
+	ClientId               string
+	SecurityProfile        SecurityProfile
+	Base64SHA256Password   string
+	InvalidUsernameAllowed bool
 }
 
 type DeviceRegistry interface {

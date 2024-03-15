@@ -9,13 +9,12 @@ import (
 	"context"
 	"errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/testcontainers/testcontainers-go"
+	"github.com/testcontainers/testcontainers-go/wait"
 	"google.golang.org/api/iterator"
 	"log"
 	"os"
 	"testing"
-
-	"github.com/testcontainers/testcontainers-go"
-	"github.com/testcontainers/testcontainers-go/wait"
 )
 
 var endpoint string
@@ -30,7 +29,7 @@ func setup() func() {
 			"emulators",
 			"firestore",
 			"start",
-			"--host-port=0.0.0.0:8080",
+			"--host-port=127.0.0.1:8080",
 		},
 		ExposedPorts: []string{"8080/tcp"},
 		WaitingFor: wait.ForAll(
@@ -44,11 +43,13 @@ func setup() func() {
 		Started:          true,
 	})
 	if err != nil {
+		log.Println("Failed to wait for started container")
 		log.Fatal(err)
 	}
 
 	endpoint, err = container.Endpoint(ctx, "")
 	if err != nil {
+		log.Println("Container did not expose endpoint")
 		log.Fatal(err)
 	}
 

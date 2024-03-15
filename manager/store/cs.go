@@ -16,8 +16,9 @@ const (
 )
 
 type ChargeStationAuth struct {
-	SecurityProfile      SecurityProfile
-	Base64SHA256Password string
+	SecurityProfile        SecurityProfile
+	Base64SHA256Password   string
+	InvalidUsernameAllowed bool
 }
 
 type ChargeStationAuthStore interface {

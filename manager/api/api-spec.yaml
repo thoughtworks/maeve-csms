@@ -398,6 +398,9 @@ components:
           type: "string"
           maxLength: 64
           description: "The base64 encoded, SHA-256 hash of the charge station password"
+        invalidUsernameAllowed:
+          type: "boolean"
+          description: "If set to true then an invalid username will not prevent the charge station connecting"
     ChargeStationSettings:
       type: "object"
       description: "Settings for a charge station"
