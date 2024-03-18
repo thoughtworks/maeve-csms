@@ -324,6 +324,14 @@ func TestRoutingCallResults(t *testing.T) {
 				Status: types.RequestStartStopStatusEnumTypeAccepted,
 			},
 		},
+		"Reset": {
+			request: &types.ResetRequestJson{
+				Type: types.ResetEnumTypeOnIdle,
+			},
+			response: &types.ResetResponseJson{
+				Status: types.ResetStatusEnumTypeScheduled,
+			},
+		},
 		"SetVariables": {
 			request: &types.SetVariablesRequestJson{
 				SetVariableData: []types.SetVariableDataType{
@@ -435,6 +443,9 @@ func TestCallMaker(t *testing.T) {
 		},
 		"RequestStopTransaction": &types.RequestStopTransactionRequestJson{
 			TransactionId: "123abcde",
+		},
+		"Reset": &types.ResetRequestJson{
+			Type: types.ResetEnumTypeImmediate,
 		},
 		"SetVariables": &types.SetVariablesRequestJson{
 			SetVariableData: []types.SetVariableDataType{
