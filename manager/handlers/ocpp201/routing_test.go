@@ -139,6 +139,12 @@ func TestRoutingCalls(t *testing.T) {
 				},
 			},
 		},
+		"NotifyReport": &types.NotifyReportRequestJson{
+			GeneratedAt: "2024-03-18T17:50:00.000Z",
+			RequestId:   33,
+			SeqNo:       1,
+			Tbc:         false,
+		},
 		"SecurityEventNotification": &types.SecurityEventNotificationRequestJson{
 			Timestamp: "2023-06-15T15:05:00+01:00",
 			Type:      "SettingSystemTime",
