@@ -258,6 +258,15 @@ func TestRoutingCallResults(t *testing.T) {
 				Status: types.ChangeAvailabilityStatusEnumTypeAccepted,
 			},
 		},
+		"GetBaseReport": {
+			request: &types.GetBaseReportRequestJson{
+				RequestId:  99,
+				ReportBase: types.ReportBaseEnumTypeConfigurationInventory,
+			},
+			response: &types.GetBaseReportResponseJson{
+				Status: types.GenericDeviceModelStatusEnumTypeEmptyResultSet,
+			},
+		},
 		"GetTransactionStatus": {
 			request: &types.GetTransactionStatusRequestJson{
 				TransactionId: makePtr(""),
@@ -414,6 +423,10 @@ func TestCallMaker(t *testing.T) {
 		},
 		"ChangeAvailability": &types.ChangeAvailabilityRequestJson{
 			OperationalStatus: types.OperationalStatusEnumTypeInoperative,
+		},
+		"GetBaseReport": &types.GetBaseReportRequestJson{
+			RequestId:  42,
+			ReportBase: types.ReportBaseEnumTypeSummaryInventory,
 		},
 		"GetTransactionStatus": &types.GetTransactionStatusRequestJson{
 			TransactionId: makePtr(""),

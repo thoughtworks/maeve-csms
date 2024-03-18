@@ -139,6 +139,13 @@ func NewRouter(emitter transport.Emitter,
 				ResponseSchema: "ocpp201/ChangeAvailabilityResponse.json",
 				Handler:        ChangeAvailabilityResultHandler{},
 			},
+			"GetBaseReport": {
+				NewRequest:     func() ocpp.Request { return new(ocpp201.GetBaseReportRequestJson) },
+				NewResponse:    func() ocpp.Response { return new(ocpp201.GetBaseReportResponseJson) },
+				RequestSchema:  "ocpp201/GetBaseReportRequest.json",
+				ResponseSchema: "ocpp201/GetBaseReportResponse.json",
+				Handler:        GetBaseReportResultHandler{},
+			},
 			"GetTransactionStatus": {
 				NewRequest:     func() ocpp.Request { return new(ocpp201.GetTransactionStatusRequestJson) },
 				NewResponse:    func() ocpp.Response { return new(ocpp201.GetTransactionStatusResponseJson) },
@@ -219,6 +226,7 @@ func NewCallMaker(e transport.Emitter) *handlers.OcppCallMaker {
 		Actions: map[reflect.Type]string{
 			reflect.TypeOf(&ocpp201.CertificateSignedRequestJson{}):       "CertificateSigned",
 			reflect.TypeOf(&ocpp201.ChangeAvailabilityRequestJson{}):      "ChangeAvailability",
+			reflect.TypeOf(&ocpp201.GetBaseReportRequestJson{}):           "GetBaseReport",
 			reflect.TypeOf(&ocpp201.GetTransactionStatusRequestJson{}):    "GetTransactionStatus",
 			reflect.TypeOf(&ocpp201.GetVariablesRequestJson{}):            "GetVariables",
 			reflect.TypeOf(&ocpp201.InstallCertificateRequestJson{}):      "InstallCertificate",

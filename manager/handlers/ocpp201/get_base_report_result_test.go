@@ -11,8 +11,8 @@ import (
 	"testing"
 )
 
-func TestResetResultHandler(t *testing.T) {
-	handler := ocpp201.ResetResultHandler{}
+func TestBaseReportResultHandler(t *testing.T) {
+	handler := ocpp201.GetBaseReportResultHandler{}
 
 	tracer, exporter := testutil.GetTracer()
 
@@ -22,11 +22,12 @@ func TestResetResultHandler(t *testing.T) {
 		ctx, span := tracer.Start(ctx, `test`)
 		defer span.End()
 
-		req := &types.ResetRequestJson{
-			Type: types.ResetEnumTypeOnIdle,
+		req := &types.GetBaseReportRequestJson{
+			RequestId:  42,
+			ReportBase: types.ReportBaseEnumTypeFullInventory,
 		}
-		resp := &types.ResetResponseJson{
-			Status: types.ResetStatusEnumTypeAccepted,
+		resp := &types.GetBaseReportResponseJson{
+			Status: types.GenericDeviceModelStatusEnumTypeAccepted,
 		}
 
 		err := handler.HandleCallResult(ctx, "cs001", req, resp, nil)
@@ -34,7 +35,8 @@ func TestResetResultHandler(t *testing.T) {
 	}()
 
 	testutil.AssertSpan(t, &exporter.GetSpans()[0], "test", map[string]any{
-		"reset.type":   "OnIdle",
-		"reset.status": "Accepted",
+		"get_base_report.request_id":  42,
+		"get_base_report.report_base": "FullInventory",
+		"get_base_report.status":      "Accepted",
 	})
 }
