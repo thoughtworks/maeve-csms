@@ -264,6 +264,19 @@ func TestRoutingCallResults(t *testing.T) {
 				Status: types.ChangeAvailabilityStatusEnumTypeAccepted,
 			},
 		},
+		"DeleteCertificate": {
+			request: &types.DeleteCertificateRequestJson{
+				CertificateHashData: types.CertificateHashDataType{
+					HashAlgorithm:  types.HashAlgorithmEnumTypeSHA256,
+					IssuerKeyHash:  "ABC123",
+					IssuerNameHash: "ABCDEF",
+					SerialNumber:   "1234578",
+				},
+			},
+			response: &types.DeleteCertificateResponseJson{
+				Status: types.DeleteCertificateStatusEnumTypeAccepted,
+			},
+		},
 		"GetBaseReport": {
 			request: &types.GetBaseReportRequestJson{
 				RequestId:  99,
@@ -453,6 +466,14 @@ func TestCallMaker(t *testing.T) {
 		},
 		"ChangeAvailability": &types.ChangeAvailabilityRequestJson{
 			OperationalStatus: types.OperationalStatusEnumTypeInoperative,
+		},
+		"DeleteCertificate": &types.DeleteCertificateRequestJson{
+			CertificateHashData: types.CertificateHashDataType{
+				HashAlgorithm:  types.HashAlgorithmEnumTypeSHA256,
+				IssuerKeyHash:  "ABC123",
+				IssuerNameHash: "ABCDEF",
+				SerialNumber:   "12345678",
+			},
 		},
 		"GetBaseReport": &types.GetBaseReportRequestJson{
 			RequestId:  42,

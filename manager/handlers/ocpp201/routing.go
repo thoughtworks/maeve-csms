@@ -145,6 +145,13 @@ func NewRouter(emitter transport.Emitter,
 				ResponseSchema: "ocpp201/ChangeAvailabilityResponse.json",
 				Handler:        ChangeAvailabilityResultHandler{},
 			},
+			"DeleteCertificate": {
+				NewRequest:     func() ocpp.Request { return new(ocpp201.DeleteCertificateRequestJson) },
+				NewResponse:    func() ocpp.Response { return new(ocpp201.DeleteCertificateResponseJson) },
+				RequestSchema:  "ocpp201/DeleteCertificateRequest.json",
+				ResponseSchema: "ocpp201/DeleteCertificateResponse.json",
+				Handler:        DeleteCertificateResultHandler{},
+			},
 			"GetBaseReport": {
 				NewRequest:     func() ocpp.Request { return new(ocpp201.GetBaseReportRequestJson) },
 				NewResponse:    func() ocpp.Response { return new(ocpp201.GetBaseReportResponseJson) },
@@ -246,6 +253,7 @@ func NewCallMaker(e transport.Emitter) *handlers.OcppCallMaker {
 		Actions: map[reflect.Type]string{
 			reflect.TypeOf(&ocpp201.CertificateSignedRequestJson{}):       "CertificateSigned",
 			reflect.TypeOf(&ocpp201.ChangeAvailabilityRequestJson{}):      "ChangeAvailability",
+			reflect.TypeOf(&ocpp201.DeleteCertificateRequestJson{}):       "DeleteCertificate",
 			reflect.TypeOf(&ocpp201.GetBaseReportRequestJson{}):           "GetBaseReport",
 			reflect.TypeOf(&ocpp201.GetReportRequestJson{}):               "GetReport",
 			reflect.TypeOf(&ocpp201.GetTransactionStatusRequestJson{}):    "GetTransactionStatus",
