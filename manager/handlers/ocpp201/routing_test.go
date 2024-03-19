@@ -347,6 +347,22 @@ func TestRoutingCallResults(t *testing.T) {
 				Status: types.ResetStatusEnumTypeScheduled,
 			},
 		},
+		"SetNetworkProfile": {
+			request: &types.SetNetworkProfileRequestJson{
+				ConfigurationSlot: 1,
+				ConnectionData: types.NetworkConnectionProfileType{
+					MessageTimeout:  30,
+					OcppCsmsUrl:     "https://cs.example.com/",
+					OcppInterface:   types.OCPPInterfaceEnumTypeWired0,
+					OcppTransport:   types.OCPPTransportEnumTypeJSON,
+					OcppVersion:     types.OCPPVersionEnumTypeOCPP20,
+					SecurityProfile: 2,
+				},
+			},
+			response: &types.SetNetworkProfileResponseJson{
+				Status: types.SetNetworkProfileStatusEnumTypeFailed,
+			},
+		},
 		"SetVariables": {
 			request: &types.SetVariablesRequestJson{
 				SetVariableData: []types.SetVariableDataType{
@@ -465,6 +481,17 @@ func TestCallMaker(t *testing.T) {
 		},
 		"Reset": &types.ResetRequestJson{
 			Type: types.ResetEnumTypeImmediate,
+		},
+		"SetNetworkProfile": &types.SetNetworkProfileRequestJson{
+			ConfigurationSlot: 1,
+			ConnectionData: types.NetworkConnectionProfileType{
+				MessageTimeout:  30,
+				OcppCsmsUrl:     "https://cs.example.com/",
+				OcppInterface:   types.OCPPInterfaceEnumTypeWired0,
+				OcppTransport:   types.OCPPTransportEnumTypeJSON,
+				OcppVersion:     types.OCPPVersionEnumTypeOCPP20,
+				SecurityProfile: 2,
+			},
 		},
 		"SetVariables": &types.SetVariablesRequestJson{
 			SetVariableData: []types.SetVariableDataType{
