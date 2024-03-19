@@ -100,7 +100,7 @@ fileignoreconfig:
   - filename: manager/handlers/ocpp201/get_installed_certificate_ids_result_test.go
     checksum: b201a32b29e4fea3559cf1f5db272492053c0a9062ea1a56bd9655b841f667e0
   - filename: manager/handlers/ocpp201/routing_test.go
-    checksum: 2b28c8e8ce8c73f7942558358eabff7f2d89a0cab11f255d48e2afc800e5b35f
+    checksum: a1e405fa7deb18e3c4af7a690545c6c7996f37f50d41f678c28c0997e37ff430
   - filename: manager/handlers/router_test.go
     checksum: 817b5440e8ef6f40cd654d541ab854e2fb5f3104f21b5a89f4fef93df8ad6240
   - filename: manager/ocpi/correlation.go

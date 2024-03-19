@@ -286,6 +286,27 @@ func TestRoutingCallResults(t *testing.T) {
 				Status: types.GenericDeviceModelStatusEnumTypeEmptyResultSet,
 			},
 		},
+		"GetInstalledCertificateIds": {
+			request: &types.GetInstalledCertificateIdsRequestJson{
+				CertificateType: []types.GetCertificateIdUseEnumType{
+					types.GetCertificateIdUseEnumTypeCSMSRootCertificate,
+				},
+			},
+			response: &types.GetInstalledCertificateIdsResponseJson{
+				Status: types.GetInstalledCertificateStatusEnumTypeAccepted,
+				CertificateHashDataChain: []types.CertificateHashDataChainType{
+					{
+						CertificateHashData: types.CertificateHashDataType{
+							HashAlgorithm:  types.HashAlgorithmEnumTypeSHA256,
+							IssuerKeyHash:  "ABC123",
+							IssuerNameHash: "ABCDEF",
+							SerialNumber:   "12345678",
+						},
+						CertificateType: types.GetCertificateIdUseEnumTypeCSMSRootCertificate,
+					},
+				},
+			},
+		},
 		"GetReport": {
 			request: &types.GetReportRequestJson{
 				RequestId: 18,
@@ -478,6 +499,11 @@ func TestCallMaker(t *testing.T) {
 		"GetBaseReport": &types.GetBaseReportRequestJson{
 			RequestId:  42,
 			ReportBase: types.ReportBaseEnumTypeSummaryInventory,
+		},
+		"GetInstalledCertificateIds": &types.GetInstalledCertificateIdsRequestJson{
+			CertificateType: []types.GetCertificateIdUseEnumType{
+				types.GetCertificateIdUseEnumTypeCSMSRootCertificate,
+			},
 		},
 		"GetReport": &types.GetReportRequestJson{
 			RequestId: 42,
