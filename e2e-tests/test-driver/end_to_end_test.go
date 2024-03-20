@@ -1,4 +1,4 @@
-package main
+package test_driver
 
 import (
 	"fmt"
@@ -58,7 +58,6 @@ func setupBrokerConnection(t *testing.T, wg *sync.WaitGroup) (mqtt.Client, func(
 }
 
 func TestRFIDCharge(t *testing.T) {
-	t.Skip("skipping test in short mode.")
 	wg := sync.WaitGroup{}
 
 	client, shutdown := setupBrokerConnection(t, &wg)
