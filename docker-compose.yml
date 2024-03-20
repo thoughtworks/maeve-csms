@@ -33,6 +33,11 @@ services:
         source: ./config/envoy
         target: /config
         read_only: true
+    depends_on:
+      manager:
+        condition: service_healthy
+      gateway:
+        condition: service_healthy
     ports:
       - "80:80"
       - "443:443"
