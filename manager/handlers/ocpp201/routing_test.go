@@ -264,6 +264,12 @@ func TestRoutingCallResults(t *testing.T) {
 				Status: types.ChangeAvailabilityStatusEnumTypeAccepted,
 			},
 		},
+		"ClearCache": {
+			request: &types.ClearCacheRequestJson{},
+			response: &types.ClearCacheResponseJson{
+				Status: types.ClearCacheStatusEnumTypeAccepted,
+			},
+		},
 		"DeleteCertificate": {
 			request: &types.DeleteCertificateRequestJson{
 				CertificateHashData: types.CertificateHashDataType{
@@ -305,6 +311,12 @@ func TestRoutingCallResults(t *testing.T) {
 						CertificateType: types.GetCertificateIdUseEnumTypeCSMSRootCertificate,
 					},
 				},
+			},
+		},
+		"GetLocalListVersion": {
+			request: &types.GetLocalListVersionRequestJson{},
+			response: &types.GetLocalListVersionResponseJson{
+				VersionNumber: 17,
 			},
 		},
 		"GetReport": {
@@ -387,6 +399,23 @@ func TestRoutingCallResults(t *testing.T) {
 			},
 			response: &types.ResetResponseJson{
 				Status: types.ResetStatusEnumTypeScheduled,
+			},
+		},
+		"SendLocalList": {
+			request: &types.SendLocalListRequestJson{
+				LocalAuthorizationList: []types.AuthorizationData{
+					{
+						IdToken: types.IdTokenType{
+							Type:    types.IdTokenEnumTypeEMAID,
+							IdToken: "XYZ12345",
+						},
+					},
+				},
+				VersionNumber: 22,
+				UpdateType:    types.UpdateEnumTypeFull,
+			},
+			response: &types.SendLocalListResponseJson{
+				Status: types.SendLocalListStatusEnumTypeAccepted,
 			},
 		},
 		"SetNetworkProfile": {
@@ -488,6 +517,7 @@ func TestCallMaker(t *testing.T) {
 		"ChangeAvailability": &types.ChangeAvailabilityRequestJson{
 			OperationalStatus: types.OperationalStatusEnumTypeInoperative,
 		},
+		"ClearCache": &types.ClearCacheRequestJson{},
 		"DeleteCertificate": &types.DeleteCertificateRequestJson{
 			CertificateHashData: types.CertificateHashDataType{
 				HashAlgorithm:  types.HashAlgorithmEnumTypeSHA256,
@@ -505,6 +535,7 @@ func TestCallMaker(t *testing.T) {
 				types.GetCertificateIdUseEnumTypeCSMSRootCertificate,
 			},
 		},
+		"GetLocalListVersion": &types.GetLocalListVersionRequestJson{},
 		"GetReport": &types.GetReportRequestJson{
 			RequestId: 42,
 		},
@@ -539,6 +570,18 @@ func TestCallMaker(t *testing.T) {
 		},
 		"Reset": &types.ResetRequestJson{
 			Type: types.ResetEnumTypeImmediate,
+		},
+		"SendLocalList": &types.SendLocalListRequestJson{
+			LocalAuthorizationList: []types.AuthorizationData{
+				{
+					IdToken: types.IdTokenType{
+						Type:    types.IdTokenEnumTypeISO14443,
+						IdToken: "ABCD1234",
+					},
+				},
+			},
+			UpdateType:    types.UpdateEnumTypeDifferential,
+			VersionNumber: 12,
 		},
 		"SetNetworkProfile": &types.SetNetworkProfileRequestJson{
 			ConfigurationSlot: 1,
