@@ -86,11 +86,11 @@ Schemas showing all the configuration options can be found in:
 
 ## Certificates
 
-The trusted CSMS CA certificate must be added to the [certs/ca/csms](certs/ca/csms)
+The trusted CSMS CA certificate must be added to the `certs/ca/csms`
 directory. If it is a DER encoded certificate then it must have a `.der` extension,
 otherwise it is assumed to be a PEM encoded file.
 
-The client certificate details must be added to the [certs/client/csms](certs/client/csms)
+The client certificate details must be added to the `certs/client/csms`
 directory. The certificate and key must be PEM encoded and called `CSMS_LEAF.pem` and 
 `CSMS_LEAF.key` respectively.
 
