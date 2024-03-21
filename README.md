@@ -35,6 +35,12 @@ Charge stations can connect to the CSMS using:
 * `ws://localhost/ws/<cs-id>`
 * `wss://localhost/ws/<cs-id>`
 
+If the charge station is also running in a Docker container then the charge
+station docker container can connect to the `maeve-csms` network and the
+charge station can connect to the CSMS using:
+* `ws://gateway:9310/ws/<cs-id>`
+* `wss://gateway:9311/ws/<cs-id>`
+
 Charge stations can use either OCPP 1.6j or OCPP 2.0.1.
 
 For TLS, the charge station should use a certificate provisioned using the

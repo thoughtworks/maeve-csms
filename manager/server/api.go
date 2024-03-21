@@ -50,7 +50,7 @@ func NewApiHandler(settings config.ApiSettings, engine store.Engine, ocpi ocpi.A
 	r.Handle("/metrics", promhttp.Handler())
 	r.Get("/api/openapi.json", getApiSwaggerJson)
 	r.With(logger).Mount("/api/v0", api.Handler(apiServer))
-	r.With(logger).Mount("/adminui", adminui.NewServer(settings.ExternalAddr, settings.OrgName, engine, csCertProvider))
+	r.With(logger).Mount("/adminui", adminui.NewServer(settings.Host, settings.WsPort, settings.WssPort, settings.OrgName, engine, csCertProvider))
 	return r
 }
 
