@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+//go:build e2e
+
 package test_driver
 
 import (
