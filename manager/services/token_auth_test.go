@@ -86,45 +86,6 @@ func TestOcppTokenAuthServiceAcceptsCentral(t *testing.T) {
 	})
 }
 
-// PENDING: this describes the current behaviour
-// working assumption is that the pin codes should be associated
-// with the charge station, so we need to add this to the
-// charge station model
-func TestOcppTokenAuthServiceRejectsKeyCode(t *testing.T) {
-	now := time.Now()
-	clock := fakeclock.NewFakePassiveClock(now)
-	tokenStore := inmemory.NewStore(clock)
-
-	tokenAuthService := services.OcppTokenAuthService{
-		TokenStore: tokenStore,
-		Clock:      clock,
-	}
-
-	tracer, exporter := testutil.GetTracer()
-
-	ctx := context.Background()
-
-	func() {
-		ctx, span := tracer.Start(ctx, "test")
-		defer span.End()
-
-		tokenInfo := tokenAuthService.Authorize(ctx, ocpp201.IdTokenType{
-			Type:    ocpp201.IdTokenEnumTypeKeyCode,
-			IdToken: "1234",
-		})
-
-		assert.Equal(t, ocpp201.IdTokenInfoType{
-			Status: ocpp201.AuthorizationStatusEnumTypeInvalid,
-		}, tokenInfo)
-	}()
-
-	testutil.AssertSpan(t, &exporter.GetSpans()[0], "test", map[string]any{
-		"token_auth.type":   "KeyCode",
-		"token_auth.id":     "1234",
-		"token_auth.status": "Invalid",
-	})
-}
-
 func TestOcppTokenAuthServiceRejectsLocalAuth(t *testing.T) {
 	now := time.Now()
 	clock := fakeclock.NewFakePassiveClock(now)

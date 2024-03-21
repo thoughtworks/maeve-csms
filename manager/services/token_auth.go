@@ -38,11 +38,6 @@ func (o *OcppTokenAuthService) Authorize(ctx context.Context, token ocpp201.IdTo
 		tokenInfo = &ocpp201.IdTokenInfoType{
 			Status: ocpp201.AuthorizationStatusEnumTypeAccepted,
 		}
-	case ocpp201.IdTokenEnumTypeKeyCode:
-		// PENDING: check key codes for charge station
-		tokenInfo = &ocpp201.IdTokenInfoType{
-			Status: ocpp201.AuthorizationStatusEnumTypeInvalid,
-		}
 	case ocpp201.IdTokenEnumTypeLocal:
 		// local auth must be implemented in a different TokenAuthService
 		tokenInfo = &ocpp201.IdTokenInfoType{
