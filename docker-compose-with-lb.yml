@@ -25,6 +25,25 @@ services:
       timeout: 10s
       retries: 3
 
+  lb:
+    image: envoyproxy/envoy:v1.26-latest
+    command: ["-c", "/config/envoy.yaml"]
+    volumes:
+      - type: bind
+        source: ./config/envoy
+        target: /config
+        read_only: true
+    depends_on:
+      manager:
+        condition: service_healthy
+      gateway:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+      - "9410:9410"
+      - "9411:9411"
+
   gateway:
     build:
       context: gateway
@@ -51,10 +70,10 @@ services:
       - "mqtt://mqtt:1883"
       - "--manager-api-addr"
       - "http://manager:9410"
-    ports:
-      - "80:9310" # charge station ws
-      - "443:9311" # charge station wss
-      - "9312:9312" # status
+    expose:
+      - "9310"
+      - "9311"
+      - "9312"
     volumes:
       - type: bind
         source: ./config/certificates
@@ -89,9 +108,9 @@ services:
         source: ./config/manager
         target: /config
         read_only: true
-    ports:
-      - "9410:9410" # manager api
-      - "9411:9411" # status
+    expose:
+      - "9410"
+      - "9411"
     healthcheck:
       test: ["CMD", "/usr/bin/curl", "-s", "--fail", "http://localhost:9410/health"]
       interval: 10s
@@ -109,3 +128,22 @@ services:
       - --host-port=0.0.0.0:8080
     ports:
       - "8080:8080"
+
+  grafana:
+    image: grafana/grafana:7.5.7
+    profiles:
+      - perf
+    ports:
+      - 3000:3000
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v2.45.1
+    profiles:
+      - perf
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus:/etc/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'

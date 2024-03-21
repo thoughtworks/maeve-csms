@@ -33,7 +33,7 @@ func TestConnectWithUnsecuredAuth(t *testing.T) {
 		CertificateReader: services.StringSource{Data: caCert},
 		PrivateKeyReader:  services.StringSource{Data: caKey},
 	}
-	server := NewServer("localhost:9410", "Example", engine, certificateProvider)
+	server := NewServer("localhost", 80, 443, "Example", engine, certificateProvider)
 
 	r := chi.NewRouter()
 	r.Mount("/adminui", server)
@@ -79,7 +79,7 @@ func TestConnectWithBasicAuth(t *testing.T) {
 		CertificateReader: services.StringSource{Data: caCert},
 		PrivateKeyReader:  services.StringSource{Data: caKey},
 	}
-	server := NewServer("localhost:9410", "Example", engine, certificateProvider)
+	server := NewServer("localhost", 80, 443, "Example", engine, certificateProvider)
 
 	r := chi.NewRouter()
 	r.Mount("/adminui", server)
@@ -125,7 +125,7 @@ func TestConnectWithMTLS(t *testing.T) {
 		CertificateReader: services.StringSource{Data: caCert},
 		PrivateKeyReader:  services.StringSource{Data: caKey},
 	}
-	server := NewServer("localhost:9410", "Example", engine, certificateProvider)
+	server := NewServer("localhost", 80, 443, "Example", engine, certificateProvider)
 
 	r := chi.NewRouter()
 	r.Mount("/adminui", server)
@@ -165,7 +165,7 @@ func TestConnectWithMTLS(t *testing.T) {
 func TestRegisterTokenWithShortUid(t *testing.T) {
 	engine := inmemory.NewStore(clock.RealClock{})
 
-	server := NewServer("localhost:9410", "Example", engine, nil)
+	server := NewServer("localhost", 80, 443, "Example", engine, nil)
 
 	r := chi.NewRouter()
 	r.Mount("/adminui", server)
@@ -207,7 +207,7 @@ func TestRegisterTokenWithShortUid(t *testing.T) {
 func TestRegisterTokenWithLongUid(t *testing.T) {
 	engine := inmemory.NewStore(clock.RealClock{})
 
-	server := NewServer("localhost:9410", "Example", engine, nil)
+	server := NewServer("localhost", 80, 443, "Example", engine, nil)
 
 	r := chi.NewRouter()
 	r.Mount("/adminui", server)

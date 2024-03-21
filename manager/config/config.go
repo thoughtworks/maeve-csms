@@ -37,9 +37,11 @@ import (
 )
 
 type ApiSettings struct {
-	Addr         string
-	ExternalAddr string
-	OrgName      string
+	Addr    string
+	Host    string
+	WsPort  int
+	WssPort int
+	OrgName string
 }
 
 type Config struct {
@@ -71,9 +73,11 @@ func Configure(ctx context.Context, cfg *BaseConfig) (c *Config, err error) {
 
 	c = &Config{
 		Api: ApiSettings{
-			Addr:         cfg.Api.Addr,
-			ExternalAddr: cfg.Api.ExternalAddr,
-			OrgName:      cfg.Api.OrgName,
+			Addr:    cfg.Api.Addr,
+			Host:    cfg.Api.Host,
+			WsPort:  cfg.Api.WsPort,
+			WssPort: cfg.Api.WssPort,
+			OrgName: cfg.Api.OrgName,
 		},
 	}
 

@@ -29,7 +29,7 @@ var (
 	res embed.FS
 )
 
-func NewServer(externalAddr, orgName string, engine store.Engine, certificateProvider services.ChargeStationCertificateProvider) chi.Router {
+func NewServer(host string, wsPort, wssPort int, orgName string, engine store.Engine, certificateProvider services.ChargeStationCertificateProvider) chi.Router {
 	r := chi.NewRouter()
 
 	templates := template.Must(template.ParseFS(res, "templates/*.gohtml"))
@@ -86,10 +86,14 @@ func NewServer(externalAddr, orgName string, engine store.Engine, certificatePro
 				_ = templates.ExecuteTemplate(w, "error.gohtml", nil)
 				return
 			}
+			optionalPort := ""
+			if wsPort != 80 {
+				optionalPort = fmt.Sprintf(":%d", wsPort)
+			}
 			data = map[string]string{
 				"csid":            csId,
 				"auth":            auth,
-				"url":             fmt.Sprintf("ws://%s/ws/%s", externalAddr, csId),
+				"url":             fmt.Sprintf("ws://%s%s/ws/%s", host, optionalPort, csId),
 				"password":        password,
 				"invalidUsername": invalidUsername,
 			}
@@ -106,10 +110,14 @@ func NewServer(externalAddr, orgName string, engine store.Engine, certificatePro
 				_ = templates.ExecuteTemplate(w, "error.gohtml", nil)
 				return
 			}
+			optionalPort := ""
+			if wsPort != 443 {
+				optionalPort = fmt.Sprintf(":%d", wssPort)
+			}
 			data = map[string]string{
 				"csid":            csId,
 				"auth":            auth,
-				"url":             fmt.Sprintf("wss://%s/ws/%s", externalAddr, csId),
+				"url":             fmt.Sprintf("wss://%s%s/ws/%s", host, optionalPort, csId),
 				"password":        password,
 				"invalidUsername": invalidUsername,
 			}
@@ -129,7 +137,7 @@ func NewServer(externalAddr, orgName string, engine store.Engine, certificatePro
 			data = map[string]string{
 				"csid":       csId,
 				"auth":       auth,
-				"url":        fmt.Sprintf("wss://%s/ws/%s", externalAddr, csId),
+				"url":        fmt.Sprintf("wss://%s/ws/%s", host, csId),
 				"clientCert": clientCert,
 				"clientKey":  clientKey,
 			}

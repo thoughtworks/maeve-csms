@@ -1,7 +1,7 @@
 [api]
 addr = ":9410"
 org_name = "Example"
-external_addr = "https://example.com/"
+host = "example.com"
 
 [transport]
 type = "mqtt"

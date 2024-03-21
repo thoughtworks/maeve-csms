@@ -20,9 +20,11 @@ func TestConfigure(t *testing.T) {
 	require.NoError(t, err)
 
 	wantApiSettings := config.ApiSettings{
-		Addr:         "localhost:9410",
-		ExternalAddr: "localhost:9410",
-		OrgName:      "Thoughtworks",
+		Addr:    "localhost:9410",
+		Host:    "localhost",
+		WsPort:  80,
+		WssPort: 443,
+		OrgName: "Thoughtworks",
 	}
 
 	assert.Equal(t, wantApiSettings, settings.Api)

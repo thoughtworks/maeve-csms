@@ -7,7 +7,7 @@ mqtt.urls = ["mqtt://mqtt:1883"]
 
 [ocpi]
 addr = ":9411"
-external_url = "http://lb:9411"
+external_url = "http://manager:9411"
 country_code = "GB"
 party_id = "TWK"
 
