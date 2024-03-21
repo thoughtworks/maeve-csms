@@ -22,13 +22,20 @@ func TestTransactionEventHandlerWithStartedEvent(t *testing.T) {
 	tariffService := services.BasicKwhTariffService{}
 
 	err := engine.SetToken(ctx, &store.Token{
-		Uid: "SOMERFID",
+		Uid:   "SOMERFID",
+		Valid: true,
 	})
 	require.NoError(t, err)
 
+	tokenAuthService := &services.OcppTokenAuthService{
+		Clock:      clock.RealClock{},
+		TokenStore: engine,
+	}
+
 	handler := handlers.TransactionEventHandler{
-		Store:         engine,
-		TariffService: tariffService,
+		Store:            engine,
+		TokenAuthService: tokenAuthService,
+		TariffService:    tariffService,
 	}
 
 	req := &types.TransactionEventRequestJson{
@@ -78,9 +85,15 @@ func TestTransactionEventHandlerWithStartedEventWithInvalidToken(t *testing.T) {
 	engine := inmemory.NewStore(clock.RealClock{})
 	tariffService := services.BasicKwhTariffService{}
 
+	tokenAuthService := &services.OcppTokenAuthService{
+		Clock:      clock.RealClock{},
+		TokenStore: engine,
+	}
+
 	handler := handlers.TransactionEventHandler{
-		Store:         engine,
-		TariffService: tariffService,
+		Store:            engine,
+		TokenAuthService: tokenAuthService,
+		TariffService:    tariffService,
 	}
 
 	req := &types.TransactionEventRequestJson{
@@ -130,9 +143,15 @@ func TestTransactionEventHandlerWithUpdatedEvent(t *testing.T) {
 	engine := inmemory.NewStore(clock.RealClock{})
 	tariffService := services.BasicKwhTariffService{}
 
+	tokenAuthService := &services.OcppTokenAuthService{
+		Clock:      clock.RealClock{},
+		TokenStore: engine,
+	}
+
 	handler := handlers.TransactionEventHandler{
-		Store:         engine,
-		TariffService: tariffService,
+		Store:            engine,
+		TokenAuthService: tokenAuthService,
+		TariffService:    tariffService,
 	}
 
 	req := &types.TransactionEventRequestJson{
@@ -174,9 +193,15 @@ func TestTransactionEventHandlerWithEndedEvent(t *testing.T) {
 	engine := inmemory.NewStore(clock.RealClock{})
 	tariffService := services.BasicKwhTariffService{}
 
+	tokenAuthService := &services.OcppTokenAuthService{
+		Clock:      clock.RealClock{},
+		TokenStore: engine,
+	}
+
 	handler := handlers.TransactionEventHandler{
-		Store:         engine,
-		TariffService: tariffService,
+		Store:            engine,
+		TokenAuthService: tokenAuthService,
+		TariffService:    tariffService,
 	}
 
 	req := &types.TransactionEventRequestJson{

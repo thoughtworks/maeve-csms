@@ -62,7 +62,7 @@ func setupTokenStore(tokenStore store.TokenStore) error {
 		ContractId:  "GBTWK012345678V",
 		Issuer:      "Thoughtworks",
 		Valid:       true,
-		CacheMode:   "NEVER",
+		CacheMode:   "ALWAYS",
 		LastUpdated: time.Now().Format(time.RFC3339),
 	})
 	if err != nil {
@@ -76,7 +76,7 @@ func setupTokenStore(tokenStore store.TokenStore) error {
 		ContractId:  "GBTWK123456789B",
 		Issuer:      "Thoughtworks",
 		Valid:       true,
-		CacheMode:   "NEVER",
+		CacheMode:   "ALWAYS",
 		LastUpdated: time.Now().Format(time.RFC3339),
 	})
 	if err != nil {
@@ -92,7 +92,10 @@ func TestAuthorizeWithEmaidAndCertificateHashes(t *testing.T) {
 
 	ah := handlersHasToBe.AuthorizeHandler{
 		Handler201: handlers201.AuthorizeHandler{
-			TokenStore:                   engine,
+			TokenAuthService: &services.OcppTokenAuthService{
+				Clock:      clock.RealClock{},
+				TokenStore: engine,
+			},
 			CertificateValidationService: mockCertValidationService{},
 		},
 	}
@@ -130,7 +133,10 @@ func TestAuthorizeWithEmaidAndInvalidCertificateHashes(t *testing.T) {
 
 	ah := handlersHasToBe.AuthorizeHandler{
 		Handler201: handlers201.AuthorizeHandler{
-			TokenStore:                   engine,
+			TokenAuthService: &services.OcppTokenAuthService{
+				Clock:      clock.RealClock{},
+				TokenStore: engine,
+			},
 			CertificateValidationService: mockCertValidationService{},
 		},
 	}

@@ -35,7 +35,11 @@ func NewRouter(emitter transport.Emitter,
 				RequestSchema:  "ocpp201/AuthorizeRequest.json",
 				ResponseSchema: "ocpp201/AuthorizeResponse.json",
 				Handler: AuthorizeHandler{
-					TokenStore:                   engine,
+					// PENDING: inject token auth service
+					TokenAuthService: &services.OcppTokenAuthService{
+						Clock:      clk,
+						TokenStore: engine,
+					},
 					CertificateValidationService: certValidationService,
 				},
 			},
@@ -123,7 +127,11 @@ func NewRouter(emitter transport.Emitter,
 				RequestSchema:  "ocpp201/TransactionEventRequest.json",
 				ResponseSchema: "ocpp201/TransactionEventResponse.json",
 				Handler: TransactionEventHandler{
-					Store:         engine,
+					Store: engine,
+					TokenAuthService: &services.OcppTokenAuthService{
+						Clock:      clk,
+						TokenStore: engine,
+					},
 					TariffService: tariffService,
 				},
 			},

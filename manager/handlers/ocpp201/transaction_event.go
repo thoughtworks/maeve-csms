@@ -13,8 +13,9 @@ import (
 )
 
 type TransactionEventHandler struct {
-	Store         store.Engine
-	TariffService services.TariffService
+	Store            store.Engine
+	TokenAuthService services.TokenAuthService
+	TariffService    services.TariffService
 }
 
 func (t TransactionEventHandler) HandleCall(ctx context.Context, chargeStationId string, request ocpp.Request) (ocpp.Response, error) {
@@ -26,24 +27,13 @@ func (t TransactionEventHandler) HandleCall(ctx context.Context, chargeStationId
 		slog.Int("seqNo", req.SeqNo))
 	response := &types.TransactionEventResponseJson{}
 
-	var idToken, tokenType string
+	var idToken string
+	var tokenType string
 	if req.IdToken != nil {
 		idToken = req.IdToken.IdToken
 		tokenType = string(req.IdToken.Type)
-
-		tok, err := t.Store.LookupToken(ctx, idToken)
-		if err != nil {
-			return nil, err
-		}
-		if tok != nil {
-			response.IdTokenInfo = &types.IdTokenInfoType{
-				Status: types.AuthorizationStatusEnumTypeAccepted,
-			}
-		} else {
-			response.IdTokenInfo = &types.IdTokenInfoType{
-				Status: types.AuthorizationStatusEnumTypeUnknown,
-			}
-		}
+		idTokenInfo := t.TokenAuthService.Authorize(ctx, *req.IdToken)
+		response.IdTokenInfo = &idTokenInfo
 	}
 
 	var err error

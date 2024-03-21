@@ -119,7 +119,10 @@ func NewRouter(emitter transport.Emitter,
 								RequestSchema:  "ocpp201/AuthorizeRequest.json",
 								ResponseSchema: "ocpp201/AuthorizeResponse.json",
 								Handler: handlers201.AuthorizeHandler{
-									TokenStore:                   engine,
+									TokenAuthService: &services.OcppTokenAuthService{
+										Clock:      clk,
+										TokenStore: engine,
+									},
 									CertificateValidationService: certValidationService,
 								},
 							},
@@ -156,7 +159,10 @@ func NewRouter(emitter transport.Emitter,
 								ResponseSchema: "has2be/AuthorizeResponse.json",
 								Handler: handlersHasToBe.AuthorizeHandler{
 									Handler201: handlers201.AuthorizeHandler{
-										TokenStore:                   engine,
+										TokenAuthService: &services.OcppTokenAuthService{
+											Clock:      clk,
+											TokenStore: engine,
+										},
 										CertificateValidationService: certValidationService,
 									},
 								},
