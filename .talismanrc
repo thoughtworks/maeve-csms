@@ -209,6 +209,8 @@ fileignoreconfig:
     checksum: b24f30ef79812e2d3875e3df4c936521ea9b9af70478066ea3838f0b7ec810e4
   - filename: manager/transport/mqtt/listener_test.go
     checksum: 14dd73d91c91f9c64b2483b17a2720d42f027bc94ce9b12b83f35d4516699c5e
+  - filename: e2e-tests/test-driver/end_to_end_test.go
+    checksum: 6ef0f09822b2d48b0367364818d47c895e36c4d8d4adae4446642428942a8599
 scopeconfig:
   - scope: go
 version: ''

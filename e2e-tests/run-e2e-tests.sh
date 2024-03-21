@@ -22,15 +22,16 @@ stop_docker_compose_for_maeve_csms() {
 
 # Function to check health endpoint
 check_health_endpoint() {
+    docker-compose down lb && docker-compose up lb -d
     HEALTH_ENDPOINT="http://localhost:9410/health"
-    echo "Waiting for the health endpoint to become available..."
+    echo "$(date +"%Y-%m-%d %H:%M:%S"):Waiting for the health endpoint to become available..."
     while true; do
         STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" $HEALTH_ENDPOINT)
         if [ $STATUS_CODE -eq 200 ]; then
-            echo "Health endpoint is available (HTTP 200)"
+            echo "$(date +"%Y-%m-%d %H:%M:%S"):Health endpoint is available (HTTP 200)"
             break
         else
-            echo "Health endpoint is not yet available (HTTP $STATUS_CODE)"
+            echo "$(date +"%Y-%m-%d %H:%M:%S"):Health endpoint is not yet available (HTTP $STATUS_CODE)"
             sleep 5
         fi
     done
@@ -61,9 +62,7 @@ run_tests() {
         echo "Tests failed"
     fi
 
-    pwd
     stop_docker_compose_for_everest
-    pwd
     stop_docker_compose_for_maeve_csms
 }
 
