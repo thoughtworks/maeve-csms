@@ -14,7 +14,9 @@ TEST_DIR="$CSMS_DIR/e2e_tests/test_driver"
 
 # Function to start Docker Compose
 start_docker_compose_for_maeve_csms() {
-    cd "$CSMS_DIR" && docker-compose up -d
+    cd "$CSMS_DIR"
+    (cd config/certificates && make)
+    docker-compose up -d
     if [ $? -eq 0 ]; then
         echo "Docker Compose started successfully"
     else
@@ -30,7 +32,6 @@ start_docker_compose_for_everest() {
         source "$SCRIPT_DIR/everest/scripts/setup-everest.sh"
         cd "$EVEREST_DIR"
         make up
-        ls everest/config/everest/certs
         if [ $? -ne 0 ]; then
             echo "Failed to start Docker Compose for tests"
             stop_docker_compose_for_everest
@@ -52,7 +53,8 @@ stop_docker_compose_for_maeve_csms() {
 
 # Function to check health endpoint
 check_health_endpoint() {
-    docker-compose down lb && docker-compose up lb -d
+    docker-compose down lb
+    docker-compose up lb -d
     HEALTH_ENDPOINT="http://localhost:9410/health"
     echo "$(date +"%Y-%m-%d %H:%M:%S"):Waiting for the health endpoint to become available..."
     while true; do
