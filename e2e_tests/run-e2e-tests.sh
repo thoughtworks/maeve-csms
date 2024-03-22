@@ -26,10 +26,10 @@ start_docker_compose_for_maeve_csms() {
 
 # Function to start Docker Compose
 start_docker_compose_for_everest() {
+        source "$SCRIPT_DIR/everest/scripts/copy-csms-cert.sh"
+        source "$SCRIPT_DIR/everest/scripts/setup-everest.sh"
         cd "$EVEREST_DIR"
         make up
-        echo "PRINT CURRENT DIRECTORY"
-        pwd
         ls everest/config/everest/certs
         if [ $? -ne 0 ]; then
             echo "Failed to start Docker Compose for tests"
