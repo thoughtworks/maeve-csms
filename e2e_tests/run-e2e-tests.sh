@@ -27,9 +27,10 @@ start_docker_compose_for_maeve_csms() {
 # Function to start Docker Compose
 start_docker_compose_for_everest() {
         cd "$EVEREST_DIR"
+        make up
+        echo "PRINT CURRENT DIRECTORY"
         pwd
         ls
-        make up
         if [ $? -ne 0 ]; then
             echo "Failed to start Docker Compose for tests"
             stop_docker_compose_for_everest
