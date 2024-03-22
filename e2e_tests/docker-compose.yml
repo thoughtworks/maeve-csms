@@ -31,16 +31,16 @@ services:
       - net.ipv6.conf.all.disable_ipv6=0
     volumes:
       - type: bind
-        source: /home/runner/work/maeve-csms/everest/config/everest
+        source: ./everest/config/everest
         target: /ext/source/config
       - type: bind
-        source: /home/runner/work/maeve-csms/everest/config/everest/ocpp/OCPP
+        source: ./everest/config/everest/ocpp/OCPP
         target: /workspace/dist/share/everest/modules/OCPP
       - type: bind
-        source: /home/runner/work/maeve-csms/everest/config/everest/ocpp/OCPP201
+        source: ./everest/config/everest/ocpp/OCPP201
         target: /workspace/dist/share/everest/modules/OCPP201
       - type: bind
-        source: /home/runner/work/maeve-csms/everest/config/everest/certs
+        source: ./everest/config/everest/certs
         target: /workspace/dist/etc/everest/certs
 
   nodered:
