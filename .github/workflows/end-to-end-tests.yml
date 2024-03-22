@@ -15,8 +15,8 @@ jobs:
           go-version: '1.20'
       - name: Install Docker Compose
         run: |
-          apt-get update
-          apt-get install docker-compose
+          sudo apt-get update
+          sudo apt-get install docker-compose
           docker-compose --version
       - name: Build and Start Docker Compose
         run: ./e2e_tests/run-e2e-tests.sh
