@@ -1,0 +1,22 @@
+name: End-to-End Tests
+on:
+  push:
+    branches: [ '*' ]
+
+jobs:
+  build-and-test:
+    name: Build docker and Run E2E Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.20'
+      - name: Install Docker Compose
+        run: |
+          apt-get update
+          apt-get install docker-compose
+          docker-compose --version
+      - name: Build and Start Docker Compose
+        run: ./e2e_tests/run-e2e-tests.sh

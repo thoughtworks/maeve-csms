@@ -4,7 +4,7 @@
 SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
 
 # Get the directory where the CSMS is located
-DEFAULT_CSMS_DIR="${SCRIPT_DIR}"/../../maeve-csms
+DEFAULT_CSMS_DIR="${SCRIPT_DIR}"/..
 CSMS_DIR="${1:-$DEFAULT_CSMS_DIR}"
 
 # Define paths relative to the script's location
