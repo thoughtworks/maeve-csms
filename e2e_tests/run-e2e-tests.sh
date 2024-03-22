@@ -30,7 +30,7 @@ start_docker_compose_for_everest() {
         make up
         echo "PRINT CURRENT DIRECTORY"
         pwd
-        ls
+        ls everest/config/everest/certs
         if [ $? -ne 0 ]; then
             echo "Failed to start Docker Compose for tests"
             stop_docker_compose_for_everest
