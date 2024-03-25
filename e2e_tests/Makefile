@@ -1,6 +1,6 @@
 .PHONY: up
 up: register-cs setup-rfid setup-contract
-	OCPP_VERSION=ocpp docker-compose --profile everest up
+	OCPP_VERSION=ocpp docker-compose --profile everest up -d
 
 .PHONY: test
 test: # password 123456
