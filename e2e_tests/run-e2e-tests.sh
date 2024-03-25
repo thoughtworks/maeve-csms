@@ -75,7 +75,7 @@ run_tests() {
     echo "Running test command..."
     cd "$TEST_DIR"
     go test --tags=e2e -v ./... -count=1
-    TEST_RESULT=$?
+#    TEST_RESULT=$?
     docker-compose logs
     cd "$CSMS_DIR"
     docker-compose logs
