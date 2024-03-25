@@ -76,7 +76,7 @@ run_tests() {
     cd "$TEST_DIR"
     go test --tags=e2e -v ./... -count=1
     TEST_RESULT=$?
-    cd ../..
+    docker-compose logs
 
     if [ $TEST_RESULT -eq 0 ]; then
         echo "Tests completed successfully"
