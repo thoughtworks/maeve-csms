@@ -55,8 +55,7 @@ stop_docker_compose_for_maeve_csms() {
 
 # Function to check health endpoint
 check_health_endpoint() {
-    docker-compose down lb
-    docker-compose up lb -d
+    docker-compose logs mqtt
     HEALTH_ENDPOINT="http://localhost:9410/health"
     echo "$(date +"%Y-%m-%d %H:%M:%S"):Waiting for the health endpoint to become available..."
     while true; do
