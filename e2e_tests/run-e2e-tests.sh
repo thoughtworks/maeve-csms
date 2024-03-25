@@ -74,7 +74,7 @@ check_health_endpoint() {
 run_tests() {
     echo "Running test command..."
     cd "$TEST_DIR"
-    go test --tags=e2e -v ./... -count=1
+    go test --tags=e2e ./... -count=1
 #    TEST_RESULT=$?
     docker-compose logs
     cd "$CSMS_DIR"
