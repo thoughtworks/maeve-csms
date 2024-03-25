@@ -41,7 +41,7 @@ start_docker_compose_for_everest() {
 
         echo "Waiting for services to initialize..."
         sleep 30
-        docker-compose logs mqtt-server
+        docker-compose logs
 }
 
 # Function to stop Docker Compose
@@ -55,7 +55,7 @@ stop_docker_compose_for_maeve_csms() {
 
 # Function to check health endpoint
 check_health_endpoint() {
-    docker-compose logs mqtt
+    docker-compose logs
     HEALTH_ENDPOINT="http://localhost:9410/health"
     echo "$(date +"%Y-%m-%d %H:%M:%S"):Waiting for the health endpoint to become available..."
     while true; do
