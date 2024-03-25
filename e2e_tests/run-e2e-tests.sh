@@ -16,7 +16,7 @@ TEST_DIR="$CSMS_DIR/e2e_tests/test_driver"
 start_docker_compose_for_maeve_csms() {
     cd "$CSMS_DIR"
     (cd config/certificates && make)
-    docker-compose up -d
+    docker-compose up
     if [ $? -eq 0 ]; then
         echo "Docker Compose started successfully"
     else
