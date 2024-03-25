@@ -42,7 +42,7 @@ start_docker_compose_for_everest() {
         echo "Waiting for services to initialize..."
         sleep 120
         docker-compose ps
-#        docker-compose logs mqtt
+        docker-compose logs mqtt-server
 }
 
 # Function to stop Docker Compose
