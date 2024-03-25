@@ -8,8 +8,6 @@ networks:
 services:
   mqtt-server:
     image: ghcr.io/everest/everest-demo/mqtt-server:0.0.10
-    logging:
-      driver: none
     ports:
       - "1884:1883"
       - "9001:9000"
