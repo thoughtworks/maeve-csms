@@ -77,12 +77,13 @@ run_tests() {
     go test --tags=e2e -v ./... -count=1
     TEST_RESULT=$?
     docker-compose logs
-
-    if [ $TEST_RESULT -eq 0 ]; then
-        echo "Tests completed successfully"
-    else
-        echo "Tests failed"
-    fi
+    cd "$CSMS_DIR"
+    docker-compose logs
+#    if [ $TEST_RESULT -eq 0 ]; then
+#        echo "Tests completed successfully"
+#    else
+#        echo "Tests failed"
+#    fi
 
     stop_docker_compose_for_everest
     stop_docker_compose_for_maeve_csms
