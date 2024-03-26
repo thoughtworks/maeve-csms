@@ -40,7 +40,7 @@ start_docker_compose_for_everest() {
         fi
 
         echo "Waiting for services to initialize..."
-        sleep 30
+        sleep 10
 }
 
 # Function to stop Docker Compose
