@@ -75,7 +75,7 @@ run_tests() {
     echo "Running test command..."
     cd "$TEST_DIR"
     # Run your command and redirect stderr to /dev/null
-    go test --tags=e2e -v ./... -count=1 2>/dev/null
+    go test --tags=e2e -v ./... -count=1
     # Check the exit code of the command
     if [ $? -ne 0 ]; then
         echo "Error: Process completed with exit code 1 ignored."
