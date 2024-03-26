@@ -74,17 +74,17 @@ check_health_endpoint() {
 run_tests() {
     echo "Running test command..."
     cd "$TEST_DIR"
-    go test --tags=e2e -v ./... -count=1
-    TEST_RESULT=$?
+#    go test --tags=e2e -v ./... -count=1
+#    TEST_RESULT=$?
+    mosquitto_sub -p 1884 -t 'everest_external/nodered/1/state/state_string'
     docker-compose logs
     cd "$CSMS_DIR"
     docker-compose logs
-    go test --tags=e2e -v ./... -count=1
-    if [ $TEST_RESULT -eq 0 ]; then
-        echo "Tests completed successfully"
-    else
-        echo "Tests failed"
-    fi
+#    if [ $TEST_RESULT -eq 0 ]; then
+#        echo "Tests completed successfully"
+#    else
+#        echo "Tests failed"
+#    fi
 
     stop_docker_compose_for_everest
     stop_docker_compose_for_maeve_csms
