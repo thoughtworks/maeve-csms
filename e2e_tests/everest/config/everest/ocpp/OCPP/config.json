@@ -1,7 +1,7 @@
 {
     "Internal": {
         "ChargePointId": "cs001",
-        "CentralSystemURI": "lb/ws/cs001",
+        "CentralSystemURI": "gateway:9311/ws/cs001",
         "ChargeBoxSerialNumber": "cs001",
         "ChargePointModel": "Yeti",
         "ChargePointVendor": "Pionix",
