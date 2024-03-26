@@ -44,7 +44,7 @@ func shutdownBrokerConnection(t *testing.T, client mqtt.Client, wg *sync.WaitGro
 func setupBrokerConnection(t *testing.T, wg *sync.WaitGroup) (mqtt.Client, func()) {
 	brokerAddr := os.Getenv("MQTT_BROKER_ADDR")
 	if brokerAddr == "" {
-		brokerAddr = "localhost:1884"
+		brokerAddr = "127.0.0.1:1884"
 	}
 
 	opts := mqtt.NewClientOptions()
