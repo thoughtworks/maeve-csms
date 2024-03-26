@@ -1,0 +1,52 @@
+networks:
+  default:
+    name: maeve-csms
+    external: true
+
+services:
+  mqtt-server:
+    image: ghcr.io/everest/everest-demo/mqtt-server:0.0.10
+    ports:
+      - "1884:1883"
+      - "9001:9000"
+    user: "10000:10000"
+    healthcheck:
+      test: [ "CMD-SHELL", "timeout 5 mosquitto_sub -t '$$SYS/#' -C 1 | grep -v Error || exit 1" ]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+
+  manager:
+    image: ghcr.io/everest/everest-demo/manager:0.0.10
+    depends_on:
+      - mqtt-server
+    environment:
+      MQTT_SERVER_ADDRESS: mqtt-server
+    entrypoint: "sh ./build/run-scripts/run-sil-${OCPP_VERSION}.sh"
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=0
+    volumes:
+      - type: bind
+        source: ./everest/config/everest
+        target: /ext/source/config
+      - type: bind
+        source: ./everest/config/everest/ocpp/OCPP
+        target: /workspace/dist/share/everest/modules/OCPP
+      - type: bind
+        source: ./everest/config/everest/ocpp/OCPP201
+        target: /workspace/dist/share/everest/modules/OCPP201
+      - type: bind
+        source: ./everest/config/everest/certs
+        target: /workspace/dist/etc/everest/certs
+
+  nodered:
+    image: ghcr.io/everest/everest-demo/nodered:0.0.10
+    depends_on:
+      - mqtt-server
+    environment:
+      - MQTT_SERVER_ADDRESS=mqtt-server
+      - FLOWS=/config/config-sil-two-evse-flow.json
+    ports:
+      - 1880:1880
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=0

@@ -11,6 +11,8 @@ fileignoreconfig:
     checksum: d28fa545deef6c383ac1cf401b2a9561a02ed17ffa6efdf665922580acf3e3e9
   - filename: docker-compose.yml
     checksum: bebfd6c63f4d2a688fdda876093b7f4a95e38c331cb70bcec548b43b80c93cd7
+  - filename: e2e_tests/test_driver/end_to_end_test.go
+    checksum: 6ef0f09822b2d48b0367364818d47c895e36c4d8d4adae4446642428942a8599
   - filename: gateway/cmd/serve.go
     checksum: f08fe8f8c8710239376098c6e1b778d3fa9a1fb5f0653ff2a9a34e9c70d4194e
   - filename: gateway/registry/remote.go
