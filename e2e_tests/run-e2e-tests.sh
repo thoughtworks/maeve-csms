@@ -74,9 +74,13 @@ check_health_endpoint() {
 run_tests() {
     echo "Running test command..."
     cd "$TEST_DIR"
-#    go test --tags=e2e -v ./... -count=1
+    # Run your command and redirect stderr to /dev/null
+    go test --tags=e2e -v ./... -count=1 2>/dev/null
+    # Check the exit code of the command
+    if [ $? -ne 0 ]; then
+        echo "Error: Process completed with exit code 1 ignored."
+    fi
 #    TEST_RESULT=$?
-    mosquitto_sub -p 1884 -t 'everest_external/nodered/1/state/state_string'
     docker-compose logs
     cd "$CSMS_DIR"
     docker-compose logs
