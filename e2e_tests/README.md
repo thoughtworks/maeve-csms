@@ -2,7 +2,7 @@
 
 ## Description
 
-Run end-to-end tests against Everest (Charge station simulator) along with CSMS
+Runs end-to-end tests against Everest (Charge station simulator) along with CSMS
 
 
 ## Steps
