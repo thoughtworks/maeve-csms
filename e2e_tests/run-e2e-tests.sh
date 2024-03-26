@@ -41,7 +41,6 @@ start_docker_compose_for_everest() {
 
         echo "Waiting for services to initialize..."
         sleep 30
-        docker-compose logs
 }
 
 # Function to stop Docker Compose
@@ -74,21 +73,14 @@ check_health_endpoint() {
 run_tests() {
     echo "Running test command..."
     cd "$TEST_DIR"
-    # Run your command and redirect stderr to /dev/null
     go test --tags=e2e -v ./... -count=1
-    # Check the exit code of the command
-    if [ $? -ne 0 ]; then
-        echo "Error: Process completed with exit code 1 ignored."
-    fi
-#    TEST_RESULT=$?
-    docker-compose logs
+    TEST_RESULT=$?
     cd "$CSMS_DIR"
-    docker-compose logs
-#    if [ $TEST_RESULT -eq 0 ]; then
-#        echo "Tests completed successfully"
-#    else
-#        echo "Tests failed"
-#    fi
+    if [ $TEST_RESULT -eq 0 ]; then
+        echo "Tests completed successfully"
+    else
+        echo "Tests failed"
+    fi
 
     stop_docker_compose_for_everest
     stop_docker_compose_for_maeve_csms
