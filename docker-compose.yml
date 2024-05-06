@@ -65,7 +65,7 @@ services:
       interval: 10s
       timeout: 10s
       retries: 3
-    user: "10000:10000"
+    user: "${UID}:${GID}"
 
   manager:
     build:
@@ -97,7 +97,7 @@ services:
       interval: 10s
       timeout: 10s
       retries: 3
-    user: "10000:10000"
+    user: "${UID}:${GID}"
 
   firestore:
     image: google/cloud-sdk
