@@ -17,6 +17,8 @@ start_docker_compose_for_maeve_csms() {
     cd "$CSMS_DIR"
     (cd config/certificates && make)
     chmod 755 $CSMS_DIR/config/certificates/csms.key
+    export UID=$(id -u)
+    export GID=$(id -g)
     docker-compose up -d
     if [ $? -eq 0 ]; then
         echo "Docker Compose started successfully"
