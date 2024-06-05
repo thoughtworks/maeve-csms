@@ -9,6 +9,7 @@ import (
 	"github.com/thoughtworks/maeve-csms/manager/store"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
+	"golang.org/x/exp/slog"
 )
 
 type TriggerMessageResultHandler struct {
