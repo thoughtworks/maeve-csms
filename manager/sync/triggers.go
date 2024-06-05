@@ -49,6 +49,7 @@ func SyncTriggers(ctx context.Context,
 				span.SetAttributes(attribute.Int("sync.trigger.count", len(triggerMessages)))
 				for _, pendingTriggerMessage := range triggerMessages {
 					func() {
+						slog.Info("[TEST] we are in SyncTriggers() in triggers.go", "pendingTriggerMessage", pendingTriggerMessage)
 						ctx, span := tracer.Start(ctx, "sync trigger", trace.WithSpanKind(trace.SpanKindInternal),
 							trace.WithAttributes(
 								attribute.String("chargeStationId", pendingTriggerMessage.ChargeStationId),
