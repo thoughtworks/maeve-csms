@@ -14,6 +14,7 @@ import (
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
 	"github.com/thoughtworks/maeve-csms/manager/store"
 	"k8s.io/utils/clock"
+	"golang.org/x/exp/slog"
 )
 
 type Server struct {
@@ -149,6 +150,7 @@ func (s *Server) LookupChargeStationAuth(w http.ResponseWriter, r *http.Request,
 }
 
 func (s *Server) TriggerChargeStation(w http.ResponseWriter, r *http.Request, csId string) {
+	slog.Info("[TEST] in TriggerChargeStation!")
 	req := new(ChargeStationTrigger)
 	if err := render.Bind(r, req); err != nil {
 		_ = render.Render(w, r, ErrInvalidRequest(err))
