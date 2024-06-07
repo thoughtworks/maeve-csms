@@ -14,8 +14,8 @@ import (
 	"github.com/go-chi/render"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
 	"github.com/thoughtworks/maeve-csms/manager/store"
-	"k8s.io/utils/clock"
 	"golang.org/x/exp/slog"
+	"k8s.io/utils/clock"
 )
 
 type Server struct {
@@ -171,9 +171,9 @@ func (s *Server) TriggerChargeStation(w http.ResponseWriter, r *http.Request, cs
 }
 
 func (s *Server) SetChargingProfile(w http.ResponseWriter, r *http.Request, csId string) {
-	fmt.Printf("[TEST] In server.go, SetChargingProfile()")
+	slog.Info("[TEST] In server.go, SetChargingProfile()")
 	req := new(ChargingProfile)
-	fmt.Printf("%+v\n", req)
+	slog.Info("[TEST] req:", req)
 
 	if err := render.Bind(r, req); err != nil {
 		_ = render.Render(w, r, ErrInvalidRequest(err))

@@ -13,6 +13,7 @@ import (
 	"path"
 	"strings"
 	"time"
+	"golang.org/x/exp/slog"
 
 	"github.com/deepmap/oapi-codegen/pkg/runtime"
 	"github.com/getkin/kin-openapi/openapi3"
@@ -693,7 +694,7 @@ func (siw *ServerInterfaceWrapper) TriggerChargeStation(w http.ResponseWriter, r
 
 // SetChargingProfile operation middleware
 func (siw *ServerInterfaceWrapper) SetChargingProfile(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("[TEST] in charging middleware!")
+	slog.Info("[TEST] in charging middleware!")
 	ctx := r.Context()
 
 	var err error
