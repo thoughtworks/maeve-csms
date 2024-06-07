@@ -21,11 +21,12 @@ type OcppCallMaker struct {
 }
 
 func (b OcppCallMaker) Send(ctx context.Context, chargeStationId string, request ocpp.Request) error {
-	action, _ := b.Actions[reflect.TypeOf(request)]
+	action, ok := b.Actions[reflect.TypeOf(request)]
 	slog.Info("[TEST] we are in Send() in call_maker.go", "action", action)
-	// if !ok {
-	// 	return fmt.Errorf("unknown request type: %T", request)
-	// }
+	if !ok {
+		slog.Error("unknown request type", request)
+		return nil
+	}
 
 	requestBytes, err := json.Marshal(request)
 	if err != nil {

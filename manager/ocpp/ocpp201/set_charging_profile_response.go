@@ -2,8 +2,6 @@
 
 package ocpp201
 
-import "github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
-
 type ChargingProfileStatusEnumType string
 
 const (
@@ -13,7 +11,7 @@ const (
 
 type SetChargingProfileResponseJson struct {
 	Status     ChargingProfileStatusEnumType
-	StatusInfo ocpp201.StatusInfoType
+	StatusInfo StatusInfoType
 }
 
 func (*SetChargingProfileResponseJson) IsResponse() {}

@@ -3,16 +3,17 @@
 package ocpp201
 
 import (
+	"io/fs"
+	"reflect"
+	"time"
+
 	"github.com/thoughtworks/maeve-csms/manager/handlers"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
 	"github.com/thoughtworks/maeve-csms/manager/services"
 	"github.com/thoughtworks/maeve-csms/manager/store"
 	"github.com/thoughtworks/maeve-csms/manager/transport"
-	"io/fs"
 	"k8s.io/utils/clock"
-	"reflect"
-	"time"
 )
 
 func NewRouter(emitter transport.Emitter,
@@ -306,6 +307,7 @@ func NewCallMaker(e transport.Emitter) *handlers.OcppCallMaker {
 			reflect.TypeOf(&ocpp201.SetVariablesRequestJson{}):               "SetVariables",
 			reflect.TypeOf(&ocpp201.TriggerMessageRequestJson{}):             "TriggerMessage",
 			reflect.TypeOf(&ocpp201.UnlockConnectorRequestJson{}):            "UnlockConnector",
+			reflect.TypeOf(&ocpp201.SetChargingProfileRequestJson{}):         "SetChargingProfile",
 		},
 	}
 }
