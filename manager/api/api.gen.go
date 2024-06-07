@@ -4,6 +4,7 @@
 package api
 
 import (
+	"log/slog"
 	"bytes"
 	"compress/gzip"
 	"encoding/base64"
@@ -13,7 +14,7 @@ import (
 	"path"
 	"strings"
 	"time"
-	"log/slog"
+
 	"github.com/deepmap/oapi-codegen/pkg/runtime"
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/go-chi/chi/v5"
@@ -693,7 +694,7 @@ func (siw *ServerInterfaceWrapper) TriggerChargeStation(w http.ResponseWriter, r
 
 // SetChargingProfile operation middleware
 func (siw *ServerInterfaceWrapper) SetChargingProfile(w http.ResponseWriter, r *http.Request) {
-	slog.Info("[TEST] in charging profile middleware!")
+	slog.Info("[TEST] in charging profile")
 	ctx := r.Context()
 
 	var err error
