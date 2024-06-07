@@ -15,6 +15,7 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/go-chi/render"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
+	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
 	"github.com/thoughtworks/maeve-csms/manager/store"
 	"golang.org/x/exp/slog"
 	"k8s.io/utils/clock"
@@ -172,13 +173,6 @@ func (s *Server) TriggerChargeStation(w http.ResponseWriter, r *http.Request, cs
 	w.WriteHeader(http.StatusCreated)
 }
 
-type SetChargingProfileRequestJson struct {
-	EvseId              int
-	ChargingProfileType ChargingProfileType
-}
-
-func (*SetChargingProfileRequestJson) IsRequest() {}
-
 func (s *Server) SetChargingProfile(w http.ResponseWriter, r *http.Request, csId string) {
 	slog.Info("[TEST] In server.go, SetChargingProfile()")
 	req := new(ChargingProfileType)
@@ -197,7 +191,7 @@ func (s *Server) SetChargingProfile(w http.ResponseWriter, r *http.Request, csId
 	// Define the call maker
 	v201CallMaker := handlers.NewCallMaker(settings.MsgEmitter)
 
-	request := SetChargingProfileRequestJson{EvseId: 0, ChargingProfileType: *req}
+	request := ocpp201.SetChargingProfileRequestJson{EvseId: 0, ChargingProfileType: ocpp201.ChargingProfileType(*req)}
 
 	// Send the call
 	v201CallMaker.Send(context.Background(), csId, &request)

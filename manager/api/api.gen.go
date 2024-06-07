@@ -18,6 +18,7 @@ import (
 	"github.com/deepmap/oapi-codegen/pkg/runtime"
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/go-chi/chi/v5"
+	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
 )
 
 // Defines values for ChargeStationInstallCertificatesCertificatesStatus.
@@ -300,106 +301,109 @@ type Token struct {
 	VisualNumber *string `json:"visualNumber,omitempty"`
 }
 
-//////////////////////////////
-// Charging Profile Structs //
-//////////////////////////////
+// //////////////////////////////
+// // Charging Profile Structs //
+// //////////////////////////////
 
-type ChargingProfileType struct {
-	Id int
-	StackLevel int
-	ChargingProfilePurpose ChargingProfilePurposeEnumType
-	ChargingProfileKind ChargingProfileKindEnumType
-	RecurrencyKind RecurrencyKindEnumType
-	ValidFrom time.Time
-	ValidTo time.Time
-	TransactionId int
-	ChargingSchedule ChargingScheduleType
-}
+type ChargingProfileType ocpp201.ChargingProfileType
 
-type ChargingProfilePurposeEnumType string
 
-const (
-	ChargingStationExternalConstraints ChargingProfilePurposeEnumType = "ChargingStationExternalConstraints"
-	ChargingStationMaxProfile          ChargingProfilePurposeEnumType = "ChargingStationMaxProfile"
-	TxDefaultProfile                   ChargingProfilePurposeEnumType = "TxDefaultProfile"
-	TxProfile                          ChargingProfilePurposeEnumType = "TxProfile"
-)
+// type ChargingProfileType struct {
+// 	Id int
+// 	StackLevel int
+// 	ChargingProfilePurpose ChargingProfilePurposeEnumType
+// 	ChargingProfileKind ChargingProfileKindEnumType
+// 	RecurrencyKind RecurrencyKindEnumType
+// 	ValidFrom time.Time
+// 	ValidTo time.Time
+// 	TransactionId int
+// 	ChargingSchedule ChargingScheduleType
+// }
 
-type ChargingProfileKindEnumType string
+// type ChargingProfilePurposeEnumType string
 
-const (
-	Absolute ChargingProfileKindEnumType = "Absolute"
-	Recurring ChargingProfileKindEnumType = "Recurring"
-	Relative ChargingProfileKindEnumType = "Relative"
-)
+// const (
+// 	ChargingStationExternalConstraints ChargingProfilePurposeEnumType = "ChargingStationExternalConstraints"
+// 	ChargingStationMaxProfile          ChargingProfilePurposeEnumType = "ChargingStationMaxProfile"
+// 	TxDefaultProfile                   ChargingProfilePurposeEnumType = "TxDefaultProfile"
+// 	TxProfile                          ChargingProfilePurposeEnumType = "TxProfile"
+// )
 
-type RecurrencyKindEnumType string
+// type ChargingProfileKindEnumType string
 
-const (
-	Daily RecurrencyKindEnumType = "Daily"
-	Weekly RecurrencyKindEnumType = "Weekly"
-)
+// const (
+// 	Absolute ChargingProfileKindEnumType = "Absolute"
+// 	Recurring ChargingProfileKindEnumType = "Recurring"
+// 	Relative ChargingProfileKindEnumType = "Relative"
+// )
 
-type ChargingScheduleType struct {
-	Id int
-	StartSchedule time.Time
-	Duration int
-	ChargingRateUnit ChargingRateUnitEnumType
-	MinChargingRate float64
-	ChargingSchedulePeriod ChargingSchedulePeriodType
-	SalesTariff SalesTariffType
-}
+// type RecurrencyKindEnumType string
 
-type ChargingRateUnitEnumType string
+// const (
+// 	Daily RecurrencyKindEnumType = "Daily"
+// 	Weekly RecurrencyKindEnumType = "Weekly"
+// )
 
-const (
-	W ChargingRateUnitEnumType = "W"
-	a ChargingRateUnitEnumType = "A"
-)
+// type ChargingScheduleType struct {
+// 	Id int
+// 	StartSchedule time.Time
+// 	Duration int
+// 	ChargingRateUnit ChargingRateUnitEnumType
+// 	MinChargingRate float64
+// 	ChargingSchedulePeriod ChargingSchedulePeriodType
+// 	SalesTariff SalesTariffType
+// }
 
-type ChargingSchedulePeriodType struct {
-	StartPeriod int
-	Limit float64
-	NumberPhases int
-	PhaseToUse int
-}
+// type ChargingRateUnitEnumType string
 
-type SalesTariffType struct {
-	Id int
-	SalesTariffDescription string
-	NumEPriceLevels int
-	SalesTariffEntry SalesTariffEntryType
-}
+// const (
+// 	W ChargingRateUnitEnumType = "W"
+// 	a ChargingRateUnitEnumType = "A"
+// )
 
-type SalesTariffEntryType struct {
-	EPriceLevel int
-	RelativeTimeInterval RelativeTimeIntervalType
-	ConsumptionCost ConsumptionCostType
-}
+// type ChargingSchedulePeriodType struct {
+// 	StartPeriod int
+// 	Limit float64
+// 	NumberPhases int
+// 	PhaseToUse int
+// }
 
-type RelativeTimeIntervalType struct {
-	Start int
-	Duration int
-}
+// type SalesTariffType struct {
+// 	Id int
+// 	SalesTariffDescription string
+// 	NumEPriceLevels int
+// 	SalesTariffEntry SalesTariffEntryType
+// }
 
-type ConsumptionCostType struct {
-	StartValue float64
-	Cost CostType
-}
+// type SalesTariffEntryType struct {
+// 	EPriceLevel int
+// 	RelativeTimeInterval RelativeTimeIntervalType
+// 	ConsumptionCost ConsumptionCostType
+// }
 
-type CostType struct {
-	CostKind CostKindEnumType
-	Amount int
-	AmountMultiplier int
-}
+// type RelativeTimeIntervalType struct {
+// 	Start int
+// 	Duration int
+// }
 
-type CostKindEnumType string
+// type ConsumptionCostType struct {
+// 	StartValue float64
+// 	Cost CostType
+// }
 
-const (
-	CarbonDioxideEmission CostKindEnumType = "CarbonDioxideEmission"
-	RelativePricePercentage CostKindEnumType = "RelativePricePercentage"
-	RenewableGenerationPercentage CostKindEnumType = "RenewableGenerationPercentage"
-)
+// type CostType struct {
+// 	CostKind CostKindEnumType
+// 	Amount int
+// 	AmountMultiplier int
+// }
+
+// type CostKindEnumType string
+
+// const (
+// 	CarbonDioxideEmission CostKindEnumType = "CarbonDioxideEmission"
+// 	RelativePricePercentage CostKindEnumType = "RelativePricePercentage"
+// 	RenewableGenerationPercentage CostKindEnumType = "RenewableGenerationPercentage"
+// )
 
 
 
