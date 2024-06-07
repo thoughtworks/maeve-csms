@@ -139,6 +139,8 @@ func (l *Listener) Connect(ctx context.Context, ocppVersion transport.OcppVersio
 					return
 				}
 
+				slog.Info("[TEST] In listener.go", "action", msg.Action)
+
 				// add additional span attributes
 				version, _ := strings.CutPrefix(string(ocppVersion), "ocpp")
 				span.SetAttributes(
