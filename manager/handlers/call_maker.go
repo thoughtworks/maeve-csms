@@ -5,12 +5,12 @@ package handlers
 import (
 	"context"
 	"encoding/json"
-	"fmt"
+	"reflect"
+
 	"github.com/google/uuid"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
 	"github.com/thoughtworks/maeve-csms/manager/transport"
 	"golang.org/x/exp/slog"
-	"reflect"
 )
 
 // OcppCallMaker is an implementation of the CallMaker interface for a specific set of OCPP messages.
@@ -21,11 +21,11 @@ type OcppCallMaker struct {
 }
 
 func (b OcppCallMaker) Send(ctx context.Context, chargeStationId string, request ocpp.Request) error {
-	action, ok := b.Actions[reflect.TypeOf(request)]
+	action, _ := b.Actions[reflect.TypeOf(request)]
 	slog.Info("[TEST] we are in Send() in call_maker.go", "action", action)
-	if !ok {
-		return fmt.Errorf("unknown request type: %T", request)
-	}
+	// if !ok {
+	// 	return fmt.Errorf("unknown request type: %T", request)
+	// }
 
 	requestBytes, err := json.Marshal(request)
 	if err != nil {
