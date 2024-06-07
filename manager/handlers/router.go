@@ -7,13 +7,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/fs"
+
 	"github.com/santhosh-tekuri/jsonschema"
 	"github.com/thoughtworks/maeve-csms/manager/schemas"
 	"github.com/thoughtworks/maeve-csms/manager/transport"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/exp/slog"
-	"io/fs"
 )
 
 // Router is the primary implementation of the transport.Router interface.
@@ -29,6 +30,9 @@ func (r Router) Handle(ctx context.Context, chargeStationId string, msg *transpo
 	span := trace.SpanFromContext(ctx)
 
 	err := r.route(ctx, chargeStationId, msg)
+
+	// TODO: Route setChargingProfile message here!
+
 	if err != nil {
 		slog.Error("unable to route message", slog.String("chargeStationId", chargeStationId), slog.String("action", msg.Action), "err", err)
 		span.SetStatus(codes.Error, "routing request failed")
