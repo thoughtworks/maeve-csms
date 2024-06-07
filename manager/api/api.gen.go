@@ -4,7 +4,6 @@
 package api
 
 import (
-	"log/slog"
 	"bytes"
 	"compress/gzip"
 	"encoding/base64"
@@ -694,7 +693,7 @@ func (siw *ServerInterfaceWrapper) TriggerChargeStation(w http.ResponseWriter, r
 
 // SetChargingProfile operation middleware
 func (siw *ServerInterfaceWrapper) SetChargingProfile(w http.ResponseWriter, r *http.Request) {
-	slog.Info("[TEST] in charging profile")
+	fmt.Printf("[TEST] in charging middleware!")
 	ctx := r.Context()
 
 	var err error
