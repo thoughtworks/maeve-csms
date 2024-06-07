@@ -173,12 +173,13 @@ func (s *Server) TriggerChargeStation(w http.ResponseWriter, r *http.Request, cs
 func (s *Server) SetChargingProfile(w http.ResponseWriter, r *http.Request, csId string) {
 	slog.Info("[TEST] In server.go, SetChargingProfile()")
 	req := new(ChargingProfile)
-	slog.Info("[TEST] r.Body:", r.Body)
 
 	if err := render.Bind(r, req); err != nil {
 		_ = render.Render(w, r, ErrInvalidRequest(err))
 		return
 	}
+
+	slog.Info("[TEST] req:", req)
 
 	w.WriteHeader(http.StatusCreated)
 }
