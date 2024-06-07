@@ -4,10 +4,12 @@ package api
 
 import (
 	"fmt"
-	handlers "github.com/thoughtworks/maeve-csms/manager/handlers/ocpp201"
-	"github.com/thoughtworks/maeve-csms/manager/ocpi"
+	"log/slog"
 	"net/http"
 	"time"
+
+	handlers "github.com/thoughtworks/maeve-csms/manager/handlers/ocpp201"
+	"github.com/thoughtworks/maeve-csms/manager/ocpi"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/go-chi/render"
@@ -161,6 +163,18 @@ func (s *Server) TriggerChargeStation(w http.ResponseWriter, r *http.Request, cs
 	})
 	if err != nil {
 		_ = render.Render(w, r, ErrInternalError(err))
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+}
+
+func (s *Server) SetChargingProfile(w http.ResponseWriter, r *http.Request, csId string) {
+	slog.Info("[TEST] In server.go, SetChargingProfile()")
+	req := new(ChargingProfile)
+	slog.Info("[TEST] req:", req)
+	if err := render.Bind(r, req); err != nil {
+		_ = render.Render(w, r, ErrInvalidRequest(err))
 		return
 	}
 

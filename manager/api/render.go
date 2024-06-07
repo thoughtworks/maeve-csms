@@ -24,6 +24,10 @@ func (c ChargeStationTrigger) Bind(r *http.Request) error {
 	return nil
 }
 
+func (c ChargingProfile) Bind(r *http.Request) error {
+	return nil
+}
+
 func (t Token) Bind(r *http.Request) error {
 	return nil
 }

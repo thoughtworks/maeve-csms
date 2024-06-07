@@ -13,7 +13,7 @@ import (
 	"path"
 	"strings"
 	"time"
-
+	"log/slog"
 	"github.com/deepmap/oapi-codegen/pkg/runtime"
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/go-chi/chi/v5"
@@ -299,6 +299,109 @@ type Token struct {
 	VisualNumber *string `json:"visualNumber,omitempty"`
 }
 
+//////////////////////////////
+// Charging Profile Structs //
+//////////////////////////////
+
+type ChargingProfile struct {
+	Id int
+	StackLevel int
+	ChargingProfilePurpose ChargingProfilePurposeEnumType
+	ChargingProfileKind ChargingProfileKindEnumType
+	RecurrencyKind RecurrencyKindEnumType
+	ValidFrom time.Time
+	ValidTo time.Time
+	TransactionId int
+	ChargingSchedule ChargingProfileType
+}
+
+type ChargingProfilePurposeEnumType string
+
+const (
+	ChargingStationExternalConstraints ChargingProfilePurposeEnumType = "ChargingStationExternalConstraints"
+	ChargingStationMaxProfile          ChargingProfilePurposeEnumType = "ChargingStationMaxProfile"
+	TxDefaultProfile                   ChargingProfilePurposeEnumType = "TxDefaultProfile"
+	TxProfile                          ChargingProfilePurposeEnumType = "TxProfile"
+)
+
+type ChargingProfileKindEnumType string
+
+const (
+	Absolute ChargingProfileKindEnumType = "Absolute"
+	Recurring ChargingProfileKindEnumType = "Recurring"
+	Relative ChargingProfileKindEnumType = "Relative"
+)
+
+type RecurrencyKindEnumType string
+
+const (
+	Daily RecurrencyKindEnumType = "Daily"
+	Weekly RecurrencyKindEnumType = "Weekly"
+)
+
+type ChargingProfileType struct {
+	Id int
+	StartSchedule time.Time
+	Duration int
+	ChargingRateUnit ChargingRateUnitEnumType
+	MinChargingRate float64
+	ChargingSchedulePeriod ChargingSchedulePeriodType
+	SalesTariff SalesTariffType
+}
+
+type ChargingRateUnitEnumType string
+
+const (
+	W ChargingRateUnitEnumType = "W"
+	a ChargingRateUnitEnumType = "A"
+)
+
+type ChargingSchedulePeriodType struct {
+	StartPeriod int
+	Limit float64
+	NumberPhases int
+	PhaseToUse int
+}
+
+type SalesTariffType struct {
+	Id int
+	SalesTariffDescription string
+	NumEPriceLevels int
+	SalesTariffEntry SalesTariffEntryType
+}
+
+type SalesTariffEntryType struct {
+	EPriceLevel int
+	RelativeTimeInterval RelativeTimeIntervalType
+	ConsumptionCost ConsumptionCostType
+}
+
+type RelativeTimeIntervalType struct {
+	Start int
+	Duration int
+}
+
+type ConsumptionCostType struct {
+	StartValue float64
+	Cost CostType
+}
+
+type CostType struct {
+	CostKind CostKindEnumType
+	Amount int
+	AmountMultiplier int
+}
+
+type CostKindEnumType string
+
+const (
+	CarbonDioxideEmission CostKindEnumType = "CarbonDioxideEmission"
+	RelativePricePercentage CostKindEnumType = "RelativePricePercentage"
+	RenewableGenerationPercentage CostKindEnumType = "RenewableGenerationPercentage"
+)
+
+
+
 // TokenCacheMode Indicates what type of token caching is allowed
 type TokenCacheMode string
 
@@ -361,6 +464,10 @@ type ServerInterface interface {
 
 	// (POST /cs/{csId}/trigger)
 	TriggerChargeStation(w http.ResponseWriter, r *http.Request, csId string)
+
+	// (POST /cs/{csId}/setchargingprofile)
+	SetChargingProfile(w http.ResponseWriter, r *http.Request, csId string)
+
 	// Registers a location with the CSMS
 	// (POST /location/{locationId})
 	RegisterLocation(w http.ResponseWriter, r *http.Request, locationId string)
@@ -575,6 +682,33 @@ func (siw *ServerInterfaceWrapper) TriggerChargeStation(w http.ResponseWriter, r
 
 	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.TriggerChargeStation(w, r, csId)
+	})
+
+	for i := len(siw.HandlerMiddlewares) - 1; i >= 0; i-- {
+		handler = siw.HandlerMiddlewares[i](handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// SetChargingProfile operation middleware
+func (siw *ServerInterfaceWrapper) SetChargingProfile(w http.ResponseWriter, r *http.Request) {
+	slog.Info("[TEST] in charging profile middleware!")
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "csId" -------------
+	var csId string
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "csId", runtime.ParamLocationPath, chi.URLParam(r, "csId"), &csId)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "csId", Err: err})
+		return
+	}
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SetChargingProfile(w, r, csId)
 	})
 
 	for i := len(siw.HandlerMiddlewares) - 1; i >= 0; i-- {
@@ -838,6 +972,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/cs/{csId}/trigger", wrapper.TriggerChargeStation)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/cs/{csId}/setchargingprofile", wrapper.SetChargingProfile)
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/location/{locationId}", wrapper.RegisterLocation)
