@@ -26,7 +26,7 @@ func (c ChargeStationTrigger) Bind(r *http.Request) error {
 	return nil
 }
 
-func (c ChargingProfile) Bind(r *http.Request) error {
+func (c ChargingProfileType) Bind(r *http.Request) error {
 	return nil
 }
 

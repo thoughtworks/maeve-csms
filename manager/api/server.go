@@ -3,10 +3,12 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"time"
 
+	"github.com/thoughtworks/maeve-csms/manager/config"
 	handlers "github.com/thoughtworks/maeve-csms/manager/handlers/ocpp201"
 	"github.com/thoughtworks/maeve-csms/manager/ocpi"
 
@@ -170,9 +172,16 @@ func (s *Server) TriggerChargeStation(w http.ResponseWriter, r *http.Request, cs
 	w.WriteHeader(http.StatusCreated)
 }
 
+type SetChargingProfileRequestJson struct {
+	EvseId              int
+	ChargingProfileType ChargingProfileType
+}
+
+func (*SetChargingProfileRequestJson) IsRequest() {}
+
 func (s *Server) SetChargingProfile(w http.ResponseWriter, r *http.Request, csId string) {
 	slog.Info("[TEST] In server.go, SetChargingProfile()")
-	req := new(ChargingProfile)
+	req := new(ChargingProfileType)
 
 	if err := render.Bind(r, req); err != nil {
 		_ = render.Render(w, r, ErrInvalidRequest(err))
@@ -180,6 +189,18 @@ func (s *Server) SetChargingProfile(w http.ResponseWriter, r *http.Request, csId
 	}
 
 	slog.Info("[TEST] req:", req)
+
+	// Get the transport.Emitter so that we can send messages
+	cfg := config.DefaultConfig
+	settings, _ := config.Configure(context.Background(), &cfg)
+
+	// Define the call maker
+	v201CallMaker := handlers.NewCallMaker(settings.MsgEmitter)
+
+	request := SetChargingProfileRequestJson{EvseId: 0, ChargingProfileType: *req}
+
+	// Send the call
+	v201CallMaker.Send(context.Background(), csId, &request)
 
 	w.WriteHeader(http.StatusCreated)
 }

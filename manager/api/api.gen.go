@@ -304,7 +304,7 @@ type Token struct {
 // Charging Profile Structs //
 //////////////////////////////
 
-type ChargingProfile struct {
+type ChargingProfileType struct {
 	Id int
 	StackLevel int
 	ChargingProfilePurpose ChargingProfilePurposeEnumType
@@ -313,7 +313,7 @@ type ChargingProfile struct {
 	ValidFrom time.Time
 	ValidTo time.Time
 	TransactionId int
-	ChargingSchedule ChargingProfileType
+	ChargingSchedule ChargingScheduleType
 }
 
 type ChargingProfilePurposeEnumType string
@@ -340,7 +340,7 @@ const (
 	Weekly RecurrencyKindEnumType = "Weekly"
 )
 
-type ChargingProfileType struct {
+type ChargingScheduleType struct {
 	Id int
 	StartSchedule time.Time
 	Duration int
