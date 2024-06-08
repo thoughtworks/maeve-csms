@@ -31,7 +31,8 @@ func (r Router) Handle(ctx context.Context, chargeStationId string, msg *transpo
 
 	err := r.route(ctx, chargeStationId, msg)
 
-	// TODO: Route setChargingProfile message here!
+	// ^^^ r.route goes into the transport.MessageTypeCallError switch statement, returns error b/c EVerest returns not implemented
+	// TODO: Handle setChargingProfile response here if we want to do more on CSMS side!
 
 	if err != nil {
 		slog.Error("unable to route message", slog.String("chargeStationId", chargeStationId), slog.String("action", msg.Action), "err", err)
