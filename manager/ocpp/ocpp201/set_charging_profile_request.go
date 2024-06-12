@@ -1,8 +1,8 @@
 package ocpp201
 
 type SetChargingProfileRequestJson struct {
-	EvseId              int
-	ChargingProfileType ChargingProfileType
+	EvseId          int
+	ChargingProfile ChargingProfileType
 }
 
 func (*SetChargingProfileRequestJson) IsRequest() {}

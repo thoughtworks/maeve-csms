@@ -191,7 +191,7 @@ func (s *Server) SetChargingProfile(w http.ResponseWriter, r *http.Request, csId
 	// Define the call maker
 	v201CallMaker := handlers.NewCallMaker(settings.MsgEmitter)
 
-	request := ocpp201.SetChargingProfileRequestJson{EvseId: 0, ChargingProfileType: ocpp201.ChargingProfileType(*req)}
+	request := ocpp201.SetChargingProfileRequestJson{EvseId: 0, ChargingProfile: ocpp201.ChargingProfileType(*req)}
 
 	// Send the call
 	v201CallMaker.Send(context.Background(), csId, &request)
