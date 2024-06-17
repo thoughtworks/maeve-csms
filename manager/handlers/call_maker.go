@@ -44,6 +44,7 @@ func (b OcppCallMaker) Send(ctx context.Context, chargeStationId string, request
 				evseId:          req.EvseId,
 				chargingProfile: req.ChargingProfile,
 			}
+			slog.Info("[TEST] in send(), SetChargingProfile case, new data is now:", test)
 			reqData = test
 			slog.Info("[TEST] in send(), SetChargingProfile case, new data now saved:", reqData)
 		} else {
