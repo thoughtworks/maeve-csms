@@ -10,8 +10,8 @@ const (
 )
 
 type SetChargingProfileResponseJson struct {
-	Status     ChargingProfileStatusEnumType
-	StatusInfo StatusInfoType
+	Status     ChargingProfileStatusEnumType `json:"status"`
+	StatusInfo StatusInfoType                `json:"statusInfo"`
 }
 
 func (*SetChargingProfileResponseJson) IsResponse() {}
