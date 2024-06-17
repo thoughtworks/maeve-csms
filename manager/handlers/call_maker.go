@@ -9,7 +9,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
-	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
 	"github.com/thoughtworks/maeve-csms/manager/transport"
 	"golang.org/x/exp/slog"
 )
@@ -34,25 +33,25 @@ func (b OcppCallMaker) Send(ctx context.Context, chargeStationId string, request
 		return nil
 	}
 
-	var reqData interface{}
-	reqData = request
+	// var reqData interface{}
+	// reqData = request
 
-	if action == "SetChargingProfile" {
-		slog.Info("[TEST] in send(), SetChargingProfile case")
-		if req, ok := request.(*ocpp201.SetChargingProfileRequestJson); ok {
-			test := SetChargingProfileRequestJsonFix{
-				evseId:          req.EvseId,
-				chargingProfile: req.ChargingProfile,
-			}
-			slog.Info("[TEST] in send(), SetChargingProfile case, new data is now:", test)
-			reqData = test
-			slog.Info("[TEST] in send(), SetChargingProfile case, new data now saved:", reqData)
-		} else {
-			slog.Error("[TEST] ERROR IN TYPE ASSERTION")
-		}
-	}
+	// if action == "SetChargingProfile" {
+	// 	slog.Info("[TEST] in send(), SetChargingProfile case")
+	// 	if req, ok := request.(*ocpp201.SetChargingProfileRequestJson); ok {
+	// 		test := SetChargingProfileRequestJsonFix{
+	// 			evseId:          req.EvseId,
+	// 			chargingProfile: req.ChargingProfile,
+	// 		}
+	// 		slog.Info("[TEST] in send(), SetChargingProfile case, new data is now:", test)
+	// 		reqData = test
+	// 		slog.Info("[TEST] in send(), SetChargingProfile case, new data now saved:", reqData)
+	// 	} else {
+	// 		slog.Error("[TEST] ERROR IN TYPE ASSERTION")
+	// 	}
+	// }
 
-	requestBytes, err := json.Marshal(reqData)
+	requestBytes, err := json.Marshal(request)
 	if err != nil {
 		return err
 	}
