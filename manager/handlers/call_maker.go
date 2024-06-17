@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
+	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
 	"github.com/thoughtworks/maeve-csms/manager/transport"
 	"golang.org/x/exp/slog"
 )
@@ -20,6 +21,11 @@ type OcppCallMaker struct {
 	Actions     map[reflect.Type]string // the OCPP Action associated with a specific ocpp.Request object
 }
 
+type SetChargingProfileRequestJsonFix struct {
+	evseId          int
+	chargingProfile interface{}
+}
+
 func (b OcppCallMaker) Send(ctx context.Context, chargeStationId string, request ocpp.Request) error {
 	action, ok := b.Actions[reflect.TypeOf(request)]
 	slog.Info("[TEST] we are in Send() in call_maker.go", "action", action)
@@ -28,7 +34,24 @@ func (b OcppCallMaker) Send(ctx context.Context, chargeStationId string, request
 		return nil
 	}
 
-	requestBytes, err := json.Marshal(request)
+	var reqData interface{}
+	reqData = request
+
+	if action == "SetChargingProfile" {
+		slog.Info("[TEST] in send(), SetChargingProfile case")
+		if req, ok := request.(*ocpp201.SetChargingProfileRequestJson); ok {
+			test := SetChargingProfileRequestJsonFix{
+				evseId:          req.EvseId,
+				chargingProfile: req.ChargingProfile,
+			}
+			reqData = test
+			slog.Info("[TEST] in send(), SetChargingProfile case, new data now saved:", reqData)
+		} else {
+			slog.Error("[TEST] ERROR IN TYPE ASSERTION")
+		}
+	}
+
+	requestBytes, err := json.Marshal(reqData)
 	if err != nil {
 		return err
 	}
