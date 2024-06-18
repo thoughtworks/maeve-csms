@@ -271,6 +271,49 @@ This operation does not require authentication
 This operation does not require authentication
 </aside>
 
+## setChargingProfile
+
+<a id="opIdsetChargingProfile"></a>
+
+`POST /cs/{csId}/setchargingprofile`
+
+> Body parameter
+
+```json
+{
+  "<ChargingProfileType>"
+}
+```
+
+<h3 id="setChargingProfile-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|csId|path|string|true|The charge station identifier|
+|body|body|[ChargineProfileType](#schemaChargingProfileType)|true|none|
+
+> Example responses
+
+> default Response
+
+```json
+{
+  "status": "string",
+  "error": "string"
+}
+```
+
+<h3 id="setChargingProfile-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|OK|None|
+|default|Default|Unexpected error|[Status](#schemastatus)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
 ## setToken
 
 <a id="opIdsetToken"></a>
@@ -837,6 +880,46 @@ Trigger a charge station action
 |trigger|SignV2GCertificate|
 |trigger|SignChargingStationCertificate|
 |trigger|SignCombinedCertificate|
+
+<h2 id="ChargingProfileType">ChargingProfileType</h2>
+<!-- backwards compatibility -->
+<a id="schemaChargingProfileType"></a>
+<a id="schema_ChargingProfileType"></a>
+<a id="tocSChargingProfileType"></a>
+<a id="tocsChargingProfileType"></a>
+
+```json
+
+{
+  "id": int,
+  "stackLevel": int,
+  "chargingProfilePurpose": "ChargingProfilePurposeEnumType",
+  "chargingProfileKind": "ChargingProfileKindEnumType",
+  "recurrencyKind": "RecurrencyKindEnumType",
+  "validFrom": "dateTime",
+  "validTo": "dateTime",
+  "transactionId": "identifierString[0..36]",
+  "chargingSchedule": "ChargingScheduleType"
+}
+
+```
+
+Send charging profile to charging station
+
+### Properties ###
+<small><em>See OCPP 2.0.1 Specification for ChargingProfileType</em></small>
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|id|int|true|none|none|
+|stackLevel|int|true|none|none|
+|chargingProfilePurpose|ChargingProfilePurposeEnumType|true|none|none|
+|chargingProfileKind|ChargingProfileKindEnumType|true|none|none|
+|recurrencyKind|RecurrencyKindEnumType|false|none|none|
+|validFrom|dateTime|false|none|none|
+|validTo|dateTime|false|none|none|
+|transactionId|identifierString[0..36]|false|none|none|
+|chargingSchedule|ChargingScheduleType|true|none|none|
 
 <h2 id="tocS_Token">Token</h2>
 <!-- backwards compatibility -->
