@@ -4,12 +4,12 @@ package ocpp201
 
 import (
 	"context"
+
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
 	"github.com/thoughtworks/maeve-csms/manager/store"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
-	"golang.org/x/exp/slog"
 )
 
 type TriggerMessageResultHandler struct {
@@ -18,8 +18,6 @@ type TriggerMessageResultHandler struct {
 
 func (i TriggerMessageResultHandler) HandleCallResult(ctx context.Context, chargeStationId string, request ocpp.Request, response ocpp.Response, state any) error {
 	req := request.(*ocpp201.TriggerMessageRequestJson)
-
-	slog.Info("[TEST] we are in HandleCallResult() in trigger_message_result.go")
 
 	status := ocpp201.TriggerMessageStatusEnumTypeNotImplemented
 
@@ -42,10 +40,8 @@ func (i TriggerMessageResultHandler) HandleCallResult(ctx context.Context, charg
 	}
 
 	if status == ocpp201.TriggerMessageStatusEnumTypeAccepted {
-		slog.Info("[TEST] we are in HandleCallResult() in trigger_message_result.go 111111111")
 		return i.Store.DeleteChargeStationTriggerMessage(ctx, chargeStationId)
 	} else {
-		slog.Info("[TEST] we are in HandleCallResult() in trigger_message_result.go 2222222222")
 		err := i.Store.SetChargeStationTriggerMessage(ctx, chargeStationId, &store.ChargeStationTriggerMessage{
 			TriggerMessage: store.TriggerMessage(req.RequestedMessage),
 			TriggerStatus:  store.TriggerStatus(status),

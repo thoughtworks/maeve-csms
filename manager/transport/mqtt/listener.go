@@ -5,6 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/rand"
+	"net/url"
+	"strings"
+	"time"
+
 	"github.com/eclipse/paho.golang/autopaho"
 	"github.com/eclipse/paho.golang/paho"
 	"github.com/thoughtworks/maeve-csms/manager/transport"
@@ -16,10 +21,6 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"go.opentelemetry.io/otel/trace/noop"
 	"golang.org/x/exp/slog"
-	"math/rand"
-	"net/url"
-	"strings"
-	"time"
 )
 
 type Listener struct {
@@ -138,8 +139,6 @@ func (l *Listener) Connect(ctx context.Context, ocppVersion transport.OcppVersio
 					slog.Warn("unable to unmarshal message", "err", err)
 					return
 				}
-
-				slog.Info("[TEST] In listener.go", "action", msg.Action)
 
 				// add additional span attributes
 				version, _ := strings.CutPrefix(string(ocppVersion), "ocpp")

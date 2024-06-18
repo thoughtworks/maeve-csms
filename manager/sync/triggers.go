@@ -5,6 +5,8 @@ package sync
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/thoughtworks/maeve-csms/manager/handlers"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp16"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
@@ -13,7 +15,6 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/exp/slog"
 	"k8s.io/utils/clock"
-	"time"
 )
 
 func SyncTriggers(ctx context.Context,
@@ -33,12 +34,11 @@ func SyncTriggers(ctx context.Context,
 			return
 		case <-time.After(runEvery):
 			func() {
-				slog.Info("[TEST] we are in SyncTriggers() in triggers.go 1")
 				ctx, span := tracer.Start(ctx, "sync triggers", trace.WithSpanKind(trace.SpanKindInternal),
 					trace.WithAttributes(attribute.String("sync.trigger.previous", previousChargeStationId)))
 				defer span.End()
 				triggerMessages, err := engine.ListChargeStationTriggerMessages(ctx, 50, previousChargeStationId)
-				slog.Info("[TEST] we are in SyncTriggers() in triggers.go 2", "triggerMessages", triggerMessages)
+				slog.Info("[TEST] we are in SyncTriggers() in triggers.go", "triggerMessages", triggerMessages)
 				if err != nil {
 					span.RecordError(err)
 					return
@@ -49,11 +49,8 @@ func SyncTriggers(ctx context.Context,
 					previousChargeStationId = ""
 				}
 				span.SetAttributes(attribute.Int("sync.trigger.count", len(triggerMessages)))
-				slog.Info("[TEST] we are in SyncTriggers() in triggers.go 3")
 				for _, pendingTriggerMessage := range triggerMessages {
 					func() {
-						slog.Info("[TEST] we are in SyncTriggers() in triggers.go4")
-						slog.Info("[TEST] pendingTriggerMessage", pendingTriggerMessage)
 						ctx, span := tracer.Start(ctx, "sync trigger", trace.WithSpanKind(trace.SpanKindInternal),
 							trace.WithAttributes(
 								attribute.String("chargeStationId", pendingTriggerMessage.ChargeStationId),
