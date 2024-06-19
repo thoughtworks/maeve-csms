@@ -1,0 +1,29 @@
+diff --git a/docker-compose.yml b/docker-compose.yml
+index b2d93e6..f0e675a 100644
+--- a/docker-compose.yml
++++ b/docker-compose.yml
+@@ -37,16 +37,8 @@ services:
+       - "serve"
+       - "--ws-addr"
+       - ":9310"
+-      - "--wss-addr"
+-      - ":9311"
+       - "--status-addr"
+       - ":9312"
+-      - "--tls-server-cert"
+-      - "/certificates/csms.pem"
+-      - "--tls-server-key"
+-      - "/certificates/csms.key"
+-      - "--tls-trust-cert"
+-      - "/certificates/trust.pem"
+       - "--mqtt-addr"
+       - "mqtt://mqtt:1883"
+       - "--manager-api-addr"
+@@ -55,7 +47,6 @@ services:
+       - "9312"
+     ports:
+       - "80:9310"
+-      - "443:9311"
+     volumes:
+       - type: bind
+         source: ./config/certificates
