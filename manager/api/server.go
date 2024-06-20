@@ -154,7 +154,7 @@ func (s *Server) LookupChargeStationAuth(w http.ResponseWriter, r *http.Request,
 }
 
 func (s *Server) TriggerChargeStation(w http.ResponseWriter, r *http.Request, csId string) {
-	slog.Info("[TEST] in TriggerChargeStation!")
+	slog.Debug("[API TRACE] in TriggerChargeStation!")
 	req := new(ChargeStationTrigger)
 	if err := render.Bind(r, req); err != nil {
 		_ = render.Render(w, r, ErrInvalidRequest(err))
@@ -174,7 +174,7 @@ func (s *Server) TriggerChargeStation(w http.ResponseWriter, r *http.Request, cs
 }
 
 func (s *Server) SetChargingProfile(w http.ResponseWriter, r *http.Request, csId string) {
-	slog.Info("[TEST] In server.go, SetChargingProfile()")
+	slog.Debug("[API TRACE] In server.go, SetChargingProfile()")
 	req := new(ChargingProfileType)
 
 	if err := render.Bind(r, req); err != nil {
@@ -182,7 +182,7 @@ func (s *Server) SetChargingProfile(w http.ResponseWriter, r *http.Request, csId
 		return
 	}
 
-	slog.Info("[TEST] req:", req)
+	slog.Debug("[API TRACE] req:", req)
 
 	// Get the transport.Emitter so that we can send messages
 	cfg := config.DefaultConfig

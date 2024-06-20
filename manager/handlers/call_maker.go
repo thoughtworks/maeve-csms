@@ -20,14 +20,9 @@ type OcppCallMaker struct {
 	Actions     map[reflect.Type]string // the OCPP Action associated with a specific ocpp.Request object
 }
 
-type SetChargingProfileRequestJsonFix struct {
-	evseId          int
-	chargingProfile interface{}
-}
-
 func (b OcppCallMaker) Send(ctx context.Context, chargeStationId string, request ocpp.Request) error {
 	action, ok := b.Actions[reflect.TypeOf(request)]
-	slog.Info("[TEST] we are in Send() in call_maker.go", "action", action)
+	slog.Debug("[API TRACE] we are in Send() in call_maker.go", "action", action)
 	if !ok {
 		slog.Error("unknown request type", request)
 		return nil

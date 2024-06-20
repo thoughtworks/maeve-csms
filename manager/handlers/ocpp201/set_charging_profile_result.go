@@ -16,7 +16,7 @@ func (h SetChargingProfileResultHandler) HandleCallResult(ctx context.Context, c
 	req := request.(*types.SetChargingProfileRequestJson)
 	resp := response.(*types.SetChargingProfileResponseJson)
 
-	slog.Info("[TEST] in scp_result.go, got response:", resp, "[TEST] From request:", req)
+	slog.Debug("[API TRACE] in scp_result.go, got response:", resp, "[API TRACE] From request:", req)
 
 	return nil
 }

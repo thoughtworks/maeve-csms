@@ -594,7 +594,7 @@ func (siw *ServerInterfaceWrapper) TriggerChargeStation(w http.ResponseWriter, r
 
 // SetChargingProfile operation middleware
 func (siw *ServerInterfaceWrapper) SetChargingProfile(w http.ResponseWriter, r *http.Request) {
-	slog.Info("[TEST] in charging middleware!")
+	slog.Debug("[API TRACE] in charging middleware!")
 	ctx := r.Context()
 
 	var err error
