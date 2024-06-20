@@ -163,7 +163,7 @@ var serveCmd = &cobra.Command{
 			}
 		}
 
-		if certsProvided {
+		if !certsProvided {
 			slog.Warn("no certs were provided, WSS will be closed")
 		} else if wssAddr != "" {
 			if tlsServerCert == "" {
