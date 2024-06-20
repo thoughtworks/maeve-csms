@@ -7,6 +7,10 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"net/url"
+	"os"
+	"time"
+
 	"github.com/spf13/cobra"
 	"github.com/subnova/slog-exporter/slogtrace"
 	"github.com/thoughtworks/maeve-csms/gateway/registry"
@@ -21,9 +25,6 @@ import (
 	"golang.org/x/exp/slog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"net/url"
-	"os"
-	"time"
 )
 
 var (
@@ -149,7 +150,22 @@ var serveCmd = &cobra.Command{
 		wsServer := server.New("ws", wsAddr, nil, websocketHandler)
 		var wssServer *server.Server
 
-		if wssAddr != "" {
+		certs := []string{tlsServerCert, tlsServerKey}
+		certs = append(certs, tlsTrustCert...)
+		certsProvided := false
+		slog.Info("Checking to see what certs were provided...")
+		for _, cert := range certs {
+			_, err := os.ReadFile(cert)
+			if err == nil {
+				slog.Info("Found at least one cert:", cert)
+				certsProvided = true
+				break
+			}
+		}
+
+		if certsProvided {
+			slog.Warn("no certs were provided, WSS will be closed")
+		} else if wssAddr != "" {
 			if tlsServerCert == "" {
 				return fmt.Errorf("no tls server cert specified for wss connection")
 			}

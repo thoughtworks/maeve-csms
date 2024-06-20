@@ -8,13 +8,7 @@ fi
 
 SP=$1
 
-echo "Patching the CSMS to disable load balancer"
-patch -p1 -i config/everest/maeve-csms-no-lb.patch
-
-if [[ $SP == 1 ]]; then
-  echo "Patching the CSMS to disable WSS"
-  patch -p1 -i config/everest/maeve-csms-no-wss.patch
-else 
+if [[ $SP == 2 || $SP == 3 ]]; then
   echo "Patching the CSMS to enable EVerest organization"
   patch -p1 -i config/everest/maeve-csms-everest-org.patch
       
