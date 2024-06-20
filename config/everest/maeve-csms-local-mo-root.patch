@@ -1,0 +1,19 @@
+diff --git a/config/manager/config.toml b/config/manager/config.toml
+index 3fa49ec..668eda9 100644
+--- a/config/manager/config.toml
++++ b/config/manager/config.toml
+@@ -19,12 +19,8 @@ firestore.project_id = "*detect-project-id*"
+ type = "ocsp"
+ 
+ [contract_cert_validator.ocsp.root_certs]
+-type = "opcp"
+-opcp.url = "https://open.plugncharge-test.hubject.com"
+-opcp.ttl = "24h"
+-opcp.auth.type = "hubject_test_token"
+-opcp.auth.hubject_test_token.url = "https://hubject.stoplight.io/api/v1/projects/cHJqOjk0NTg5/nodes/6bb8b3bc79c2e-authorization-token"
+-opcp.auth.hubject_test_token.ttl = "6h"
++type = "file"
++file.files = ["/certificates/root-MO-cert.pem"]
+ 
+ [contract_cert_provider]
+ type = "opcp"

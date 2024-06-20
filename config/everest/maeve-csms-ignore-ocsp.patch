@@ -1,0 +1,32 @@
+diff --git a/manager/handlers/ocpp201/authorize.go b/manager/handlers/ocpp201/authorize.go
+index 5df2305..0db9f79 100644
+--- a/manager/handlers/ocpp201/authorize.go
++++ b/manager/handlers/ocpp201/authorize.go
+@@ -38,7 +38,12 @@ func (a AuthorizeHandler) HandleCall(ctx context.Context, chargeStationId string
+ 		if req.Certificate != nil {
+ 			_, err = a.CertificateValidationService.ValidatePEMCertificateChain(ctx, []byte(*req.Certificate), req.IdToken.IdToken)
+			idTokenInfo.Status, certificateStatus = handleCertificateValidationError(err)
+-			if err != nil {
++			if err.Error() == "failed to perform ocsp check after 1 attempts" {
++				var tempStatus = types.AuthorizeCertificateStatusEnumTypeAccepted
++				certificateStatus = &tempStatus
++				idTokenInfo.Status = types.AuthorizationStatusEnumTypeAccepted
++				span.SetAttributes(attribute.String("authorize.cert_warn", "No OCSP, but ignoring for testing purpose."))
++			} else if err != nil {
+ 				span.SetAttributes(attribute.String("authorize.cert_error", err.Error()))
+ 			}
+ 		}
+@@ -46,7 +46,12 @@ func (a AuthorizeHandler) HandleCall(ctx context.Context, chargeStationId string
+ 		if req.Iso15118CertificateHashData != nil {
+ 			_, err := a.CertificateValidationService.ValidateHashedCertificateChain(ctx, *req.Iso15118CertificateHashData)
+			idTokenInfo.Status, certificateStatus = handleCertificateValidationError(err)
+-			if err != nil {
++			if err.Error() == "failed to perform ocsp check after 1 attempts" {
++				var tempStatus = types.AuthorizeCertificateStatusEnumTypeAccepted
++				certificateStatus = &tempStatus
++				idTokenInfo.Status = types.AuthorizationStatusEnumTypeAccepted
++				span.SetAttributes(attribute.String("authorize.cert_warn", "No OCSP, but ignoring for testing purpose."))
++			} else if err != nil {
+ 				span.SetAttributes(attribute.String("authorize.cert_error", err.Error()))
+ 			}
+ 		}

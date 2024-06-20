@@ -149,7 +149,22 @@ var serveCmd = &cobra.Command{
 		wsServer := server.New("ws", wsAddr, nil, websocketHandler)
 		var wssServer *server.Server
 
-		if wssAddr != "" {
+		certs := []string{tlsServerCert, tlsServerKey}
+		certs = append(certs, tlsTrustCert...)
+		certsProvided := false
+		slog.Info("Checking to see what certs were provided...")
+		for _, cert := range certs {
+			_, err := os.ReadFile(cert)
+			if err == nil {
+				slog.Info("Found at least one cert:", cert)
+				certsProvided = true
+				break
+			}
+		}
+
+		if !certsProvided {
+			slog.Warn("no certs were provided, WSS will be closed")
+		} else if wssAddr != "" {
 			if tlsServerCert == "" {
 				return fmt.Errorf("no tls server cert specified for wss connection")
 			}

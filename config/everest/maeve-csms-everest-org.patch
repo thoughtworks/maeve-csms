@@ -1,0 +1,13 @@
+diff --git a/docker-compose.yml b/docker-compose.yml
+index b2d93e6..fa3a1ff 100644
+--- a/docker-compose.yml
++++ b/docker-compose.yml
+@@ -47,6 +47,8 @@ services:
+       - "/certificates/csms.key"
+       - "--tls-trust-cert"
+       - "/certificates/trust.pem"
++      - "--org-name"
++      - "EVerest"
+       - "--mqtt-addr"
+       - "mqtt://mqtt:1883"
+       - "--manager-api-addr"
