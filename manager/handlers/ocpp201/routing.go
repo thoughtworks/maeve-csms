@@ -306,6 +306,7 @@ func NewCallMaker(e transport.Emitter) *handlers.OcppCallMaker {
 			reflect.TypeOf(&ocpp201.SetVariablesRequestJson{}):               "SetVariables",
 			reflect.TypeOf(&ocpp201.TriggerMessageRequestJson{}):             "TriggerMessage",
 			reflect.TypeOf(&ocpp201.UnlockConnectorRequestJson{}):            "UnlockConnector",
+			reflect.TypeOf(&ocpp201.SetChargingProfileRequestJson{}):         "SetChargingProfile",
 		},
 	}
 }

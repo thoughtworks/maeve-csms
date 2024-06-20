@@ -8,11 +8,14 @@ import (
 	"github.com/thoughtworks/maeve-csms/manager/ocpi"
 	"net/http"
 	"time"
-
+	"context"
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/go-chi/render"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
+	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
 	"github.com/thoughtworks/maeve-csms/manager/store"
+	"github.com/thoughtworks/maeve-csms/manager/config"
+	"golang.org/x/exp/slog"
 	"k8s.io/utils/clock"
 )
 
@@ -149,6 +152,7 @@ func (s *Server) LookupChargeStationAuth(w http.ResponseWriter, r *http.Request,
 }
 
 func (s *Server) TriggerChargeStation(w http.ResponseWriter, r *http.Request, csId string) {
+	slog.Debug("[API TRACE] in TriggerChargeStation!")
 	req := new(ChargeStationTrigger)
 	if err := render.Bind(r, req); err != nil {
 		_ = render.Render(w, r, ErrInvalidRequest(err))
@@ -163,6 +167,32 @@ func (s *Server) TriggerChargeStation(w http.ResponseWriter, r *http.Request, cs
 		_ = render.Render(w, r, ErrInternalError(err))
 		return
 	}
+
+	w.WriteHeader(http.StatusCreated)
+}
+
+func (s *Server) SetChargingProfile(w http.ResponseWriter, r *http.Request, csId string) {
+	slog.Debug("[API TRACE] In server.go, SetChargingProfile()")
+	req := new(ChargingProfileType)
+
+	if err := render.Bind(r, req); err != nil {
+		_ = render.Render(w, r, ErrInvalidRequest(err))
+		return
+	}
+
+	slog.Debug("[API TRACE] req:", req)
+
+	// Get the transport.Emitter so that we can send messages
+	cfg := config.DefaultConfig
+	settings, _ := config.Configure(context.Background(), &cfg)
+
+	// Define the call maker
+	v201CallMaker := handlers.NewCallMaker(settings.MsgEmitter)
+
+	request := ocpp201.SetChargingProfileRequestJson{EvseId: 0, ChargingProfile: ocpp201.ChargingProfileType(*req)}
+
+	// Send the call
+	v201CallMaker.Send(context.Background(), csId, &request)
 
 	w.WriteHeader(http.StatusCreated)
 }

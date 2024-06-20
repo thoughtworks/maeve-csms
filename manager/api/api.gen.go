@@ -13,10 +13,12 @@ import (
 	"path"
 	"strings"
 	"time"
+	"golang.org/x/exp/slog"
 
 	"github.com/deepmap/oapi-codegen/pkg/runtime"
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/go-chi/chi/v5"
+	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
 )
 
 // Defines values for ChargeStationInstallCertificatesCertificatesStatus.
@@ -299,6 +301,8 @@ type Token struct {
 	VisualNumber *string `json:"visualNumber,omitempty"`
 }
 
+type ChargingProfileType ocpp201.ChargingProfileType
+
 // TokenCacheMode Indicates what type of token caching is allowed
 type TokenCacheMode string
 
@@ -361,6 +365,10 @@ type ServerInterface interface {
 
 	// (POST /cs/{csId}/trigger)
 	TriggerChargeStation(w http.ResponseWriter, r *http.Request, csId string)
+
+	// (POST /cs/{csId}/setchargingprofile)
+	SetChargingProfile(w http.ResponseWriter, r *http.Request, csId string)
+
 	// Registers a location with the CSMS
 	// (POST /location/{locationId})
 	RegisterLocation(w http.ResponseWriter, r *http.Request, locationId string)
@@ -575,6 +583,33 @@ func (siw *ServerInterfaceWrapper) TriggerChargeStation(w http.ResponseWriter, r
 
 	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.TriggerChargeStation(w, r, csId)
+	})
+
+	for i := len(siw.HandlerMiddlewares) - 1; i >= 0; i-- {
+		handler = siw.HandlerMiddlewares[i](handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// SetChargingProfile operation middleware
+func (siw *ServerInterfaceWrapper) SetChargingProfile(w http.ResponseWriter, r *http.Request) {
+	slog.Debug("[API TRACE] in charging middleware!")
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "csId" -------------
+	var csId string
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "csId", runtime.ParamLocationPath, chi.URLParam(r, "csId"), &csId)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "csId", Err: err})
+		return
+	}
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SetChargingProfile(w, r, csId)
 	})
 
 	for i := len(siw.HandlerMiddlewares) - 1; i >= 0; i-- {
@@ -838,6 +873,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/cs/{csId}/trigger", wrapper.TriggerChargeStation)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/cs/{csId}/setchargingprofile", wrapper.SetChargingProfile)
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/location/{locationId}", wrapper.RegisterLocation)

@@ -29,6 +29,9 @@ func (r Router) Handle(ctx context.Context, chargeStationId string, msg *transpo
 	span := trace.SpanFromContext(ctx)
 
 	err := r.route(ctx, chargeStationId, msg)
+
+	// TODO: Handle setChargingProfile response here if we want to do more on CSMS side!
+
 	if err != nil {
 		slog.Error("unable to route message", slog.String("chargeStationId", chargeStationId), slog.String("action", msg.Action), "err", err)
 		span.SetStatus(codes.Error, "routing request failed")
@@ -54,9 +57,11 @@ func (r Router) Handle(ctx context.Context, chargeStationId string, msg *transpo
 }
 
 func (r Router) route(ctx context.Context, chargeStationId string, message *transport.Message) error {
+	slog.Debug("[API TRACE] we are in route() in router.go", "action", message.Action)
 	switch message.MessageType {
 	case transport.MessageTypeCall:
 		route, ok := r.CallRoutes[message.Action]
+		slog.Debug("[API TRACE] we are in route() in router.go, in MessageTypeCall", "route", route)
 		if !ok {
 			return fmt.Errorf("routing request: %w", transport.NewError(transport.ErrorNotImplemented, fmt.Errorf("%s not implemented", message.Action)))
 		}
@@ -101,6 +106,7 @@ func (r Router) route(ctx context.Context, chargeStationId string, message *tran
 		}
 	case transport.MessageTypeCallResult:
 		route, ok := r.CallResultRoutes[message.Action]
+		slog.Debug("[API TRACE] we are in route() in router.go, in MessageTypeCallResult", "route", route)
 		if !ok {
 			return fmt.Errorf("routing request: %w", transport.NewError(transport.ErrorNotImplemented, fmt.Errorf("%s result not implemented", message.Action)))
 		}

@@ -37,6 +37,7 @@ func SyncTriggers(ctx context.Context,
 					trace.WithAttributes(attribute.String("sync.trigger.previous", previousChargeStationId)))
 				defer span.End()
 				triggerMessages, err := engine.ListChargeStationTriggerMessages(ctx, 50, previousChargeStationId)
+				slog.Debug("[API TRACE] we are in SyncTriggers() in triggers.go", "triggerMessages", triggerMessages)
 				if err != nil {
 					span.RecordError(err)
 					return

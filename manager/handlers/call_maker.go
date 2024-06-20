@@ -5,7 +5,6 @@ package handlers
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/google/uuid"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
 	"github.com/thoughtworks/maeve-csms/manager/transport"
@@ -22,8 +21,10 @@ type OcppCallMaker struct {
 
 func (b OcppCallMaker) Send(ctx context.Context, chargeStationId string, request ocpp.Request) error {
 	action, ok := b.Actions[reflect.TypeOf(request)]
+	slog.Debug("[API TRACE] we are in Send() in call_maker.go", "action", action)
 	if !ok {
-		return fmt.Errorf("unknown request type: %T", request)
+		slog.Error("unknown request type", request)
+		return nil
 	}
 
 	requestBytes, err := json.Marshal(request)
