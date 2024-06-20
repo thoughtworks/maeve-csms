@@ -15,6 +15,6 @@ if [[ $SP == 2 || $SP == 3 ]]; then
   echo "Patching the CSMS to enable local mo root"
   patch -p1 -i config/everest/maeve-csms-local-mo-root.patch
       
-  echo "Patching the CSMS to enable local mo root"
+  echo "Patching the CSMS to ignore OCSP"
   patch -p1 -i config/everest/maeve-csms-ignore-ocsp.patch
 fi
