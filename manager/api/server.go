@@ -3,20 +3,18 @@
 package api
 
 import (
-	"context"
 	"fmt"
-	"net/http"
-	"time"
-
-	"github.com/thoughtworks/maeve-csms/manager/config"
 	handlers "github.com/thoughtworks/maeve-csms/manager/handlers/ocpp201"
 	"github.com/thoughtworks/maeve-csms/manager/ocpi"
-
+	"net/http"
+	"time"
+	"context"
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/go-chi/render"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
 	"github.com/thoughtworks/maeve-csms/manager/store"
+	"github.com/thoughtworks/maeve-csms/manager/config"
 	"golang.org/x/exp/slog"
 	"k8s.io/utils/clock"
 )

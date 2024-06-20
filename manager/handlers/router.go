@@ -7,14 +7,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/fs"
-
 	"github.com/santhosh-tekuri/jsonschema"
 	"github.com/thoughtworks/maeve-csms/manager/schemas"
 	"github.com/thoughtworks/maeve-csms/manager/transport"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/exp/slog"
+	"io/fs"
 )
 
 // Router is the primary implementation of the transport.Router interface.

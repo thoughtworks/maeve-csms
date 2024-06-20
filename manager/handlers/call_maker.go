@@ -5,12 +5,11 @@ package handlers
 import (
 	"context"
 	"encoding/json"
-	"reflect"
-
 	"github.com/google/uuid"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp"
 	"github.com/thoughtworks/maeve-csms/manager/transport"
 	"golang.org/x/exp/slog"
+	"reflect"
 )
 
 // OcppCallMaker is an implementation of the CallMaker interface for a specific set of OCPP messages.

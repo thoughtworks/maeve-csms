@@ -5,11 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math/rand"
-	"net/url"
-	"strings"
-	"time"
-
 	"github.com/eclipse/paho.golang/autopaho"
 	"github.com/eclipse/paho.golang/paho"
 	"github.com/thoughtworks/maeve-csms/manager/transport"
@@ -21,6 +16,10 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"go.opentelemetry.io/otel/trace/noop"
 	"golang.org/x/exp/slog"
+	"math/rand"
+	"net/url"
+	"strings"
+	"time"
 )
 
 type Listener struct {

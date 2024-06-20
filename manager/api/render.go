@@ -2,9 +2,7 @@
 
 package api
 
-import (
-	"net/http"
-)
+import "net/http"
 
 func (c ChargeStationAuth) Bind(r *http.Request) error {
 	return nil

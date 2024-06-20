@@ -5,8 +5,6 @@ package sync
 import (
 	"context"
 	"fmt"
-	"time"
-
 	"github.com/thoughtworks/maeve-csms/manager/handlers"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp16"
 	"github.com/thoughtworks/maeve-csms/manager/ocpp/ocpp201"
@@ -15,6 +13,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/exp/slog"
 	"k8s.io/utils/clock"
+	"time"
 )
 
 func SyncTriggers(ctx context.Context,
