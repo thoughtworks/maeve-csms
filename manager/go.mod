@@ -18,7 +18,7 @@ require (
 	github.com/pelletier/go-toml/v2 v2.0.9
 	github.com/prometheus/client_golang v1.15.1
 	github.com/rodaine/table v1.1.0
-	github.com/rs/cors v1.9.0
+	github.com/rs/cors v1.11.0
 	github.com/santhosh-tekuri/jsonschema v1.2.4
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.9.0
