@@ -1,20 +1,16 @@
 #!/usr/bin/env bash
 
-command_exists() {
-  command -v "$1" >/dev/null 2>&1
-}
-
-# Check if 'docker compose' is available (with space)
-if command_exists "docker compose"; then
+# Check if 'docker compose' is available
+if docker compose version >/dev/null 2>&1; then
   DOCKER_COMPOSE_CMD="docker compose"
+elif docker-compose version >/dev/null 2>&1; then
+  # Fallback to 'docker-compose' if 'docker compose' is not available
+  DOCKER_COMPOSE_CMD="docker-compose"
 else
-  # Check if 'docker-compose' is available
-  if command_exists docker-compose; then
-    DOCKER_COMPOSE_CMD="docker-compose"
-  else
-    echo "Error: Neither 'docker-compose' nor 'docker compose' is available. Please install Docker Compose."
-    exit 1
-  fi
+  echo "Error: Neither 'docker-compose' nor 'docker compose' is available. Please install Docker Compose."
+  exit 1
 fi
 
+# Run the Docker Compose command with any passed arguments
 $DOCKER_COMPOSE_CMD up "${@:1}"
+
